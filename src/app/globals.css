@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-base: #05080f;
+    --bg-surface: #0c1018;
+    --bg-surface-2: #131b28;
+    --bg-surface-3: #1a2438;
+    --border-subtle: rgba(255,255,255,0.06);
+    --border-default: rgba(255,255,255,0.10);
+    --border-emphasis: rgba(255,255,255,0.18);
+    --accent: #4c7df4;
+    --accent-hover: #6b96f7;
+    --accent-muted: rgba(76,125,244,0.12);
+    --emerald: #34d399;
+    --emerald-muted: rgba(52,211,153,0.12);
+    --text-primary: #e8ecf4;
+    --text-secondary: #8896b3;
+    --text-tertiary: #4f5f7a;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  [data-rk] {
+    --rk-colors-accentColor: #4c7df4 !important;
+  }
+}
+
+@layer utilities {
+  /* Card styles */
+  .card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+  }
+  .card-hover {
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .card-hover:hover {
+    border-color: var(--border-default);
+    background: var(--bg-surface-2);
+  }
+
+  /* Data display */
+  .data-positive { color: var(--emerald); }
+  .data-muted { color: var(--text-secondary); }
+
+  /* Divider */
+  .divider {
+    border-color: var(--border-subtle);
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .badge-blue {
+    background: var(--accent-muted);
+    color: var(--accent-hover);
+    border: 1px solid rgba(76,125,244,0.2);
+  }
+  .badge-emerald {
+    background: var(--emerald-muted);
+    color: var(--emerald);
+    border: 1px solid rgba(52,211,153,0.2);
+  }
+  .badge-amber {
+    background: rgba(245,158,11,0.1);
+    color: #fbbf24;
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+
+  /* Input base style */
+  .input-base {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border-default);
+    background: var(--bg-surface-2);
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  .input-base:focus {
+    border-color: var(--accent);
+    background: var(--bg-surface-3);
+  }
+  .input-base::placeholder {
+    color: var(--text-tertiary);
+  }
+
+  /* Button primary */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.15s ease, opacity 0.15s ease;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:active { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* Button secondary */
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: var(--bg-surface-2);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid var(--border-default);
+    transition: background 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+  }
+  .btn-secondary:hover {
+    background: var(--bg-surface-3);
+    border-color: var(--border-emphasis);
+  }
+  .btn-secondary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* Stat display */
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255,255,255,0.04) 25%,
+      rgba(255,255,255,0.09) 50%,
+      rgba(255,255,255,0.04) 75%
+    );
+    background-size: 600px 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: 6px;
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}

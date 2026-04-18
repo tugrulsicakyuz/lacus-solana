@@ -1,0 +1,11 @@
+{
+  "network": "baseSepolia",
+  "chainId": "84532",
+  "deployer": "0x04bF6B3445911f5784Bb6d7b02Fd0d6481BD8511",
+  "timestamp": "2026-03-08T13:58:34.207Z",
+  "contracts": {
+    "MockUSDC": "0xc3D019eBE177Dc15fC5888221B0f10191e9fF870",
+    "BondFactory": "0x4ba4De2B6a413065a1b72F3396Af1dC6eaE1b120",
+    "BondExchange": "0x3d6523d560B609062F7958BE4AaA4Ded997378bf"
+  }
+}
