@@ -95,7 +95,7 @@ export default function LaunchpadPage() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px", flexWrap: "wrap", gap: "16px" }}>
             <div>
               <h1 style={{ fontSize: "32px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Bond Markets</h1>
-              <p style={{ fontSize: "14px", color: "#64748b" }}>Discover and invest in tokenized bonds on Base Network</p>
+              <p style={{ fontSize: "14px", color: "#64748b" }}>Discover and invest in tokenized credit products built for the Lacus thesis</p>
             </div>
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
               <div style={{ background: "#0d1117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "20px", padding: "8px 16px", fontSize: "13px", color: "#94a3b8" }}>
@@ -354,4 +354,3 @@ export default function LaunchpadPage() {
     </>
   );
 }
-

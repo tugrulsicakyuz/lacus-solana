@@ -9,7 +9,7 @@ import { mainnet, arbitrum, base, baseSepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const config = getDefaultConfig({
-  appName: "Sparrow",
+  appName: "Lacus",
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID as string,
   chains: [baseSepolia, base, mainnet, arbitrum],
   ssr: true,

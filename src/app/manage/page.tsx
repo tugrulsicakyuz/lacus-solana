@@ -102,7 +102,7 @@ export default function ManagePage() {
         }
       }
       toast.success(
-        <span>✅ Yield distributed! <a href={baseScanUrl(depositTxHash!)} target="_blank" rel="noopener noreferrer" className="underline text-blue-400 hover:text-blue-300">View on BaseScan →</a></span>,
+        <span>✅ Yield distributed! <a href={baseScanUrl(depositTxHash!)} target="_blank" rel="noopener noreferrer" className="underline text-blue-400 hover:text-blue-300">View transaction details →</a></span>,
         { id: "deposit-confirm" }
       );
       setFlow(bondSymbol, 'done');

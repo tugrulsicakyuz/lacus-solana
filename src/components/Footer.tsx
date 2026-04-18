@@ -71,11 +71,11 @@ export default function Footer() {
                   textTransform: "uppercase",
                 }}
               >
-                Sparrow
+                Lacus
               </span>
             </Link>
             <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>
-              P2P Bond Protocol on Base
+              Transparent Credit Infrastructure
             </p>
           </div>
 
@@ -94,17 +94,17 @@ export default function Footer() {
           </nav>
 
           <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
-            &copy; {new Date().getFullYear()} Sparrow Protocol
+            &copy; {new Date().getFullYear()} Lacus
           </p>
         </div>
 
         {/* Legal disclaimer */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: 16, paddingBottom: 16 }}>
           <p style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.18)", lineHeight: 1.6 }}>
-            This platform operates on{" "}
-            <span style={{ color: "rgba(255,255,255,0.35)" }}>Base Sepolia testnet</span>{" "}
-            and is for demonstration purposes only. Nothing on this site constitutes financial,
-            legal, or investment advice. Do not use real funds.
+            This prototype is for demonstration purposes only and should be used with test assets
+            while the Lacus product stack migrates toward{" "}
+            <span style={{ color: "rgba(255,255,255,0.35)" }}>Solana Devnet</span>. Nothing on
+            this site constitutes financial, legal, or investment advice.
           </p>
         </div>
       </div>

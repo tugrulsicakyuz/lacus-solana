@@ -18,7 +18,7 @@ export default function WhitepaperPage() {
                 <circle cx="8" cy="13" r="1.2" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontSize: "18px", fontWeight: 600, letterSpacing: "-0.02em", color: "#f1f5f9" }}>Sparrow</span>
+            <span style={{ fontSize: "18px", fontWeight: 600, letterSpacing: "-0.02em", color: "#f1f5f9" }}>Lacus</span>
           </Link>
           <span style={{ fontSize: "14px", color: "#64748b" }}>Whitepaper v1.0</span>
         </div>
@@ -91,7 +91,7 @@ export default function WhitepaperPage() {
           height: "calc(100vh - 108px)",
           border: "none"
         }}
-        title="Sparrow Protocol Whitepaper"
+        title="Lacus Whitepaper"
       />
     </div>
   );

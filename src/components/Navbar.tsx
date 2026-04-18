@@ -88,12 +88,12 @@ export default function Navbar() {
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
             <div style={{ display: "flex", height: "32px", width: "32px", alignItems: "center", justifyContent: "center", borderRadius: "6px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <img src="/logo.png" alt="Sparrow" style={{ height: "22px", width: "22px", objectFit: "contain" }} />
+              <img src="/logo.png" alt="Lacus" style={{ height: "22px", width: "22px", objectFit: "contain" }} />
             </div>
-            <span style={{ fontSize: "16px", fontWeight: 600, color: "#f1f5f9" }}>Sparrow</span>
+            <span style={{ fontSize: "16px", fontWeight: 600, color: "#f1f5f9" }}>Lacus</span>
           </Link>
           <div style={{ background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.15)", color: "#34d399", borderRadius: "20px", padding: "3px 10px", fontSize: "11px", fontWeight: 500 }}>
-            Testnet
+            Devnet
           </div>
         </div>
 

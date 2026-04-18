@@ -1009,7 +1009,7 @@ function SecondaryPageContent() {
                   {buyListingTxHash && (
                     <a href={`https://sepolia.basescan.org/tx/${buyListingTxHash}`} target="_blank" rel="noopener noreferrer"
                       className="block text-xs mb-4" style={{ color: "#4c7df4" }}>
-                      View atomic trade on BaseScan ↗
+                      View atomic trade details ↗
                     </a>
                   )}
                   <button onClick={() => { setActiveListing(null); setBuyStep("idle"); }}
@@ -1074,7 +1074,7 @@ function SecondaryPageContent() {
                   {buyListingTxHash && (
                     <a href={`https://sepolia.basescan.org/tx/${buyListingTxHash}`} target="_blank" rel="noopener noreferrer"
                       className="block text-center text-xs" style={{ color: "#4c7df4" }}>
-                      View trade tx on BaseScan ↗
+                      View trade tx details ↗
                     </a>
                   )}
                 </div>

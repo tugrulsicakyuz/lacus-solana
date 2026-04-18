@@ -196,7 +196,7 @@ export default function ApplyPage() {
     const canvas = signatureCanvasRef.current;
     const signatureData = canvas ? canvas.toDataURL("image/png") : "";
     const canonicalData = JSON.stringify({
-      version: "sparrow-loan-agreement-v3",
+      version: "lacus-loan-agreement-v3",
       issuerName: form.issuer_name,
       bondSymbol: form.symbol?.trim().toUpperCase(),
       apy: form.apy,
@@ -505,7 +505,7 @@ export default function ApplyPage() {
                 </div>
               </div>
 
-              {/* BaseScan link */}
+              {/* Transaction link */}
               {createdTxHash && (
                 <a
                   href={baseScanUrl(createdTxHash)}
@@ -516,7 +516,7 @@ export default function ApplyPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.color = "#4c7df4"; e.currentTarget.style.borderColor = "rgba(76,125,244,0.3)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
                 >
-                  View transaction on BaseScan →
+                  View transaction details →
                 </a>
               )}
 
@@ -581,7 +581,7 @@ export default function ApplyPage() {
             Issue a Bond
           </h1>
           <p style={{ fontSize: "14px", color: "#64748b" }}>
-            Complete all steps to list your bond on Sparrow Markets.
+            Complete all steps to list your bond on Lacus Markets.
           </p>
         </div>
 
@@ -900,8 +900,8 @@ export default function ApplyPage() {
                         </svg>
                       </div>
                       <div>
-                        <p style={{ fontSize: "13px", fontWeight: 600, color: "#f1f5f9" }}>Sparrow Loan Agreement</p>
-                        <p style={{ fontSize: "11px", color: "#475569" }}>Version 3 · Originated via Sparrow Protocol Platform</p>
+                        <p style={{ fontSize: "13px", fontWeight: 600, color: "#f1f5f9" }}>Lacus Loan Agreement</p>
+                        <p style={{ fontSize: "11px", color: "#475569" }}>Version 3 · Originated via Lacus Protocol</p>
                       </div>
                     </div>
                     <a
@@ -921,7 +921,7 @@ export default function ApplyPage() {
                     {/* Preamble */}
                     <p style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", color: "#4c7df4", marginBottom: "8px" }}>LOAN AGREEMENT</p>
                     <p style={{ fontSize: "13px", color: "#64748b", lineHeight: 1.6, marginBottom: "24px" }}>
-                      This Agreement is solely between Borrower and Lender(s). Sparrow Protocol is NOT a party to this Agreement.
+                      This Agreement is solely between Borrower and Lender(s). Lacus is NOT a party to this Agreement.
                       Effective Date: <span style={{ color: "#94a3b8" }}>{new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
                     </p>
 
@@ -934,8 +934,8 @@ export default function ApplyPage() {
                         { label: "Loan Amount (USDC)", value: form.total_issue_size ? `$${Number(form.total_issue_size).toLocaleString()}` : "—" },
                         { label: "Annual Percentage Rate", value: form.apy ? `${form.apy}%` : "—" },
                         { label: "Maturity", value: form.maturity_months ? `${form.maturity_months} months` : "—" },
-                        { label: "Settlement Currency", value: "USDC (ERC-20)" },
-                        { label: "Governing Network", value: "Base Sepolia Testnet" },
+                        { label: "Settlement Currency", value: "USDC" },
+                        { label: "Governing Network", value: "Solana Devnet" },
                       ].map((row, idx, arr) => (
                         <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", borderBottom: idx < arr.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none", background: idx % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
                           <span style={{ fontSize: "12px", color: "#475569" }}>{row.label}</span>
@@ -951,7 +951,7 @@ export default function ApplyPage() {
                         <path d="M8 5v3.5M8 11h.01" stroke="#4c7df4" strokeWidth="1.4" strokeLinecap="round"/>
                       </svg>
                       <p style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>
-                        By signing below, you confirm that the information above is accurate and agree to be bound by the full terms of the Sparrow Loan Agreement. The signed agreement will be hashed using SHA-256 and stored immutably on Base.
+                        By signing below, you confirm that the information above is accurate and agree to be bound by the full terms of the Lacus Loan Agreement. The signed agreement will be hashed using SHA-256 for on-chain verification.
                       </p>
                     </div>
                   </div>
@@ -1087,7 +1087,7 @@ export default function ApplyPage() {
                       <span className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
                         I have read and agree to the{" "}
                         <a href="/loan-agreement-v3.pdf" target="_blank" rel="noopener noreferrer" style={{ color: "#4c7df4", textDecoration: "underline" }}>
-                          Sparrow Loan Agreement
+                          Lacus Loan Agreement
                         </a>
                         . I confirm that all information provided is accurate. By signing above and checking this box, I am executing this Agreement electronically pursuant to the{" "}
                         <span style={{ color: "rgba(255,255,255,0.6)" }}>Electronic Signatures in Global and National Commerce Act (ESIGN Act), 15 U.S.C. § 7001</span>.
@@ -1170,7 +1170,7 @@ export default function ApplyPage() {
 
                   <div className="rounded-xl px-4 py-3" style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.15)" }}>
                     <p className="text-xs" style={{ color: "rgba(251,191,36,0.8)" }}>
-                      <span className="font-semibold">Note:</span> Submitting will trigger a wallet confirmation to deploy a bond smart contract on Base Sepolia. This action cannot be undone.
+                      <span className="font-semibold">Note:</span> Submitting will trigger a wallet confirmation to deploy a bond smart contract in the current demo environment. This action cannot be undone.
                     </p>
                   </div>
 

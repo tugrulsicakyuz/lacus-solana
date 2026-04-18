@@ -1,8 +1,8 @@
-# Sparrow Smart Contracts - RWA Tokenized Bond Protocol
+# Lacus Smart Contracts - Legacy Credit Prototype
 
 ## Architecture Overview
 
-Sparrow implements a complete on-chain bond issuance and trading system for Real World Assets (RWAs) using a factory pattern with independent ERC20 bond tokens and a limit order book exchange.
+These contracts power the legacy Lacus prototype for on-chain bond issuance and trading. They remain in the repository as the product migrates toward a Solana-native architecture.
 
 ## Contracts
 

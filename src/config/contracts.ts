@@ -1,6 +1,6 @@
 /**
- * Smart Contract Configuration for Sparrow Protocol
- * Deployed on Base Sepolia Testnet
+ * Legacy contract configuration for the Lacus prototype
+ * Retained while the product migrates toward Solana Devnet
  */
 
 // Contract Addresses

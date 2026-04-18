@@ -43,8 +43,9 @@ export default function ChainGuard() {
             animation: "pulse 2s infinite",
           }}
         />
-        Wrong network detected. Sparrow runs on{" "}
-        <strong style={{ color: "#f87171" }}>Base Sepolia</strong>.
+        Wrong network detected. Lacus is migrating to{" "}
+        <strong style={{ color: "#f87171" }}>Solana Devnet</strong>; this demo wallet flow still
+        needs the current test network.
       </span>
       <button
         onClick={() => switchChain({ chainId: baseSepolia.id })}
@@ -62,7 +63,7 @@ export default function ChainGuard() {
           transition: "opacity 0.2s",
         }}
       >
-        {isPending ? "Switching…" : "Switch to Base Sepolia"}
+        {isPending ? "Switching…" : "Switch Network"}
       </button>
     </div>
   );

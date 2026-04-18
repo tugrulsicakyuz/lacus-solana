@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title BondEscrow
- * @notice Atomic escrow for secondary market bond trades on Sparrow Protocol.
+ * @notice Atomic escrow for secondary market bond trades on Lacus.
  * @dev Seller locks bond tokens when creating a listing.
  *      Buyer calls buyListing() — USDC goes to seller and bonds go to buyer
  *      atomically in a single transaction. No trust required between parties.

@@ -201,7 +201,7 @@ export default function DashboardPage() {
         if (!holdingsResult.success) throw new Error("Holdings update failed after 3 retries: " + holdingsResult.error);
         const txResult = await retryInsert("transactions", { wallet_address: walletLower, transaction_type: "CLAIM", bond_symbol: claimingBond, token_amount: 0, usdc_amount: claimedAmount });
         if (!txResult.success) throw new Error("Transaction record failed after 3 retries: " + txResult.error);
-        toast.success(<span>🎉 Yield claimed! <a href={baseScanUrl(claimHash!)} target="_blank" rel="noopener noreferrer" className="underline text-blue-400 hover:text-blue-300">View on BaseScan →</a></span>, { id: "claim-yield" });
+        toast.success(<span>🎉 Yield claimed! <a href={baseScanUrl(claimHash!)} target="_blank" rel="noopener noreferrer" className="underline text-blue-400 hover:text-blue-300">View transaction details →</a></span>, { id: "claim-yield" });
         await fetchPortfolio();
       } catch (error) { console.error("Supabase sync error:", error); toast.error("Database update failed", { id: "claim-yield" }); }
       finally { setClaimingBond(null); resetClaim(); }

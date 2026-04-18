@@ -227,7 +227,7 @@ function PrimaryPageContent() {
         const totalSold = (allHoldings ?? []).reduce((sum: number, h: { balance: number }) => sum + h.balance, 0);
         const newFilledPct = Math.min(Math.round((totalSold / (selectedBond.total_issue_size / selectedBond.price_per_token)) * 100), 100);
         await supabase.from("bonds").update({ filled_percentage: newFilledPct }).eq("symbol", bondSymbol);
-        toast.success(<span>🎉 Swap complete! <a href={baseScanUrl(buyHash!)} target="_blank" rel="noopener noreferrer" className="underline text-blue-400 hover:text-blue-300">View on BaseScan →</a></span>, { id: "swap-tx" });
+        toast.success(<span>🎉 Swap complete! <a href={baseScanUrl(buyHash!)} target="_blank" rel="noopener noreferrer" className="underline text-blue-400 hover:text-blue-300">View transaction details →</a></span>, { id: "swap-tx" });
         refetchUsdcBalance(); refetchAllowance(); setPayAmount(""); setComputedReceive("");
       } catch (error) { console.error("Supabase sync error:", error); toast.error("Database update failed", { id: "swap-tx" }); }
       finally { setIsProcessing(false); resetBuy(); processingLockRef.current = false; setExchangeFlow('idle'); pendingBuyRef.current = null; }
@@ -392,7 +392,7 @@ function PrimaryPageContent() {
                 {[
                   { label: "Unit Price", value: selectedBond ? `${fmtCurrency(selectedBond.price_per_token)} / ${symbol}` : "—" },
                   { label: "Total Cost", value: payAmount && parseFloat(payAmount) > 0 ? fmtCurrency(parseFloat(payAmount)) : "—" },
-                  { label: "Network", value: "Base Sepolia", green: true },
+                  { label: "Network", value: "Solana Devnet", green: true },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between">
                     <span className="flex items-center gap-1" style={{ color: "#4f5f7a" }}>

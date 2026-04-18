@@ -12,37 +12,37 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "Sparrow",
-    template: "%s | Sparrow",
+    default: "Lacus",
+    template: "%s | Lacus",
   },
   description:
-    "Issue, trade, and manage tokenized real-world asset bonds on-chain. Sparrow Protocol brings institutional-grade bond infrastructure to Web3 on Base.",
+    "Lacus is transparent credit infrastructure for on-chain capital markets: issue tokenized bonds, build fixed-income portfolios, and structure auditable credit products for a Solana-native future.",
   keywords: [
     "RWA",
     "tokenized bonds",
     "DeFi",
     "real world assets",
-    "Base blockchain",
+    "Solana",
     "bond protocol",
-    "on-chain bonds",
-    "yield",
-    "institutional DeFi",
+    "on-chain credit",
+    "structured credit",
+    "fixed income",
+    "portfolio construction",
   ],
-  authors: [{ name: "Sparrow Protocol" }],
+  authors: [{ name: "Lacus" }],
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://sparrow-protocol.vercel.app",
-    siteName: "Sparrow",
-    title: "Sparrow",
+    siteName: "Lacus",
+    title: "Lacus",
     description:
-      "Issue, trade, and manage tokenized real-world asset bonds on-chain. Institutional-grade infrastructure on Base.",
+      "Transparent credit infrastructure for tokenized bonds, portfolio construction, and auditable structured products.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sparrow",
+    title: "Lacus",
     description:
-      "Issue, trade, and manage tokenized real-world asset bonds on-chain. Institutional-grade infrastructure on Base.",
+      "Transparent credit infrastructure for tokenized bonds, portfolio construction, and auditable structured products.",
   },
   robots: {
     index: true,
@@ -65,7 +65,7 @@ export default function RootLayout({
           <div className="w-full bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-center text-xs text-amber-400/90">
             <span className="inline-flex items-center gap-2">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-              This application runs on <strong>Base Sepolia testnet</strong>. Do not use real funds or assets.
+              This demo environment uses test-only assets while <strong>Lacus migrates to Solana Devnet</strong>.
             </span>
           </div>
           <ChainGuard />

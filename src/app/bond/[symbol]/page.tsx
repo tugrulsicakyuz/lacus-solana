@@ -376,7 +376,7 @@ function BondDetailContent() {
                 { label: "Total Supply", value: `${totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} tokens` },
                 { label: "Total Value", value: fmtCurrencyCompact(bond.total_issue_size) },
                 { label: "Remaining Supply", value: `${remainingTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} tokens` },
-                { label: "Network", value: "Base Sepolia" },
+                { label: "Network", value: "Solana Devnet" },
               ].map((row, idx, arr) => (
                 <div
                   key={row.label}
@@ -591,7 +591,7 @@ function BondDetailContent() {
               ))}
             </div>
             <p style={{ marginTop: "16px", fontSize: "11px", color: "#8d909f", lineHeight: "1.6" }}>
-              These documents were submitted by the issuer. Sparrow Protocol does not verify the accuracy or authenticity of any uploaded document. Investors are solely responsible for conducting their own due diligence.
+              These documents were submitted by the issuer. Lacus does not verify the accuracy or authenticity of any uploaded document. Investors are solely responsible for conducting their own due diligence.
             </p>
           </div>
         </section>
