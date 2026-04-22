@@ -2,27 +2,27 @@ export default function PrinciplesSection() {
   const principles = [
     {
       num: '01',
-      label: 'Issuance',
-      title: 'Debt, issued at the speed of a block.',
-      desc: "Create custom bond instruments with programmatically enforced terms — coupons, schedules, covenants, call structures. Solana's sub-second finality collapses issuance from quarters into seconds.",
+      label: 'Access',
+      title: 'Debt capital for every company, not just the chosen few.',
+      desc: 'Banks gatekeep. Bond markets price out anyone without institutional backing. Lacus removes both barriers: any company can issue, any investor can participate, on terms enforced by code.',
     },
     {
       num: '02',
       label: 'Transparency',
-      title: 'Every cashflow, auditable in daylight.',
-      desc: 'Positions, exposures, and coupon distributions are legible on-chain in real time. Risk parameters are published alongside the instruments they govern — no opaque tranches, no buried dependencies.',
+      title: 'Every bond. Every cashflow. No black boxes.',
+      desc: 'CDOs imploded in 2008 because nobody tracked what was inside them. On Lacus, every position, covenant, and coupon distribution is readable on-chain before you invest, not after.',
     },
     {
       num: '03',
       label: 'Custody',
-      title: 'Governed by contracts, not counterparties.',
-      desc: 'Assets remain under audited smart contracts. No rehypothecation, no trustee, no bilateral exposure. The protocol is the settlement layer; you are the sole custodian of your position.',
+      title: 'Your position. Your keys. No counterparty holding either.',
+      desc: 'We never touch the money. Assets settle directly through audited smart contracts. No rehypothecation, no trustee, no bilateral exposure. The protocol mediates; you own.',
     },
     {
       num: '04',
-      label: 'Exit',
-      title: 'Liquidity, without forfeiting yield.',
-      desc: 'A continuous peer-to-peer order book gives bondholders a liquid exit route at any point before maturity. Sell the duration, keep the accrual; the book clears block by block.',
+      label: 'Liquidity',
+      title: 'Exit when you want. Keep what you earned.',
+      desc: 'A live P2P order book lets bondholders sell before maturity. Settlement is instant: no T+2, no value date delays. Duration is tradeable; yield is yours.',
     },
   ];
 
@@ -32,14 +32,14 @@ export default function PrinciplesSection() {
         <div className="col-span-12 md:col-span-7 flex flex-col gap-7 reveal">
           <div className="eyebrow eyebrow-rule">Principles</div>
           <h2 className="font-display text-[var(--ink)] text-[3rem] md:text-[4rem] leading-[1.02] tracking-tight">
-            A protocol is the sum of
+            The 2008 crisis didn&apos;t happen
             <br />
-            <span className="italic grad-ink-interactive cursor-pointer">its constraints.</span>
+            <span className="italic grad-ink-interactive cursor-pointer">because of risk.</span>
           </h2>
         </div>
         <div className="col-span-12 md:col-span-5 flex items-end reveal reveal-d1">
           <p className="text-[var(--ink2)] text-[1.05rem] leading-[1.7] max-w-[40ch]">
-            Lacus makes four of them explicit — so that issuance, exposure, settlement, and exit can all be reasoned about from first principles.
+            It happened because of opacity. Nobody could see inside the box. We put the box on-chain.
           </p>
         </div>
       </div>

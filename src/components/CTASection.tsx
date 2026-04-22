@@ -81,13 +81,14 @@ export default function CTASection() {
         </div>
 
         <h2 className="font-display text-[var(--ink)] text-[3.6rem] md:text-[5.2rem] leading-[0.98] tracking-tight max-w-[22ch]">
-          Build in a market that
-          <span className="italic grad-ink-interactive cursor-pointer"> reads itself.</span>
+          Fixed income.
+          <span className="italic grad-ink-interactive cursor-pointer"> Open, finally.</span>
         </h2>
 
         <p className="mt-8 text-[var(--ink2)] text-[1.05rem] leading-[1.65] max-w-[52ch]">
-          Lacus is open to issuers, allocators, and builders. Start with the docs,
-          or plug in through the SDK.
+          Lacus is infrastructure for debt markets that work the way they should:
+          transparent, accessible, and auditable by anyone. Whether you&apos;re
+          raising or deploying capital.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">

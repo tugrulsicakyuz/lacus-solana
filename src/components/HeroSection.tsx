@@ -147,10 +147,10 @@ export default function HeroSection() {
             className="font-display text-[var(--ink)] leading-[0.96] tracking-tight reveal reveal-d1"
             style={{ fontSize: "clamp(2.6rem, 3.8vw, 4.4rem)" }}
           >
-            Raise debt without
+            Raise capital.
             <br />
             <span className="italic grad-ink-interactive cursor-pointer">
-              the middlemen.
+              Without asking permission.
             </span>
           </h1>
 
@@ -159,15 +159,16 @@ export default function HeroSection() {
             className="mt-8 text-[1rem] leading-[1.7] text-[var(--ink2)] reveal reveal-d2"
             style={{ maxWidth: "36ch" }}
           >
-            Tokenize bonds, BNPL receivables, and structured credit on Solana.
-            Global investor access, transparent covenants, on-chain repayments.
+            Banks turn you down. Bond markets demand months of paperwork and a
+            team of lawyers. Lacus lets any company issue a bond on-chain, in
+            minutes, on terms you define.
           </p>
 
           {/* Tags */}
           <div
             className="mt-6 flex flex-wrap gap-2 justify-end reveal reveal-d2"
           >
-            {["Bond Issuance", "Structured Credit", "KYC Gated"].map((t) => (
+            {["Bond Issuance", "Structured Credit", "KYC Verified"].map((t) => (
               <span
                 key={t}
                 style={{
@@ -275,7 +276,7 @@ export default function HeroSection() {
             className="eyebrow eyebrow-rule mb-10 reveal"
             style={{ color: "var(--lilac)" }}
           >
-            For Retail Investors
+            For Investors
           </div>
 
           {/* Heading */}
@@ -283,10 +284,10 @@ export default function HeroSection() {
             className="font-display text-[var(--ink)] leading-[0.96] tracking-tight reveal reveal-d1"
             style={{ fontSize: "clamp(2.6rem, 3.8vw, 4.4rem)" }}
           >
-            Fixed income,
+            The bond market was never
             <br />
             <span className="italic grad-ink-interactive cursor-pointer">
-              finally within reach.
+              built for you.
             </span>
           </h2>
 
@@ -295,14 +296,14 @@ export default function HeroSection() {
             className="mt-8 text-[1rem] leading-[1.7] text-[var(--ink2)] reveal reveal-d2"
             style={{ maxWidth: "36ch" }}
           >
-            Access real fixed-income markets historically closed to retail.
-            Build a transparent, inspectable portfolio — and exit via P2P any
-            time.
+            Until now. Mix high-yield startup bonds with lower-risk instruments.
+            Build a portfolio you can actually see inside: every position, every
+            cashflow, auditable on-chain.
           </p>
 
           {/* Tags */}
           <div className="mt-6 flex flex-wrap gap-2 reveal reveal-d2">
-            {["Transparent Portfolios", "P2P Secondary", "Solana Native"].map(
+            {["Custom Portfolios", "P2P Secondary", "Instant Settlement"].map(
               (t) => (
                 <span
                   key={t}
