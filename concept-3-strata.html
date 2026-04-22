@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lacus — Concept 3: Strata</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --a0: #8BE4F8;   /* lightest aqua */
+  --a1: #5CC6F0;
+  --a2: #3AAAE0;
+  --i0: #5B6BE8;   /* indigo */
+  --v0: #7B5FDC;   /* violet */
+  --l0: #A882EA;   /* lilac */
+  --l1: #C8A8F6;   /* soft petal */
+  --bg: #050610;
+  --s1: #0A0C1E;   /* slab 1 */
+  --s2: #0D0E22;   /* slab 2 */
+  --s3: #08091A;   /* slab 3 */
+  --text: #E0E4FA;
+  --muted: rgba(224,228,250,0.45);
+  --faint: rgba(224,228,250,0.08);
+  --border: rgba(255,255,255,0.065);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ─ NAV ─ */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 60px;
+  mix-blend-mode: normal;
+}
+.nav-bg {
+  position: absolute; inset: 0;
+  background: rgba(5,6,16,0.75);
+  backdrop-filter: blur(20px);
+  z-index: -1;
+}
+.logo {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900; font-size: 17px; letter-spacing: 0.05em;
+  color: transparent;
+  background: linear-gradient(90deg, var(--a0), var(--l0));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.nav-links { display: flex; gap: 32px; }
+.nav-links a { font-size: 12px; color: var(--muted); text-decoration: none; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; transition: color 0.2s; }
+.nav-links a:hover { color: var(--text); }
+.nav-pill {
+  padding: 9px 22px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--i0), var(--l0));
+  font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif;
+  color: #fff; border: none; cursor: pointer; letter-spacing: 0.05em; text-transform: uppercase;
+  box-shadow: 0 0 28px rgba(123,95,220,0.35);
+  transition: all 0.2s;
+}
+.nav-pill:hover { box-shadow: 0 0 40px rgba(123,95,220,0.55); transform: translateY(-1px); }
+
+/* ─ SLAB SYSTEM ─ */
+/* Every section is a "slab" — full-width panel with a slight clip-path skew */
+.slab {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ─ HERO SLAB ─ */
+.slab-hero {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex; align-items: center;
+  clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+  padding-bottom: 80px;
+}
+/* deep atmospheric layer */
+.hero-atmo {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+}
+/* grid lines background */
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(91,107,232,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(91,107,232,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at 40% 50%, black 30%, transparent 75%);
+}
+/* large ambient glow */
+.hero-glow-1 {
+  position: absolute;
+  top: 20%; left: 15%;
+  width: 700px; height: 700px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(90,198,240,0.1) 0%, transparent 65%);
+  animation: glow-drift 9s ease-in-out infinite;
+}
+.hero-glow-2 {
+  position: absolute;
+  top: 30%; right: 5%;
+  width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(168,130,234,0.1) 0%, transparent 65%);
+  animation: glow-drift 9s ease-in-out infinite reverse;
+}
+@keyframes glow-drift {
+  0%,100%{transform:translate(0,0)} 50%{transform:translate(20px, -20px)}
+}
+
+/* HERO LAYOUT: asymmetric — big headline left, floating slab right */
+.hero-inner {
+  position: relative; z-index: 2;
+  max-width: 1280px; margin: 0 auto;
+  width: 100%; padding: 120px 60px 60px;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 60px;
+  align-items: center;
+}
+.hero-text {}
+.hero-eyebrow {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 24px;
+}
+.eyebrow-line {
+  width: 40px; height: 2px;
+  background: linear-gradient(90deg, var(--a0), var(--a2));
+}
+.eyebrow-text {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--a1);
+}
+
+.hero-h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(44px, 6.5vw, 88px);
+  font-weight: 900; line-height: 0.95;
+  letter-spacing: -3px;
+  margin-bottom: 28px;
+}
+.h1-line1 { display: block; color: #fff; }
+.h1-line2 {
+  display: block;
+  background: linear-gradient(90deg, var(--a1) 0%, var(--i0) 40%, var(--l0) 80%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.h1-line3 { display: block; color: rgba(255,255,255,0.25); }
+
+.hero-descriptor {
+  font-size: 15px; color: var(--muted); line-height: 1.75;
+  max-width: 420px; margin-bottom: 36px;
+}
+.hero-descriptor strong { color: rgba(224,228,250,0.8); font-weight: 500; }
+
+.hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn-main {
+  padding: 14px 32px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--a2), var(--i0));
+  font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+  color: #fff; border: none; cursor: pointer; letter-spacing: 0.04em; text-transform: uppercase;
+  box-shadow: 0 0 30px rgba(58,170,224,0.3);
+  transition: all 0.25s;
+}
+.btn-main:hover { transform: translateY(-2px); box-shadow: 0 6px 40px rgba(58,170,224,0.4); }
+.btn-outline {
+  padding: 13px 28px; border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.02);
+  font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif;
+  color: var(--muted); cursor: pointer; letter-spacing: 0.04em; text-transform: uppercase;
+  transition: all 0.2s;
+}
+.btn-outline:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+/* ─ HERO RIGHT: stacked info slabs ─ */
+.hero-slabs { display: flex; flex-direction: column; gap: 10px; }
+.info-slab {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex; align-items: center; gap: 16px;
+  transition: all 0.3s;
+  position: relative; overflow: hidden;
+}
+.info-slab::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  opacity: 0; transition: opacity 0.3s;
+}
+.info-slab.ac::before { background: linear-gradient(180deg, var(--a0), var(--a2)); }
+.info-slab.vc::before { background: linear-gradient(180deg, var(--v0), var(--l0)); }
+.info-slab:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+.info-slab:hover::before { opacity: 1; }
+
+.slab-ico {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.slab-ico.a { background: rgba(139,228,248,0.1); }
+.slab-ico.v { background: rgba(168,130,234,0.1); }
+.slab-text h4 { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+.slab-text p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+.slab-yield {
+  margin-left: auto; flex-shrink: 0; text-align: right;
+}
+.yield-num {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 20px; font-weight: 700;
+  background: linear-gradient(90deg, var(--a0), var(--i0));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.info-slab.vc .yield-num {
+  background: linear-gradient(90deg, var(--v0), var(--l1));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.yield-sub { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* live ticker */
+.live-ticker {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(139,228,248,0.04);
+  border: 1px solid rgba(139,228,248,0.12);
+  border-radius: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ticker-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--a0); box-shadow: 0 0 8px var(--a0); animation: tdot 1.8s ease-in-out infinite; }
+@keyframes tdot { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.ticker-text { font-family: 'Inter', monospace; font-size: 11px; color: var(--a1); }
+.ticker-val { margin-left: auto; font-family: 'Unbounded', sans-serif; font-size: 12px; font-weight: 700; color: #6EFCB8; }
+
+/* ─ SLAB 2: HOW (skewed top) ─ */
+.slab-how {
+  background: var(--s1);
+  margin-top: -80px;
+  clip-path: polygon(0 8%, 100% 0, 100% 92%, 0 100%);
+  padding: 160px 0;
+  position: relative; z-index: 1;
+}
+.how-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 60px;
+}
+.slab-kicker {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--a1); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.slab-kicker::before { content: ''; display: block; width: 32px; height: 2px; background: var(--a1); }
+.slab-kicker.p { color: var(--l0); }
+.slab-kicker.p::before { background: var(--l0); }
+
+.slab-h2 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 900; letter-spacing: -2px; line-height: 1.0;
+  color: #fff; margin-bottom: 16px;
+}
+.slab-sub {
+  font-size: 15px; color: var(--muted); line-height: 1.7;
+  max-width: 480px; margin-bottom: 60px;
+}
+
+/* four stacked "credit layer" cards — each offset */
+.layers {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  position: relative;
+}
+.layers::before {
+  content: '';
+  position: absolute; top: 50%; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139,228,248,0.15), rgba(168,130,234,0.15), transparent);
+  pointer-events: none;
+}
+.layer-card {
+  padding: 32px 24px 28px;
+  border: 1px solid var(--border);
+  background: rgba(5,6,16,0.5);
+  position: relative;
+  transition: transform 0.3s, border-color 0.3s;
+  overflow: hidden;
+}
+.layer-card:first-child { border-radius: 16px 0 0 16px; }
+.layer-card:last-child  { border-radius: 0 16px 16px 0; }
+.layer-card + .layer-card { border-left: none; }
+
+/* staggered vertical offset */
+.layer-card:nth-child(1) { transform: translateY(0); }
+.layer-card:nth-child(2) { transform: translateY(12px); }
+.layer-card:nth-child(3) { transform: translateY(24px); }
+.layer-card:nth-child(4) { transform: translateY(36px); }
+
+.layer-card:hover { border-color: rgba(139,228,248,0.18); transform: translateY(-6px) !important; }
+
+.layer-n {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 42px; font-weight: 900; line-height: 1;
+  background: linear-gradient(135deg, rgba(139,228,248,0.15), rgba(168,130,234,0.08));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 16px;
+}
+.layer-h { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 8px; }
+.layer-p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.layer-tag {
+  display: inline-block; margin-top: 14px;
+  padding: 4px 10px; border-radius: 4px;
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+}
+.layer-tag.a { background: rgba(139,228,248,0.1); color: var(--a0); }
+.layer-tag.m { background: rgba(91,107,232,0.1); color: #8899ff; }
+.layer-tag.v { background: rgba(168,130,234,0.1); color: var(--l0); }
+.layer-tag.g { background: rgba(110,252,184,0.08); color: #6EFCB8; }
+
+/* ─ SLAB 3: WHO ─ (reverse skew) */
+.slab-who {
+  background: var(--bg);
+  margin-top: -100px;
+  clip-path: polygon(0 0, 100% 8%, 100% 100%, 0 92%);
+  padding: 180px 0;
+  position: relative; z-index: 2;
+}
+.who-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 60px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+}
+.who-visual {
+  position: relative; height: 400px;
+}
+/* stacked visual cards */
+.vis-card {
+  position: absolute;
+  background: rgba(10,12,30,0.9);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 22px;
+  backdrop-filter: blur(12px);
+  min-width: 220px;
+}
+.vis-card.vc1 { top: 0; left: 0; box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
+.vis-card.vc2 { top: 60px; left: 60px; z-index: 1; border-color: rgba(139,228,248,0.12); box-shadow: 0 8px 50px rgba(0,0,0,0.6); }
+.vis-card.vc3 { bottom: 40px; right: 0; z-index: 2; border-color: rgba(168,130,234,0.12); box-shadow: 0 8px 50px rgba(0,0,0,0.6); }
+.vc-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+.vc-main { font-family: 'Unbounded', sans-serif; font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.vc-main.a { background: linear-gradient(90deg, var(--a0), var(--a2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.vc-main.v { background: linear-gradient(90deg, var(--v0), var(--l1)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.vc-sub { font-size: 11px; color: var(--muted); }
+.vc-bar { margin-top: 12px; height: 4px; border-radius: 2px; background: var(--faint); overflow: hidden; }
+.vc-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--a0), var(--i0)); }
+.vc-fill.p { background: linear-gradient(90deg, var(--v0), var(--l0)); }
+
+.who-text {}
+.who-items { display: flex; flex-direction: column; gap: 24px; margin-top: 40px; }
+.who-item { display: flex; gap: 16px; }
+.wi-marker {
+  width: 3px; border-radius: 2px; flex-shrink: 0;
+  background: linear-gradient(180deg, var(--a0), var(--i0));
+  min-height: 60px;
+}
+.wi-marker.p { background: linear-gradient(180deg, var(--v0), var(--l0)); }
+.wi-content h4 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+.wi-content p  { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+/* ─ SLAB 4: METRICS ─ */
+.slab-metrics {
+  background: var(--s2);
+  margin-top: -100px;
+  clip-path: polygon(0 8%, 100% 0, 100% 100%, 0 100%);
+  padding: 160px 0 100px;
+  position: relative; z-index: 1;
+}
+.metrics-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 60px;
+}
+.metrics-top {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 56px;
+}
+.metrics-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(28px, 3.5vw, 44px); font-weight: 900;
+  letter-spacing: -1.5px; color: #fff; max-width: 440px; line-height: 1.05;
+}
+.metrics-title span {
+  background: linear-gradient(90deg, var(--a1), var(--l0));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.metrics-cta-wrap { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+.mc-note { font-size: 12px; color: var(--muted); text-align: right; }
+
+.metrics-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+}
+.met-cell {
+  padding: 36px 28px;
+  position: relative; overflow: hidden;
+  transition: background 0.25s;
+}
+.met-cell:hover { background: rgba(255,255,255,0.02); }
+.met-cell + .met-cell { border-left: 1px solid var(--border); }
+.met-cell::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  opacity: 0; transition: opacity 0.3s;
+}
+.met-cell:nth-child(1)::after { background: linear-gradient(90deg, var(--a0), var(--a2)); }
+.met-cell:nth-child(2)::after { background: linear-gradient(90deg, var(--i0), var(--v0)); }
+.met-cell:nth-child(3)::after { background: linear-gradient(90deg, var(--v0), var(--l0)); }
+.met-cell:nth-child(4)::after { background: linear-gradient(90deg, var(--l0), var(--l1)); }
+.met-cell:hover::after { opacity: 1; }
+
+.met-val {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 36px; font-weight: 900; letter-spacing: -1.5px;
+  line-height: 1; margin-bottom: 8px;
+}
+.met-val.a0 { color: var(--a0); }
+.met-val.i0 { color: var(--i0); }
+.met-val.v0 { color: var(--v0); }
+.met-val.l0 { color: var(--l0); }
+.met-label { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+/* ─ FINAL CTA SLAB ─ */
+.slab-cta {
+  background: var(--bg);
+  clip-path: polygon(0 0, 100% 8%, 100% 100%, 0 100%);
+  padding: 160px 0 80px;
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+.cta-bg-glow {
+  position: absolute; top: 30%; left: 50%;
+  transform: translateX(-50%);
+  width: 800px; height: 600px;
+  background: radial-gradient(ellipse,
+    rgba(91,107,232,0.1) 0%,
+    rgba(168,130,234,0.07) 40%,
+    transparent 70%);
+  pointer-events: none;
+  animation: cta-glow-pulse 6s ease-in-out infinite;
+}
+@keyframes cta-glow-pulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+
+.cta-inner { position: relative; z-index: 1; padding: 0 60px; }
+.cta-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 4px;
+  border: 1px solid rgba(139,228,248,0.2); background: rgba(139,228,248,0.05);
+  font-family: 'Unbounded', sans-serif;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--a1); margin-bottom: 32px;
+}
+.cta-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--a1); box-shadow: 0 0 8px var(--a1); animation: cdot 2s ease-in-out infinite; }
+@keyframes cdot { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.cta-h {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(36px, 5.5vw, 74px); font-weight: 900;
+  letter-spacing: -3px; line-height: 0.95;
+  margin-bottom: 24px;
+}
+.cta-h .w1 { display: block; color: #fff; }
+.cta-h .w2 {
+  display: block;
+  background: linear-gradient(90deg, var(--a1) 0%, var(--i0) 35%, var(--l0) 70%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.cta-p { font-size: 15px; color: var(--muted); max-width: 480px; margin: 0 auto 40px; line-height: 1.7; }
+
+.cta-row { display: flex; justify-content: center; gap: 12px; }
+
+/* ─ FOOTER ─ */
+footer {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 28px 60px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.f-brand {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900; font-size: 14px; letter-spacing: 0.06em;
+  background: linear-gradient(90deg, var(--a0), var(--l0));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.f-meta { font-size: 11px; color: rgba(224,228,250,0.25); }
+.f-links { display: flex; gap: 20px; }
+.f-links a { font-size: 12px; color: rgba(224,228,250,0.3); text-decoration: none; transition: color 0.2s; }
+.f-links a:hover { color: rgba(224,228,250,0.6); }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(139,228,248,0.2); border-radius: 2px; }
+
+@media (max-width: 960px) {
+  nav { padding: 16px 24px; }
+  .nav-links { display: none; }
+  .hero-inner { grid-template-columns: 1fr; padding: 120px 24px 60px; }
+  .layers { grid-template-columns: 1fr 1fr; }
+  .layer-card:nth-child(n) { transform: none !important; }
+  .layer-card:first-child { border-radius: 16px 0 0 0; }
+  .layer-card:last-child  { border-radius: 0 0 16px 0; }
+  .layer-card:nth-child(2) { border-left: none; border-radius: 0 16px 0 0; }
+  .layer-card:nth-child(3) { border-radius: 0 0 0 16px; border-left: none; border-top: none; }
+  .layer-card:nth-child(4) { border-left: none; border-top: none; }
+  .who-inner { grid-template-columns: 1fr; padding: 0 24px; }
+  .who-visual { height: 280px; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  .met-cell + .met-cell { border-left: none; }
+  .met-cell:nth-child(odd) { border-right: 1px solid var(--border); }
+  .met-cell:nth-child(n+3) { border-top: 1px solid var(--border); }
+  .how-inner, .metrics-inner { padding: 0 24px; }
+  .metrics-top { flex-direction: column; align-items: flex-start; gap: 24px; }
+  .metrics-cta-wrap { align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-bg"></div>
+  <div class="logo">LACUS</div>
+  <div class="nav-links">
+    <a href="#">Protocol</a>
+    <a href="#">Markets</a>
+    <a href="#">Issuers</a>
+    <a href="#">Investors</a>
+  </div>
+  <button class="nav-pill">Enter App</button>
+</nav>
+
+<!-- ─ HERO SLAB ─ -->
+<div class="slab slab-hero">
+  <div class="hero-atmo">
+    <div class="hero-grid"></div>
+    <div class="hero-glow-1"></div>
+    <div class="hero-glow-2"></div>
+  </div>
+
+  <div class="hero-inner">
+    <!-- LEFT TEXT -->
+    <div class="hero-text">
+      <div class="hero-eyebrow">
+        <div class="eyebrow-line"></div>
+        <div class="eyebrow-text">Solana — Open Credit Protocol</div>
+      </div>
+
+      <h1 class="hero-h1">
+        <span class="h1-line1">Fixed</span>
+        <span class="h1-line2">Income.</span>
+        <span class="h1-line3">Unchained.</span>
+      </h1>
+
+      <p class="hero-descriptor">
+        <strong>Companies issue bonds on-chain.</strong> Retail investors earn real fixed income. Structured credit stays transparent — always. <strong>Non-custodial. Solana-native. Open.</strong>
+      </p>
+
+      <div class="hero-btns">
+        <button class="btn-main">Explore Markets</button>
+        <button class="btn-outline">Issue Debt →</button>
+      </div>
+    </div>
+
+    <!-- RIGHT INFO SLABS -->
+    <div class="hero-slabs">
+      <div class="info-slab ac">
+        <div class="slab-ico a">📈</div>
+        <div class="slab-text">
+          <h4>Bond Issuance</h4>
+          <p>Tokenize debt on Solana in hours</p>
+        </div>
+        <div class="slab-yield">
+          <div class="yield-num">$14M+</div>
+          <div class="yield-sub">Deployed</div>
+        </div>
+      </div>
+
+      <div class="info-slab vc">
+        <div class="slab-ico v">💎</div>
+        <div class="slab-text">
+          <h4>Fixed Income Access</h4>
+          <p>6.2–11% APY, fully on-chain</p>
+        </div>
+        <div class="slab-yield">
+          <div class="yield-num">38</div>
+          <div class="yield-sub">Open Offers</div>
+        </div>
+      </div>
+
+      <div class="info-slab ac">
+        <div class="slab-ico a">⚡</div>
+        <div class="slab-text">
+          <h4>P2P Secondary Market</h4>
+          <p>Exit positions. Sub-second settlement.</p>
+        </div>
+        <div class="slab-yield">
+          <div class="yield-num">&lt;1s</div>
+          <div class="yield-sub">Settlement</div>
+        </div>
+      </div>
+
+      <div class="live-ticker">
+        <div class="ticker-dot"></div>
+        <div class="ticker-text">Lacus · Solana Mainnet · Live</div>
+        <div class="ticker-val">+$240K today</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─ HOW SLAB ─ -->
+<div class="slab slab-how">
+  <div class="how-inner">
+    <div class="slab-kicker">The Protocol</div>
+    <h2 class="slab-h2">Credit in layers.<br>Transparent by design.</h2>
+    <p class="slab-sub">Every credit instrument on Lacus is structured, traceable, and inspectable — no black boxes, ever.</p>
+
+    <div class="layers">
+      <div class="layer-card">
+        <div class="layer-n">01</div>
+        <div class="layer-h">Issue</div>
+        <div class="layer-p">Companies tokenize bonds, BNPL receivables, mortgages, and structured credit — with KYC, covenants, and financials on-chain.</div>
+        <span class="layer-tag a">Issuers</span>
+      </div>
+      <div class="layer-card">
+        <div class="layer-n">02</div>
+        <div class="layer-h">Structure</div>
+        <div class="layer-p">Lacus orchestrates tranching and terms. Smart contracts enforce every covenant. Nothing goes off-chain, nothing becomes opaque.</div>
+        <span class="layer-tag m">Protocol</span>
+      </div>
+      <div class="layer-card">
+        <div class="layer-n">03</div>
+        <div class="layer-h">Invest</div>
+        <div class="layer-p">Retail investors browse verified offerings, build portfolios with full transparency, and earn coupon yields paid in real time on Solana.</div>
+        <span class="layer-tag v">Investors</span>
+      </div>
+      <div class="layer-card">
+        <div class="layer-n">04</div>
+        <div class="layer-h">Trade</div>
+        <div class="layer-p">Bond positions are liquid. Trade peer-to-peer on the secondary market with instant settlement. No queues, no counterparty risk.</div>
+        <span class="layer-tag g">P2P Market</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─ WHO SLAB ─ -->
+<div class="slab slab-who">
+  <div class="who-inner">
+    <!-- Visual composition -->
+    <div class="who-visual">
+      <div class="vis-card vc1">
+        <div class="vc-label">Meridian Labs · Series A</div>
+        <div class="vc-main a">$2.0M</div>
+        <div class="vc-sub">Bond · 18 months · 9.2% APY</div>
+        <div class="vc-bar"><div class="vc-fill" style="width:70%"></div></div>
+      </div>
+
+      <div class="vis-card vc2">
+        <div class="vc-label">Your Portfolio</div>
+        <div class="vc-main v">$14,800</div>
+        <div class="vc-sub">3 instruments · Avg 8.4% yield</div>
+        <div class="vc-bar"><div class="vc-fill p" style="width:55%"></div></div>
+      </div>
+
+      <div class="vis-card vc3">
+        <div class="vc-label">Settlement</div>
+        <div class="vc-main" style="color:#6EFCB8;font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;">Confirmed</div>
+        <div class="vc-sub">P2P trade · 287ms · Solana</div>
+      </div>
+    </div>
+
+    <!-- Text -->
+    <div class="who-text">
+      <div class="slab-kicker p">Who It's For</div>
+      <h2 class="slab-h2" style="font-size: clamp(28px,3.5vw,44px);">Built for both sides<br>of capital.</h2>
+      <div class="who-items">
+        <div class="who-item">
+          <div class="wi-marker"></div>
+          <div class="wi-content">
+            <h4>Companies &amp; Startups</h4>
+            <p>Raise debt capital globally — without banks, without brokers. Define your terms, get on-chain, and repay transparently. KYC-gated to protect all parties.</p>
+          </div>
+        </div>
+        <div class="who-item">
+          <div class="wi-marker p"></div>
+          <div class="wi-content">
+            <h4>Retail Investors</h4>
+            <p>Access fixed-income opportunities previously locked in institutional markets. Build a diversified bond portfolio, inspect every position, and exit via P2P anytime.</p>
+          </div>
+        </div>
+        <div class="who-item">
+          <div class="wi-marker" style="background:linear-gradient(180deg,var(--i0),var(--v0))"></div>
+          <div class="wi-content">
+            <h4>The Protocol</h4>
+            <p>Lacus routes capital, enforces structure, and settles trades — but never takes custody of funds. Non-custodial by architecture, not by promise.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─ METRICS SLAB ─ -->
+<div class="slab slab-metrics">
+  <div class="metrics-inner">
+    <div class="metrics-top">
+      <div class="metrics-title">The numbers speak <span>for themselves.</span></div>
+      <div class="metrics-cta-wrap">
+        <button class="btn-main" style="align-self:flex-end;">Explore Markets</button>
+        <div class="mc-note">Non-custodial · On Solana</div>
+      </div>
+    </div>
+    <div class="metrics-grid">
+      <div class="met-cell">
+        <div class="met-val a0">$14M+</div>
+        <div class="met-label">Total capital deployed across all active bond instruments</div>
+      </div>
+      <div class="met-cell">
+        <div class="met-val i0">6.2–11%</div>
+        <div class="met-label">Annual yield range across current open offerings</div>
+      </div>
+      <div class="met-cell">
+        <div class="met-val v0">&lt;400ms</div>
+        <div class="met-label">P2P secondary market settlement time on Solana</div>
+      </div>
+      <div class="met-cell">
+        <div class="met-val l0">100%</div>
+        <div class="met-label">On-chain positions — every instrument fully inspectable</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─ CTA SLAB ─ -->
+<div class="slab slab-cta">
+  <div class="cta-bg-glow"></div>
+  <div class="cta-inner">
+    <div class="cta-badge">
+      <div class="cta-badge-dot"></div>
+      Built on Solana
+    </div>
+    <h2 class="cta-h">
+      <span class="w1">Credit markets.</span>
+      <span class="w2">Open now.</span>
+    </h2>
+    <p class="cta-p">Lacus is the open protocol for bond tokenization and transparent structured credit on Solana. Non-custodial. Inspectable. Live.</p>
+    <div class="cta-row">
+      <button class="btn-main">Launch App</button>
+      <button class="btn-outline">Read the Docs →</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-brand">LACUS</div>
+  <div class="f-meta">Open credit protocol on Solana · Exploration concept only</div>
+  <div class="f-links">
+    <a href="#">Twitter</a>
+    <a href="#">Discord</a>
+    <a href="#">GitHub</a>
+    <a href="#">Docs</a>
+  </div>
+</footer>
+
+<script>
+// Intersection observer for reveal animations
+const reveals = document.querySelectorAll('.layer-card, .met-cell, .who-item, .info-slab');
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = e.target.classList.contains('layer-card')
+        ? `translateY(${['0','12px','24px','36px'][Array.from(e.target.parentNode.children).indexOf(e.target)]})`
+        : 'translateY(0)';
+    }
+  });
+}, { threshold: 0.15 });
+
+reveals.forEach((el, i) => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(24px)';
+  el.style.transition = `opacity 0.6s ease ${i * 0.05}s, transform 0.6s ease ${i * 0.05}s`;
+  revealObs.observe(el);
+});
+
+// Subtle mouse-track on hero glows
+document.addEventListener('mousemove', e => {
+  const x = (e.clientX / window.innerWidth - 0.5);
+  const y = (e.clientY / window.innerHeight - 0.5);
+  const g1 = document.querySelector('.hero-glow-1');
+  const g2 = document.querySelector('.hero-glow-2');
+  if (g1) g1.style.transform = `translate(${x * 30}px, ${y * 20}px)`;
+  if (g2) g2.style.transform = `translate(${-x * 20}px, ${-y * 15}px)`;
+});
+</script>
+</body>
+</html>

@@ -237,10 +237,10 @@ function PrimaryPageContent() {
 
   if (loading) {
     return (
-      <section className="pb-4 pt-16 sm:pt-20" style={{ background: "#05080f" }}>
-        <div className="flex flex-col items-center justify-center py-32">
-          <Loader2 className="h-7 w-7 animate-spin" style={{ color: "#4c7df4" }} />
-          <p className="mt-3 text-sm" style={{ color: "#4f5f7a" }}>Loading exchange data…</p>
+      <section className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-7 w-7 animate-spin text-[var(--lilac)]" />
+          <p className="text-sm text-[var(--ink3)]">Loading exchange data…</p>
         </div>
       </section>
     );
@@ -249,26 +249,36 @@ function PrimaryPageContent() {
   return (
     <>
       {/* Header */}
-      <section className="overflow-hidden pb-6 pt-16 sm:pt-20" style={{ background: "#05080f" }}>
+      <section className="pt-14 pb-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl" style={{ color: "#e8ecf4" }}>Primary Market</h1>
-          <p className="mt-1 text-sm" style={{ color: "#8896b3" }}>Purchase tokenized bonds directly from issuers.</p>
+          <div className="eyebrow eyebrow-rule mb-5 reveal" style={{ color: "var(--aqua-bright)" }}>
+            Primary Market
+          </div>
+          <h1
+            className="font-display text-[var(--ink)] leading-[0.97] tracking-tight reveal reveal-d1"
+            style={{ fontSize: "clamp(2rem, 3vw, 3.4rem)" }}
+          >
+            Buy bonds
+            <span className="italic grad-ink-interactive cursor-pointer"> directly.</span>
+          </h1>
+          <p className="mt-4 text-[var(--ink3)] text-[0.95rem] leading-[1.65] max-w-[46ch] reveal reveal-d2">
+            Purchase tokenized bonds at issuance price — USDC in, yield-bearing tokens out.
+          </p>
         </div>
       </section>
 
       {/* Main layout */}
-      <section className="py-8 sm:py-12" style={{ background: "#05080f" }}>
+      <section className="pb-16">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:px-8">
 
           {/* Left column */}
-          <div className="w-full lg:w-[55%] space-y-4">
+          <div className="w-full lg:w-[55%] space-y-4 reveal reveal-d1">
             {fetchError ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-                <p className="text-sm mb-3" style={{ color: "#f87171" }}>{fetchError}</p>
+              <div className="flex flex-col items-center justify-center py-16 text-center px-4 gap-3">
+                <p className="text-sm text-[var(--coral)]">{fetchError}</p>
                 <button
                   onClick={() => fetchBonds()}
-                  className="rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-80"
-                  style={{ background: "rgba(76,125,244,0.12)", color: "#8eb4fb", border: "1px solid rgba(76,125,244,0.2)" }}
+                  className="btn-ghost px-5 py-2.5 text-sm"
                 >
                   Try again
                 </button>
@@ -279,25 +289,21 @@ function PrimaryPageContent() {
             <div className="relative">
               <button
                 onClick={() => setPairDropdownOpen(!pairDropdownOpen)}
-                className="flex w-full cursor-pointer items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-colors"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e8ecf4" }}
+                className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium bg-[var(--surface)] border border-[var(--rule)] text-[var(--ink)] hover:border-[var(--lilac)] transition-colors"
               >
                 {selectedBond ? `${selectedBond.issuer_name} (${selectedBond.symbol}) / USDC` : "Select a bond"}
-                <ChevronDown className={`ml-2 h-4 w-4 transition-transform duration-200 ${pairDropdownOpen ? "rotate-180" : ""}`} style={{ color: "#8896b3" }} />
+                <ChevronDown className={`ml-2 h-4 w-4 text-[var(--ink3)] transition-transform duration-200 ${pairDropdownOpen ? "rotate-180" : ""}`} />
               </button>
               {pairDropdownOpen && (
-                <div className="absolute left-0 z-20 mt-1 w-full overflow-hidden rounded-xl shadow-2xl" style={{ background: "#0c1018", border: "1px solid rgba(255,255,255,0.10)" }}>
+                <div className="absolute left-0 z-20 mt-1 w-full overflow-hidden rounded-xl shadow-2xl bg-[var(--deep)] border border-[var(--rule)]">
                   {bonds.map((bond) => (
                     <button
                       key={bond.id}
                       onClick={() => { setSelectedBond(bond); setPairDropdownOpen(false); }}
-                      className="w-full cursor-pointer px-4 py-2.5 text-left text-sm transition-colors"
-                      style={bond.id === selectedBond?.id ? { background: "rgba(76,125,244,0.10)", color: "#8eb4fb" } : { color: "#c8d4e8" }}
-                      onMouseEnter={(e) => { if (bond.id !== selectedBond?.id) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
-                      onMouseLeave={(e) => { if (bond.id !== selectedBond?.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                      className={`w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-[var(--surface)] ${bond.id === selectedBond?.id ? 'bg-[var(--lilac)]/10 text-[var(--lilac)]' : 'text-[var(--ink2)]'}`}
                     >
-                      <span className="font-medium">{bond.symbol}</span>
-                      <span style={{ color: "#8896b3" }}> — {bond.issuer_name}</span>
+                      <span className="font-medium font-mono">{bond.symbol}</span>
+                      <span className="text-[var(--ink3)]"> — {bond.issuer_name}</span>
                     </button>
                   ))}
                 </div>
@@ -306,37 +312,37 @@ function PrimaryPageContent() {
 
             {/* Bond info card */}
             {selectedBond && (
-              <div className="rounded-xl p-5 space-y-4" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div className="card-luminous rounded-xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold" style={{ color: "#e8ecf4" }}>{selectedBond.issuer_name}</h2>
+                  <h2 className="text-sm font-semibold text-[var(--ink)]">{selectedBond.issuer_name}</h2>
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {marketStats.map((stat) => (
-                    <div key={stat.label} className="rounded-lg px-3 py-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                      <p className="text-[10px] uppercase tracking-wider" style={{ color: "#4f5f7a" }}>{stat.label}</p>
-                      <p className="mt-1 text-sm font-semibold" style={{ color: stat.isYield ? "#34d399" : "#e8ecf4" }}>{stat.value}</p>
+                    <div key={stat.label} className="rounded-lg px-3 py-3 bg-[var(--surface)] border border-[var(--rule)]">
+                      <p className="eyebrow-dim">{stat.label}</p>
+                      <p className="mt-1 text-sm font-semibold font-mono" style={{ color: stat.isYield ? 'var(--aqua-bright)' : 'var(--ink)' }}>{stat.value}</p>
                     </div>
                   ))}
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px]" style={{ color: "#4f5f7a" }}>Fill Rate</span>
-                    <span className="text-[11px] font-semibold" style={{ color: "#8896b3" }}>{selectedBond.filled_percentage}%</span>
+                    <span className="text-[11px] text-[var(--ink3)]">Fill Rate</span>
+                    <span className="text-[11px] font-mono text-[var(--ink2)]">{selectedBond.filled_percentage}%</span>
                   </div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(selectedBond.filled_percentage, 100)}%`, background: "#4c7df4" }} />
+                  <div className="h-1.5 rounded-full overflow-hidden bg-[var(--shore)]">
+                    <div className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-[var(--aqua-soft)] to-[var(--lilac)]" style={{ width: `${Math.min(selectedBond.filled_percentage, 100)}%` }} />
                   </div>
                 </div>
               </div>
             )}
 
             {!selectedBond && (
-              <div className="flex flex-col items-center justify-center rounded-xl p-10 text-center" style={{ background: "rgba(255,255,255,0.015)", border: "1px dashed rgba(255,255,255,0.10)" }}>
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: "rgba(76,125,244,0.08)" }}>
-                  <TrendingUp className="h-6 w-6" style={{ color: "#4c7df4" }} />
+              <div className="card-luminous rounded-xl flex flex-col items-center justify-center p-10 text-center border border-dashed border-[var(--rule)]">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--lilac)]/10">
+                  <TrendingUp className="h-6 w-6 text-[var(--lilac)]" />
                 </div>
-                <p className="text-sm font-medium" style={{ color: "#8896b3" }}>Select a bond to view details</p>
-                <p className="mt-1 text-xs" style={{ color: "#4f5f7a" }}>Choose from the dropdown above to see price, APY, and market data.</p>
+                <p className="text-sm font-medium text-[var(--ink2)]">Select a bond to view details</p>
+                <p className="mt-1 text-xs text-[var(--ink3)]">Choose from the dropdown above to see price, APY, and market data.</p>
               </div>
             )}
               </>
@@ -345,18 +351,18 @@ function PrimaryPageContent() {
 
           {/* Right column: Swap */}
           <div className="w-full lg:w-[45%]">
-            <div className="rounded-xl p-6" style={{ background: "#0c1018", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div className="mb-5 pb-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                <span className="text-sm font-semibold" style={{ color: "#e8ecf4" }}>Buy Bonds</span>
+            <div className="card-luminous rounded-2xl p-6">
+              <div className="mb-5 pb-3 border-b border-[var(--rule)]">
+                <span className="text-sm font-semibold text-[var(--ink)] eyebrow">Buy Bonds</span>
               </div>
 
               {/* You Pay */}
-              <div className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <div className="flex items-center justify-between text-[11px] uppercase tracking-wider" style={{ color: "#4f5f7a" }}>
+              <div className="rounded-xl p-4 bg-[var(--surface)] border border-[var(--rule)] focus-within:border-[var(--lilac)] transition-colors">
+                <div className="flex items-center justify-between eyebrow-dim mb-2">
                   <span>You Pay</span>
-                  <span>Balance: {usdcBalance} USDC</span>
+                  <span>Balance: <span className="font-mono">{usdcBalance}</span> USDC</span>
                 </div>
-                <div className="mt-2 flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <input
                     type="number" min="0" placeholder="0.00" value={payAmount}
                     onKeyDown={(e) => { if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault(); }}
@@ -366,45 +372,43 @@ function PrimaryPageContent() {
                       if (!isNaN(num) && num > 0 && price > 0) setComputedReceive((num / price).toFixed(4));
                       else setComputedReceive("");
                     }}
-                    className="w-full min-w-0 bg-transparent text-2xl font-semibold outline-none placeholder:text-[#2a3545] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                    style={{ color: "#e8ecf4" }}
+                    className="w-full min-w-0 bg-transparent text-2xl font-semibold font-mono text-[var(--ink)] outline-none placeholder:text-[var(--ink4)] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
-                  <span className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold" style={{ background: "rgba(255,255,255,0.08)", color: "#c8d4e8", border: "1px solid rgba(255,255,255,0.12)" }}>USDC</span>
+                  <span className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold font-mono bg-[var(--shore)] border border-[var(--rule)] text-[var(--ink2)]">USDC</span>
                 </div>
               </div>
 
               {/* You Receive */}
-              <div className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div className="flex items-center justify-between text-[11px] uppercase tracking-wider" style={{ color: "#4f5f7a" }}>
+              <div className="rounded-xl p-4 bg-[var(--deep)] border border-[var(--rule)]">
+                <div className="flex items-center justify-between eyebrow-dim mb-2">
                   <span>You Receive (Est.)</span>
-                  <span>Balance: {bondBalance} {symbol}</span>
+                  <span>Balance: <span className="font-mono">{bondBalance}</span> {symbol}</span>
                 </div>
-                <div className="mt-2 flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <input type="text" readOnly placeholder="0.0000" value={computedReceive}
-                    className="w-full min-w-0 bg-transparent text-2xl font-semibold outline-none cursor-default"
-                    style={{ color: "#4f5f7a" }} />
-                  <span className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold" style={{ background: "rgba(255,255,255,0.08)", color: "#c8d4e8", border: "1px solid rgba(255,255,255,0.12)" }}>{symbol}</span>
+                    className="w-full min-w-0 bg-transparent text-2xl font-semibold font-mono text-[var(--ink3)] outline-none cursor-default" />
+                  <span className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold font-mono bg-[var(--shore)] border border-[var(--rule)] text-[var(--ink2)]">{symbol}</span>
                 </div>
               </div>
 
               {/* Details */}
-              <div className="mt-4 space-y-2 rounded-lg px-4 py-3 text-xs" style={{ background: "rgba(255,255,255,0.03)" }}>
+              <div className="mt-4 space-y-2 rounded-xl px-4 py-3 bg-[var(--surface)]">
                 {[
                   { label: "Unit Price", value: selectedBond ? `${fmtCurrency(selectedBond.price_per_token)} / ${symbol}` : "—" },
                   { label: "Total Cost", value: payAmount && parseFloat(payAmount) > 0 ? fmtCurrency(parseFloat(payAmount)) : "—" },
                   { label: "Network", value: "Solana Devnet", green: true },
                 ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between">
-                    <span className="flex items-center gap-1" style={{ color: "#4f5f7a" }}>
+                  <div key={row.label} className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1 text-[var(--ink3)]">
                       <Info className="h-3 w-3" />{row.label}
                     </span>
-                    <span className="font-medium" style={{ color: (row as any).green ? "#34d399" : "#8896b3" }}>{row.value}</span>
+                    <span className="font-medium font-mono" style={{ color: (row as any).green ? 'var(--aqua-bright)' : 'var(--ink2)' }}>{row.value}</span>
                   </div>
                 ))}
               </div>
 
               {selectedBond && !selectedBond.contract_address && (
-                <div className="mt-4 rounded-lg px-4 py-2.5 text-xs" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", color: "#fbbf24" }}>
+                <div className="mt-4 rounded-xl px-4 py-2.5 text-xs bg-[var(--coral)]/5 border border-[var(--coral)]/20 text-[var(--coral)]">
                   <Info className="inline h-3.5 w-3.5 mr-1.5" />
                   Contract address missing. This bond has not been deployed yet.
                 </div>
@@ -418,8 +422,7 @@ function PrimaryPageContent() {
                   else handleApprove();
                 }}
                 disabled={!payAmount || payAmount === "0" || (exchangeFlow !== 'idle' && exchangeFlow !== 'approved') || !selectedBond?.contract_address}
-                className="mt-5 w-full cursor-pointer rounded-lg py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 active:opacity-75 disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ background: "#4c7df4" }}
+                className="mt-5 w-full btn-primary py-3.5 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isApproving || isProcessing ? (
                   <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Processing...</span>
@@ -436,7 +439,7 @@ function PrimaryPageContent() {
 
 export default function PrimaryPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen" style={{ background: "#05080f" }} />}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <PrimaryPageContent />
     </Suspense>
   );

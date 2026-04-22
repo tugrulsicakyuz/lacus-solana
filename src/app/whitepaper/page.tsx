@@ -2,97 +2,50 @@
 
 import Link from "next/link";
 import { ArrowLeft, Download } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export default function WhitepaperPage() {
   return (
-    <div style={{ height: "calc(100vh - 60px)", display: "flex", flexDirection: "column", background: "#05080f" }}>
+    <div className="h-[calc(100vh-60px)] flex flex-col">
       {/* Top Bar */}
-      <div style={{ height: "48px", background: "#0d1117", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px" }}>
+      <div className="h-12 bg-[var(--deep)] border-b border-[var(--rule)] flex items-center justify-between px-6">
         {/* Left: Logo + Title */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
-            <div style={{ display: "flex", height: "28px", width: "28px", alignItems: "center", justifyContent: "center", borderRadius: "6px", background: "#4c7df4", boxShadow: "0 0 12px rgba(76,125,244,0.3)" }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 8C3 5.239 5.239 3 8 3C10.761 3 13 5.239 13 8" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
-                <path d="M5 10.5C5 9.119 6.343 8 8 8C9.657 8 11 10.5" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
-                <circle cx="8" cy="13" r="1.2" fill="white"/>
-              </svg>
-            </div>
-            <span style={{ fontSize: "18px", fontWeight: 600, letterSpacing: "-0.02em", color: "#f1f5f9" }}>Lacus</span>
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-3 no-underline">
+            <Logo size="footer" />
+            <span className="wordmark text-[1.1rem]">Lacus</span>
           </Link>
-          <span style={{ fontSize: "14px", color: "#64748b" }}>Whitepaper v1.0</span>
+          <span className="text-sm text-[var(--ink3)] font-mono">Whitepaper v1.0</span>
         </div>
 
         {/* Right: Actions */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div className="flex items-center gap-3">
           <a
             href="/whitepaper.pdf"
             download
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "6px 16px",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "8px",
-              color: "#94a3b8",
-              fontSize: "13px",
-              fontWeight: 500,
-              textDecoration: "none",
-              transition: "border-color 0.2s, color 0.2s"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
-              e.currentTarget.style.color = "#f1f5f9";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-              e.currentTarget.style.color = "#94a3b8";
-            }}
+            className="btn-ghost px-4 py-2 text-sm inline-flex items-center gap-2"
           >
-            <Download style={{ width: "14px", height: "14px" }} />
+            <Download className="w-3.5 h-3.5" />
             Download PDF
           </a>
           <Link
             href="/about"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "6px 16px",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "8px",
-              color: "#94a3b8",
-              fontSize: "13px",
-              fontWeight: 500,
-              textDecoration: "none",
-              transition: "border-color 0.2s, color 0.2s"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
-              e.currentTarget.style.color = "#f1f5f9";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-              e.currentTarget.style.color = "#94a3b8";
-            }}
+            className="btn-ghost px-4 py-2 text-sm inline-flex items-center gap-2"
           >
-            <ArrowLeft style={{ width: "14px", height: "14px" }} />
+            <ArrowLeft className="w-3.5 h-3.5" />
             Back
           </Link>
         </div>
       </div>
 
       {/* PDF Viewer */}
-      <iframe
-        src="/whitepaper.pdf"
-        style={{
-          width: "100%",
-          height: "calc(100vh - 108px)",
-          border: "none"
-        }}
-        title="Lacus Whitepaper"
-      />
+      <div className="flex-1 card-luminous m-4 rounded-2xl overflow-hidden">
+        <iframe
+          src="/whitepaper.pdf"
+          className="w-full h-full border-none"
+          title="Lacus Whitepaper"
+        />
+      </div>
     </div>
   );
 }

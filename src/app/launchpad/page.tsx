@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useScrollReveal } from "@/lib/useClientInteractions";
 
 interface Bond {
   id: number;
@@ -22,6 +23,7 @@ function fmtCurrency(n: number): string {
 }
 
 export default function LaunchpadPage() {
+  useScrollReveal();
   const router = useRouter();
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,8 +52,6 @@ export default function LaunchpadPage() {
     setCurrentPage(1);
   }, [searchQuery, sortBy]);
 
-  const handleInvest = (symbol: string) => router.push(`/primary?bond=${symbol}`);
-
   const filteredBonds = bonds
     .filter((bond) => {
       const q = searchQuery.toLowerCase();
@@ -74,283 +74,236 @@ export default function LaunchpadPage() {
   const totalVolume = bonds.reduce((sum, b) => sum + b.total_issue_size, 0);
 
   return (
-    <>
-      <style>{`
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        .shimmer {
-          background: linear-gradient(90deg, #0d1117 25%, #151c28 50%, #0d1117 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-        }
-      `}</style>
-
-      {/* Page Layout */}
-      <section style={{ background: "#05080f", minHeight: "100vh", paddingTop: "48px", paddingBottom: "48px" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
-          
-          {/* Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px", flexWrap: "wrap", gap: "16px" }}>
+    <section className="min-h-screen pt-12 pb-12">
+      <div className="max-w-[1280px] mx-auto px-8">
+        
+        {/* Header */}
+        <div className="pt-14 pb-12">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
             <div>
-              <h1 style={{ fontSize: "32px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Bond Markets</h1>
-              <p style={{ fontSize: "14px", color: "#64748b" }}>Discover and invest in tokenized credit products built for the Lacus thesis</p>
-            </div>
-            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-              <div style={{ background: "#0d1117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "20px", padding: "8px 16px", fontSize: "13px", color: "#94a3b8" }}>
-                <span style={{ fontWeight: 600, color: "#f1f5f9" }}>{bonds.length}</span> bonds
+              <div className="eyebrow eyebrow-rule mb-5 reveal" style={{ color: "var(--aqua-bright)" }}>
+                Bond Markets
               </div>
-              <div style={{ background: "#0d1117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "20px", padding: "8px 16px", fontSize: "13px", color: "#94a3b8" }}>
-                <span style={{ fontWeight: 600, color: "#f1f5f9" }}>{fmtCurrency(totalVolume)}</span> volume
-              </div>
-            </div>
-          </div>
-
-          {/* Search & Filter Bar */}
-          <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "32px", flexWrap: "wrap" }}>
-            <div style={{ position: "relative", width: "280px" }}>
-              <Search style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", color: "#475569", pointerEvents: "none" }} />
-              <input
-                type="text"
-                placeholder="Search bonds..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  width: "100%",
-                  background: "#0d1117",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: "10px",
-                  padding: "10px 16px 10px 44px",
-                  fontSize: "14px",
-                  color: "#f1f5f9",
-                  outline: "none"
-                }}
-                onFocus={(e) => e.currentTarget.style.borderColor = "rgba(76,125,244,0.4)"}
-                onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"}
-              />
-            </div>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-              style={{
-                background: "#0d1117",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: "10px",
-                padding: "10px 16px",
-                fontSize: "14px",
-                color: "#f1f5f9",
-                outline: "none",
-                width: "160px",
-                cursor: "pointer"
-              }}
-            >
-              <option value="default">Sort by Default</option>
-              <option value="apy">Highest APY</option>
-              <option value="size">Largest Size</option>
-              <option value="filled">Fill Rate</option>
-            </select>
-          </div>
-
-          {/* Bond Grid */}
-          {loading ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} style={{ background: "#0d1117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px", padding: "24px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
-                    <div style={{ flex: 1 }}>
-                      <div className="shimmer" style={{ height: "16px", width: "120px", borderRadius: "4px", marginBottom: "8px" }} />
-                      <div className="shimmer" style={{ height: "12px", width: "60px", borderRadius: "4px" }} />
-                    </div>
-                    <div className="shimmer" style={{ height: "20px", width: "50px", borderRadius: "20px" }} />
-                  </div>
-                  <div className="shimmer" style={{ height: "36px", width: "80px", borderRadius: "4px", marginBottom: "8px" }} />
-                  <div className="shimmer" style={{ height: "12px", width: "100px", borderRadius: "4px", marginBottom: "20px" }} />
-                  <div style={{ display: "flex", gap: "16px", marginBottom: "20px" }}>
-                    <div style={{ flex: 1 }}>
-                      <div className="shimmer" style={{ height: "10px", width: "60px", borderRadius: "4px", marginBottom: "6px" }} />
-                      <div className="shimmer" style={{ height: "14px", width: "40px", borderRadius: "4px" }} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div className="shimmer" style={{ height: "10px", width: "60px", borderRadius: "4px", marginBottom: "6px" }} />
-                      <div className="shimmer" style={{ height: "14px", width: "50px", borderRadius: "4px" }} />
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: "20px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <div className="shimmer" style={{ height: "10px", width: "60px", borderRadius: "4px" }} />
-                      <div className="shimmer" style={{ height: "10px", width: "30px", borderRadius: "4px" }} />
-                    </div>
-                    <div style={{ height: "4px", background: "rgba(255,255,255,0.06)", borderRadius: "2px", overflow: "hidden" }}>
-                      <div className="shimmer" style={{ height: "100%", width: "60%" }} />
-                    </div>
-                  </div>
-                  <div className="shimmer" style={{ height: "40px", width: "100%", borderRadius: "10px" }} />
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", gap: "16px" }}>
-              <p style={{ fontSize: "14px", color: "#ef4444" }}>Failed to load bonds: {error}</p>
-              <button
-                onClick={() => fetchBonds()}
-                style={{
-                  background: "rgba(76,125,244,0.1)",
-                  color: "#4c7df4",
-                  border: "1px solid rgba(76,125,244,0.3)",
-                  borderRadius: "8px",
-                  padding: "8px 20px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "opacity 0.15s"
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = "0.8"}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+              <h1
+                className="font-display text-[var(--ink)] leading-[0.97] tracking-tight reveal reveal-d1"
+                style={{ fontSize: "clamp(2.2rem, 3.5vw, 3.8rem)" }}
               >
-                Try again
-              </button>
-            </div>
-          ) : filteredBonds.length === 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px" }}>
-              <p style={{ fontSize: "14px", color: "#64748b" }}>
-                {bonds.length === 0 ? "No active bond offerings at this time." : "No bonds match your search criteria."}
+                Explore Credit Products
+                <br />
+                <span className="italic grad-ink-interactive cursor-pointer">on-chain.</span>
+              </h1>
+              <p className="mt-5 text-[var(--ink3)] text-[1rem] leading-[1.65] max-w-[44ch] reveal reveal-d2">
+                Tokenized bonds built for the Lacus protocol — transparent terms, on-chain settlement.
               </p>
             </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-              {paginatedBonds.map((bond) => {
-                return (
-                  <div
-                    key={bond.id}
-                    onClick={() => router.push(`/primary?bond=${bond.symbol}`)}
-                    style={{
-                      background: "#0d1117",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                      borderRadius: "16px",
-                      padding: "24px",
-                      cursor: "pointer",
-                      transition: "border-color 0.15s"
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.borderColor = "rgba(76,125,244,0.4)"}
-                    onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"}
-                  >
-                    {/* Top row */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
-                      <div style={{ flex: 1 }}>
-                        <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#f1f5f9", marginBottom: "4px" }}>{bond.issuer_name}</h3>
-                        <p style={{ fontSize: "12px", color: "#64748b" }}>{bond.symbol}</p>
-                      </div>
-                    </div>
-
-                    {/* Middle section */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <div style={{ fontSize: "36px", fontWeight: 700, color: "#34d399", lineHeight: 1, marginBottom: "8px" }}>
-                        {bond.apy}%
-                      </div>
-                      <div style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "16px" }}>
-                        ANNUAL YIELD
-                      </div>
-                      <div style={{ display: "flex", gap: "16px" }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "4px" }}>Maturity</div>
-                          <div style={{ fontSize: "14px", color: "#94a3b8", fontWeight: 500 }}>{bond.maturity_months} months</div>
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "4px" }}>Price</div>
-                          <div style={{ fontSize: "14px", color: "#94a3b8", fontWeight: 500 }}>{fmtCurrency(bond.price_per_token)}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Fill rate */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                        <span style={{ fontSize: "11px", color: "#64748b" }}>Fill Rate</span>
-                        <span style={{ fontSize: "13px", color: "#94a3b8", fontWeight: 500 }}>{bond.filled_percentage}%</span>
-                      </div>
-                      <div style={{ height: "4px", background: "rgba(255,255,255,0.06)", borderRadius: "2px", overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${bond.filled_percentage}%`, background: "#4c7df4", borderRadius: "2px", transition: "width 0.3s" }} />
-                      </div>
-                    </div>
-
-                    {/* Bottom button */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); router.push(`/primary?bond=${bond.symbol}`); }}
-                      style={{
-                        width: "100%",
-                        background: "transparent",
-                        border: "1px solid rgba(76,125,244,0.3)",
-                        color: "#4c7df4",
-                        borderRadius: "10px",
-                        padding: "10px",
-                        fontSize: "14px",
-                        fontWeight: 500,
-                        cursor: "pointer",
-                        transition: "background 0.15s",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "6px"
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = "rgba(76,125,244,0.08)"}
-                      onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-                    >
-                      View Bond
-                      <ChevronRight style={{ width: "16px", height: "16px" }} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px", marginTop: "40px" }}>
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
+            <div className="flex gap-3 items-center reveal reveal-d2 flex-shrink-0">
+              <div
                 style={{
-                  background: "#0d1117",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  color: "#94a3b8",
-                  borderRadius: "8px",
-                  padding: "8px 20px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                  opacity: currentPage === 1 ? 0.4 : 1,
-                  transition: "opacity 0.15s"
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "0.70rem",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  padding: "8px 16px",
+                  borderRadius: "100px",
+                  border: "1px solid rgba(125,211,252,0.18)",
+                  background: "rgba(125,211,252,0.04)",
+                  color: "var(--aqua-bright)",
                 }}
               >
-                Previous
-              </button>
-              <div style={{ fontSize: "14px", color: "#f1f5f9", fontWeight: 500 }}>
-                Page {currentPage} of {totalPages}
+                <span style={{ fontVariantNumeric: "tabular-nums" }}>{bonds.length}</span> bonds
               </div>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
+              <div
                 style={{
-                  background: "#0d1117",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  color: "#94a3b8",
-                  borderRadius: "8px",
-                  padding: "8px 20px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-                  opacity: currentPage === totalPages ? 0.4 : 1,
-                  transition: "opacity 0.15s"
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "0.70rem",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  padding: "8px 16px",
+                  borderRadius: "100px",
+                  border: "1px solid rgba(196,181,253,0.18)",
+                  background: "rgba(196,181,253,0.04)",
+                  color: "var(--lilac)",
                 }}
               >
-                Next
-              </button>
+                {fmtCurrency(totalVolume)} vol.
+              </div>
             </div>
-          )}
+          </div>
         </div>
-      </section>
-    </>
+
+        {/* Search & Filter Bar */}
+        <div className="flex gap-3 items-center mb-8 flex-wrap reveal reveal-d1">
+          <div className="relative w-72">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink4)] pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search bonds..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[var(--surface)] border border-[var(--rule)] rounded-xl pl-12 pr-4 py-3 text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--lilac)]"
+            />
+          </div>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="bg-[var(--surface)] border border-[var(--rule)] rounded-xl px-4 py-3 text-sm text-[var(--ink)] outline-none w-40 cursor-pointer focus:border-[var(--lilac)]"
+          >
+            <option value="default">Sort by Default</option>
+            <option value="apy">Highest APY</option>
+            <option value="size">Largest Size</option>
+            <option value="filled">Fill Rate</option>
+          </select>
+        </div>
+
+        {/* Bond Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="card-luminous rounded-2xl p-6">
+                <div className="flex justify-between items-start mb-5">
+                  <div className="flex-1">
+                    <div className="h-4 w-32 bg-[var(--surface)] rounded animate-pulse mb-2" />
+                    <div className="h-3 w-16 bg-[var(--surface)] rounded animate-pulse" />
+                  </div>
+                </div>
+                <div className="h-9 w-20 bg-[var(--surface)] rounded animate-pulse mb-2" />
+                <div className="h-3 w-28 bg-[var(--surface)] rounded animate-pulse mb-5" />
+                <div className="flex gap-4 mb-5">
+                  <div className="flex-1">
+                    <div className="h-2 w-16 bg-[var(--surface)] rounded animate-pulse mb-2" />
+                    <div className="h-4 w-12 bg-[var(--surface)] rounded animate-pulse" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="h-2 w-16 bg-[var(--surface)] rounded animate-pulse mb-2" />
+                    <div className="h-4 w-14 bg-[var(--surface)] rounded animate-pulse" />
+                  </div>
+                </div>
+                <div className="mb-5">
+                  <div className="flex justify-between mb-2">
+                    <div className="h-2 w-16 bg-[var(--surface)] rounded animate-pulse" />
+                    <div className="h-2 w-8 bg-[var(--surface)] rounded animate-pulse" />
+                  </div>
+                  <div className="h-1 bg-[var(--shore)] rounded-full overflow-hidden">
+                    <div className="h-full w-3/5 bg-[var(--surface)] animate-pulse" />
+                  </div>
+                </div>
+                <div className="h-10 w-full bg-[var(--surface)] rounded-xl animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <p className="text-sm text-[var(--coral)]">Failed to load bonds: {error}</p>
+            <button
+              onClick={() => fetchBonds()}
+              className="btn-primary px-6 py-3"
+            >
+              Try again
+            </button>
+          </div>
+        ) : filteredBonds.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <p className="text-sm text-[var(--ink3)]">
+              {bonds.length === 0 ? "No active bond offerings at this time." : "No bonds match your search criteria."}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {paginatedBonds.map((bond, idx) => (
+              <div
+                key={bond.id}
+                onClick={() => router.push(`/primary?bond=${bond.symbol}`)}
+                className={`card-luminous card-tilt rounded-2xl p-6 cursor-pointer reveal ${idx < 3 ? `reveal-d${idx + 1}` : ""}`}
+              >
+                {/* Top row */}
+                <div className="flex justify-between items-start mb-5">
+                  <div className="flex-1">
+                    <h3 className="text-base font-semibold text-[var(--ink)] mb-1">{bond.issuer_name}</h3>
+                    <p className="text-xs text-[var(--ink3)] font-mono">{bond.symbol}</p>
+                  </div>
+                </div>
+
+                {/* Middle section */}
+                <div className="mb-5">
+                  <div
+                    className="font-display leading-none mb-1"
+                    style={{
+                      fontSize: "clamp(2.4rem, 3vw, 3rem)",
+                      background: "linear-gradient(125deg, var(--aqua-soft), var(--aqua-bright) 50%, var(--lilac))",
+                      WebkitBackgroundClip: "text",
+                      backgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      color: "transparent",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {bond.apy}%
+                  </div>
+                  <div className="eyebrow-dim mb-4">
+                    Annual Yield
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <div className="text-[11px] text-[var(--ink3)] mb-1">Maturity</div>
+                      <div className="text-sm text-[var(--ink2)] font-medium font-mono">{bond.maturity_months} mo</div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[11px] text-[var(--ink3)] mb-1">Price</div>
+                      <div className="text-sm text-[var(--ink2)] font-medium font-mono">{fmtCurrency(bond.price_per_token)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fill rate */}
+                <div className="mb-5">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-[11px] text-[var(--ink3)]">Filled</span>
+                    <span className="text-sm text-[var(--ink3)] font-medium font-mono tab">{bond.filled_percentage}%</span>
+                  </div>
+                  <div className="h-1 bg-[var(--shore)] rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-[var(--aqua-soft)] to-[var(--lilac)] rounded-full transition-all duration-300"
+                      style={{ width: `${bond.filled_percentage}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Bottom button */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); router.push(`/primary?bond=${bond.symbol}`); }}
+                  className="w-full btn-ghost flex items-center justify-center gap-2"
+                >
+                  View Bond
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-3 mt-10">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="btn-ghost px-5 py-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <div className="text-sm text-[var(--ink)] font-medium font-mono">
+              Page {currentPage} of {totalPages}
+            </div>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="btn-ghost px-5 py-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

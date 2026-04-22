@@ -7,16 +7,17 @@ import Footer from "@/components/Footer";
 import { Toaster } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ChainGuard from "@/components/ChainGuard";
+import GlobalInteractions from "@/components/GlobalInteractions";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "Lacus",
+    default: "Lacus — Credit markets with luminous depth.",
     template: "%s | Lacus",
   },
   description:
-    "Lacus is transparent credit infrastructure for on-chain capital markets: issue tokenized bonds, build fixed-income portfolios, and structure auditable credit products for a Solana-native future.",
+    "Lacus is a Solana-native protocol for tokenizing, trading, and settling fixed-income instruments. A deep, continuous market for on-chain credit — rendered clear.",
   keywords: [
     "RWA",
     "tokenized bonds",
@@ -60,14 +61,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen bg-slate-950 text-slate-100 antialiased tracking-tight`}>
+      <body className={`${inter.className} min-h-screen antialiased tracking-tight`}>
+        {/* Global ambient layer — visible on every page */}
+        <div id="cursor-orb" />
+        <div className="fixed inset-0 z-[-3] grain" />
+        <div className="fixed top-[-25vh] left-[-10vw] w-[90vw] h-[90vh] z-[-2] pointer-events-none">
+          <div className="drift w-full h-full aura-top" />
+        </div>
+        <div className="fixed top-[55vh] right-[-20vw] w-[80vw] h-[80vh] z-[-2] pointer-events-none">
+          <div className="drift w-full h-full aura-mid" style={{ animationDelay: "-14s" }} />
+        </div>
+
         <Web3Provider>
-          <div className="w-full bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-center text-xs text-amber-400/90">
-            <span className="inline-flex items-center gap-2">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-              This demo environment uses test-only assets while <strong>Lacus migrates to Solana Devnet</strong>.
-            </span>
-          </div>
+          <GlobalInteractions />
           <ChainGuard />
           <Navbar />
           <main className="flex-1">

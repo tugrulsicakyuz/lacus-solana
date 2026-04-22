@@ -162,8 +162,8 @@ function BondDetailContent() {
   /* ── Loading ── */
   if (loading) {
     return (
-      <section style={{ background: "#10131b", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Loader2 style={{ width: "32px", height: "32px", color: "#4c7df4", animation: "spin 1s linear infinite" }} />
+      <section className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-[var(--lilac)] animate-spin" />
       </section>
     );
   }
@@ -171,30 +171,11 @@ function BondDetailContent() {
   /* ── Not found ── */
   if (notFound || !bond) {
     return (
-      <section style={{ background: "#10131b", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px", paddingTop: "96px" }}>
-        <p style={{ fontFamily: "Manrope, sans-serif", fontSize: "24px", fontWeight: 700, color: "#e0e2ed" }}>Bond Not Found</p>
-        <p style={{ color: "#c3c6d6", fontSize: "14px" }}>No bond found with symbol &ldquo;{symbol}&rdquo;.</p>
-        <Link
-          href="/launchpad"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            marginTop: "16px",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            background: "linear-gradient(135deg, #b3c5ff 0%, #5e8bff 100%)",
-            color: "#001849",
-            fontSize: "14px",
-            fontWeight: 700,
-            fontFamily: "Manrope, sans-serif",
-            textDecoration: "none",
-            transition: "opacity 0.2s"
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.8"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
-        >
-          <ArrowLeft style={{ width: "16px", height: "16px" }} />
+      <section className="min-h-screen flex flex-col items-center justify-center gap-4 pt-24">
+        <p className="font-display text-[var(--ink)] text-2xl">Bond Not Found</p>
+        <p className="text-sm text-[var(--ink3)]">No bond found with symbol &ldquo;{symbol}&rdquo;.</p>
+        <Link href="/launchpad" className="btn-primary flex items-center gap-2 mt-4 px-6 py-3">
+          <ArrowLeft className="w-4 h-4" />
           Back to Launchpad
         </Link>
       </section>
@@ -209,105 +190,53 @@ function BondDetailContent() {
   return (
     <>
       {/* ── Hero Header ── */}
-      <section style={{ background: "#10131b", paddingTop: "104px", paddingBottom: "48px" }}>
-        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px" }}>
+      <section className="pt-24 pb-12">
+        <div className="max-w-[1280px] mx-auto px-8">
           <Link
             href="/launchpad"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              marginBottom: "24px",
-              fontSize: "13px",
-              color: "#8d909f",
-              textDecoration: "none",
-              transition: "color 0.2s"
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#c3c6d6"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#8d909f"; }}
+            className="inline-flex items-center gap-1.5 mb-6 text-[13px] text-[var(--ink3)] hover:text-[var(--ink)] transition-colors"
           >
-            <ArrowLeft style={{ width: "14px", height: "14px" }} />
+            <ArrowLeft className="w-3.5 h-3.5" />
             Back to Launchpad
           </Link>
 
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: "32px" }}>
+          <div className="flex flex-wrap items-start justify-between gap-8">
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap", marginBottom: "12px" }}>
-                <h1 style={{ fontFamily: "Manrope, sans-serif", fontSize: "48px", fontWeight: 800, letterSpacing: "-0.02em", color: "#e0e2ed", lineHeight: 1 }}>
+              <div className="flex items-center gap-4 flex-wrap mb-3">
+                <h1 className="font-display text-[var(--ink)] text-[3rem] leading-none tracking-tight">
                   {bond.symbol}
                 </h1>
                 {bond.filled_percentage >= 100 && (
-                  <span
-                    style={{
-                      padding: "6px 16px",
-                      borderRadius: "9999px",
-                      background: "rgba(195,198,214,0.1)",
-                      color: "#8d909f",
-                      border: "1px solid rgba(141,144,159,0.2)",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      textTransform: "uppercase"
-                    }}
-                  >
+                  <span className="px-4 py-1.5 rounded-full bg-[var(--surface)] border border-[var(--rule)] text-[var(--ink3)] text-[11px] font-mono uppercase tracking-widest">
                     Sold Out
                   </span>
                 )}
               </div>
-              <p style={{ fontSize: "16px", color: "#8d909f" }}>{bond.issuer_name}</p>
+              <p className="text-base text-[var(--ink3)] mt-1">{bond.issuer_name}</p>
               
               {/* APY Hero Metric */}
-              <div style={{ marginTop: "24px", display: "inline-flex", alignItems: "baseline", gap: "8px" }}>
-                <div style={{ fontFamily: "Manrope, sans-serif", fontSize: "56px", fontWeight: 800, letterSpacing: "-0.02em", color: "#45dfa4" }}>
+              <div className="mt-6 inline-flex items-baseline gap-2">
+                <div className="font-display text-[var(--aqua-bright)] text-[3.5rem] leading-none">
                   {bond.apy}%
                 </div>
-                <div style={{ fontSize: "14px", color: "#8d909f", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>APY</div>
+                <div className="text-sm text-[var(--ink3)] uppercase tracking-widest">APY</div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <div className="flex gap-3 flex-wrap">
               <Link
                 href={`/primary?bond=${bond.symbol}`}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "14px 32px",
-                  borderRadius: "8px",
-                  background: "linear-gradient(135deg, #b3c5ff 0%, #5e8bff 100%)",
-                  color: "#002b75",
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  fontFamily: "Manrope, sans-serif",
-                  textDecoration: "none",
-                  transition: "opacity 0.2s"
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.9"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+                className="btn-primary flex items-center gap-2 px-8 py-3.5"
               >
-                <DollarSign style={{ width: "16px", height: "16px" }} />
+                <DollarSign className="w-4 h-4" />
                 Buy Bonds
               </Link>
               <Link
                 href={`/secondary?bond=${bond.symbol}`}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "14px 32px",
-                  borderRadius: "8px",
-                  background: "#31353d",
-                  color: "#b3c5ff",
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  fontFamily: "Manrope, sans-serif",
-                  textDecoration: "none",
-                  transition: "background 0.2s"
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#262a32"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "#31353d"; }}
+                className="btn-ghost flex items-center gap-2 px-8 py-3.5"
               >
-                <BarChart3 style={{ width: "16px", height: "16px" }} />
+                <BarChart3 className="w-4 h-4" />
                 Secondary
               </Link>
               {bond.contract_address && (
@@ -315,24 +244,9 @@ function BondDetailContent() {
                   href={`https://sepolia.basescan.org/address/${bond.contract_address}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "14px 24px",
-                    borderRadius: "8px",
-                    border: "1px solid rgba(67,70,84,0.3)",
-                    background: "transparent",
-                    color: "#8d909f",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    transition: "color 0.2s"
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#c3c6d6"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "#8d909f"; }}
+                  className="btn-ghost flex items-center gap-2 px-6 py-3.5 text-[13px]"
                 >
-                  <ExternalLink style={{ width: "14px", height: "14px" }} />
+                  <ExternalLink className="w-3.5 h-3.5" />
                   Contract
                 </a>
               )}
@@ -342,32 +256,32 @@ function BondDetailContent() {
       </section>
 
       {/* ── Main content ── */}
-      <section style={{ background: "#10131b", paddingTop: "48px", paddingBottom: "80px" }}>
-        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px" }}>
+      <section className="pb-20">
+        <div className="max-w-[1280px] mx-auto px-8">
 
           {/* ── Key Metrics Grid ── */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "48px" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
             {[
-              { icon: DollarSign, label: "Price per Token", value: fmtCurrency(bond.price_per_token), color: "#e0e2ed" },
-              { icon: Calendar, label: "Maturity", value: maturityLabel(bond.maturity_months), color: "#e0e2ed" },
-              { icon: TrendingUp, label: "Total Issue", value: fmtCurrencyCompact(bond.total_issue_size), color: "#e0e2ed" },
+              { icon: DollarSign, label: "Price per Token", value: fmtCurrency(bond.price_per_token) },
+              { icon: Calendar, label: "Maturity", value: maturityLabel(bond.maturity_months) },
+              { icon: TrendingUp, label: "Total Issue", value: fmtCurrencyCompact(bond.total_issue_size) },
             ].map((s) => (
               <div
                 key={s.label}
-                style={{ background: "#181c23", padding: "24px", borderRadius: "8px", border: "1px solid rgba(67,70,84,0.1)" }}
+                className="card-luminous rounded-xl p-6"
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.15em", color: "#8d909f", fontWeight: 600 }}>
-                  <s.icon style={{ width: "14px", height: "14px" }} />
+                <div className="flex items-center gap-1.5 mb-3 eyebrow-dim">
+                  <s.icon className="w-3.5 h-3.5" />
                   {s.label}
                 </div>
-                <p style={{ fontFamily: "Manrope, sans-serif", fontSize: "24px", fontWeight: 700, color: s.color }}>{s.value}</p>
+                <p className="text-2xl font-semibold text-[var(--ink)] font-mono">{s.value}</p>
               </div>
             ))}
           </div>
 
           {/* ── Bond Details Section ── */}
-          <div style={{ background: "#181c23", borderRadius: "12px", padding: "32px", marginBottom: "32px" }}>
-            <h2 style={{ fontFamily: "Manrope, sans-serif", fontSize: "18px", fontWeight: 700, color: "#e0e2ed", marginBottom: "32px" }}>Bond Details</h2>
+          <div className="card-luminous rounded-2xl p-8 mb-6">
+            <h2 className="text-base font-semibold text-[var(--ink)] mb-8 eyebrow">Bond Details</h2>
 
             <div>
               {[
@@ -380,55 +294,37 @@ function BondDetailContent() {
               ].map((row, idx, arr) => (
                 <div
                   key={row.label}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "20px 0",
-                    borderBottom: idx < arr.length - 1 ? "1px solid rgba(67,70,84,0.1)" : "none",
-                    transition: "background 0.2s"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(195,198,214,0.02)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                  }}
+                  className="flex items-center justify-between py-5 border-b border-[var(--rule)] last:border-b-0 hover:bg-[var(--rule-soft)] transition-colors rounded px-2 -mx-2"
                 >
-                  <span style={{ fontSize: "13px", color: "#8d909f" }}>{row.label}</span>
-                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: "14px", fontWeight: 600, color: "#e0e2ed" }}>{row.value}</span>
+                  <span className="text-[13px] text-[var(--ink3)]">{row.label}</span>
+                  <span className="text-sm font-medium text-[var(--ink)] font-mono">{row.value}</span>
                 </div>
               ))}
             </div>
 
             {/* Fill progress */}
-            <div style={{ marginTop: "32px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-                <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#8d909f", fontWeight: 600 }}>Fill Rate</span>
-                <span style={{ fontFamily: "Manrope, sans-serif", fontSize: "16px", fontWeight: 700, color: "#e0e2ed" }}>{bond.filled_percentage}%</span>
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-3">
+                <span className="eyebrow-dim">Fill Rate</span>
+                <span className="font-mono text-base font-semibold text-[var(--ink)]">{bond.filled_percentage}%</span>
               </div>
-              <div style={{ width: "100%", height: "8px", borderRadius: "9999px", overflow: "hidden", background: "#0a0e16" }}>
+              <div className="w-full h-2 bg-[var(--shore)] rounded-full overflow-hidden">
                 <div
-                  style={{
-                    width: `${fillPct}%`,
-                    height: "100%",
-                    borderRadius: "9999px",
-                    background: fillPct >= 80 ? "#45dfa4" : "#b3c5ff",
-                    transition: "width 0.5s ease"
-                  }}
+                  className={`h-full rounded-full transition-all duration-500 ${fillPct >= 80 ? 'bg-[var(--aqua)]' : 'bg-gradient-to-r from-[var(--aqua-soft)] to-[var(--lilac)]'}`}
+                  style={{ width: `${fillPct}%` }}
                 />
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "8px", fontSize: "11px", color: "#8d909f" }}>
-                <span>{soldTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} sold</span>
-                <span>{totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} total</span>
+              <div className="flex justify-between mt-2">
+                <span className="text-[11px] text-[var(--ink4)] font-mono">{soldTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} sold</span>
+                <span className="text-[11px] text-[var(--ink4)] font-mono">{totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} total</span>
               </div>
             </div>
           </div>
 
           {/* ── Market Data Section ── */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px", marginBottom: "32px" }}>
-            <div style={{ background: "#181c23", borderRadius: "12px", padding: "24px" }}>
-              <h3 style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.15em", color: "#8d909f", fontWeight: 600, marginBottom: "16px" }}>Market Data</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="card-luminous rounded-2xl p-6">
+              <h3 className="eyebrow-dim mb-4">Market Data</h3>
               <div>
                 {[
                   { icon: BarChart3, label: "24h Volume", value: marketData.volume24h > 0 ? fmtCurrencyCompact(marketData.volume24h) : "—" },
@@ -437,19 +333,13 @@ function BondDetailContent() {
                 ].map((row, idx) => (
                   <div
                     key={row.label}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "12px 0",
-                      borderBottom: idx < 2 ? "1px solid rgba(67,70,84,0.1)" : "none"
-                    }}
+                    className="flex items-center justify-between py-3 border-b border-[var(--rule)] last:border-b-0"
                   >
-                    <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#8d909f" }}>
-                      <row.icon style={{ width: "14px", height: "14px" }} />
+                    <span className="flex items-center gap-1.5 text-[13px] text-[var(--ink3)]">
+                      <row.icon className="w-3.5 h-3.5" />
                       {row.label}
                     </span>
-                    <span style={{ fontSize: "14px", fontWeight: 600, color: "#e0e2ed" }}>{row.value}</span>
+                    <span className="text-sm font-semibold text-[var(--ink)] font-mono">{row.value}</span>
                   </div>
                 ))}
               </div>
@@ -457,30 +347,21 @@ function BondDetailContent() {
 
             {/* Contract address */}
             {bond.contract_address ? (
-              <div style={{ background: "#181c23", borderRadius: "12px", padding: "24px" }}>
-                <p style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.15em", color: "#8d909f", fontWeight: 600, marginBottom: "12px" }}>Contract Address</p>
+              <div className="card-luminous rounded-2xl p-6">
+                <p className="eyebrow-dim mb-3">Contract Address</p>
                 <a
                   href={`https://sepolia.basescan.org/address/${bond.contract_address}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    fontFamily: "monospace",
-                    fontSize: "12px",
-                    color: "#b3c5ff",
-                    wordBreak: "break-all",
-                    textDecoration: "none",
-                    transition: "color 0.2s"
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#5e8bff"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "#b3c5ff"; }}
+                  className="font-mono text-xs text-[var(--lilac)] hover:text-[var(--lilac-bright)] break-all transition-colors"
                 >
                   {bond.contract_address}
                 </a>
               </div>
             ) : (
-              <div style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: "12px", padding: "24px" }}>
-                <p style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#fbbf24" }}>
-                  <Info style={{ width: "16px", height: "16px", flexShrink: 0 }} />
+              <div className="card-luminous rounded-2xl p-6 border border-[var(--coral)]/20 bg-[var(--coral)]/5">
+                <p className="flex items-center gap-2 text-[12px] text-[var(--coral)]">
+                  <Info className="w-4 h-4 flex-shrink-0" />
                   Contract address not yet assigned. This bond is pending deployment.
                 </p>
               </div>
@@ -489,42 +370,35 @@ function BondDetailContent() {
 
           {/* ── User Holdings ── */}
           {address && userHolding && userHolding.balance > 0 && (
-            <div style={{ background: "#181c23", border: "1px solid rgba(76,125,244,0.15)", borderRadius: "12px", padding: "32px" }}>
-              <h2 style={{ fontFamily: "Manrope, sans-serif", fontSize: "18px", fontWeight: 700, color: "#e0e2ed", marginBottom: "24px", display: "flex", alignItems: "center", gap: "8px" }}>
-                <Wallet style={{ width: "20px", height: "20px", color: "#b3c5ff" }} />
+            <div className="card-luminous rounded-2xl p-8 mb-6 border border-[var(--lilac)]/15">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-[var(--ink)] mb-6">
+                <Wallet className="w-5 h-5 text-[var(--lilac)]" />
                 Your Position
               </h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "24px" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
-                  <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.15em", color: "#8d909f", fontWeight: 600, marginBottom: "8px" }}>Balance</p>
-                  <p style={{ fontFamily: "Manrope, sans-serif", fontSize: "24px", fontWeight: 700, color: "#b3c5ff" }}>
+                  <p className="eyebrow-dim mb-2">Balance</p>
+                  <p className="text-2xl font-semibold text-[var(--lilac)] font-mono">
                     {userHolding.balance.toLocaleString("en-US", { maximumFractionDigits: 4 })} {bond.symbol}
                   </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.15em", color: "#8d909f", fontWeight: 600, marginBottom: "8px" }}>Value</p>
-                  <p style={{ fontFamily: "Manrope, sans-serif", fontSize: "24px", fontWeight: 700, color: "#e0e2ed" }}>
+                  <p className="eyebrow-dim mb-2">Value</p>
+                  <p className="text-2xl font-semibold text-[var(--ink)] font-mono">
                     {fmtCurrency(userHolding.balance * bond.price_per_token)}
                   </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.15em", color: "#8d909f", fontWeight: 600, marginBottom: "8px" }}>Accrued Yield</p>
-                  <p style={{ fontFamily: "Manrope, sans-serif", fontSize: "24px", fontWeight: 700, color: "#45dfa4" }}>
+                  <p className="eyebrow-dim mb-2">Accrued Yield</p>
+                  <p className="text-2xl font-semibold text-[var(--aqua-bright)] font-mono">
                     {fmtCurrency(userHolding.unclaimed_yield ?? 0)}
                   </p>
                 </div>
               </div>
-              <div style={{ marginTop: "24px" }}>
+              <div className="mt-6">
                 <Link
                   href="/dashboard"
-                  style={{
-                    fontSize: "12px",
-                    color: "#b3c5ff",
-                    textDecoration: "underline",
-                    transition: "color 0.2s"
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#5e8bff"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "#b3c5ff"; }}
+                  className="text-sm text-[var(--lilac)] hover:text-[var(--lilac-bright)] transition-colors link-grad"
                 >
                   View in Portfolio →
                 </Link>
@@ -534,9 +408,9 @@ function BondDetailContent() {
 
           {/* ── No wallet notice ── */}
           {!address && (
-            <div style={{ background: "#181c23", borderRadius: "12px", padding: "24px", display: "flex", alignItems: "center", gap: "16px" }}>
-              <Wallet style={{ width: "24px", height: "24px", flexShrink: 0, color: "#8d909f", opacity: 0.5 }} />
-              <p style={{ fontSize: "14px", color: "#8d909f" }}>
+            <div className="card-luminous rounded-xl p-6 flex items-center gap-4 mb-6">
+              <Wallet className="w-5 h-5 text-[var(--ink4)] flex-shrink-0" />
+              <p className="text-sm text-[var(--ink3)]">
                 Connect your wallet to view your position in this bond.
               </p>
             </div>
@@ -546,51 +420,41 @@ function BondDetailContent() {
       </section>
 
       {documents.length > 0 && (
-        <section style={{ background: "#10131b", paddingTop: "48px", paddingBottom: "80px" }}>
-          <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px" }}>
-            <h2 style={{ fontFamily: "Manrope, sans-serif", fontSize: "18px", fontWeight: 700, color: "#e0e2ed", marginBottom: "24px" }}>
+        <section className="pb-20">
+          <div className="max-w-[1280px] mx-auto px-8">
+            <h2 className="eyebrow mb-6">
               Issuer Documents
             </h2>
-            <div style={{ background: "#181c23", borderRadius: "12px", overflow: "hidden" }}>
+            <div className="card-luminous rounded-2xl overflow-hidden">
               {documents.map((doc, i) => (
                 <a
                   key={doc.id}
                   href={getDocumentUrl(doc.file_path)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "20px 24px",
-                    borderBottom: i < documents.length - 1 ? "1px solid rgba(67,70,84,0.1)" : "none",
-                    textDecoration: "none",
-                    transition: "background 0.2s"
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(195,198,214,0.02)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                  className="flex items-center justify-between px-6 py-5 border-b border-[var(--rule)] last:border-b-0 hover:bg-[var(--surface)] transition-colors"
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                    <div style={{ display: "flex", width: "40px", height: "40px", alignItems: "center", justifyContent: "center", borderRadius: "8px", background: "rgba(179,197,255,0.1)" }}>
-                      <svg style={{ width: "20px", height: "20px", color: "#b3c5ff" }} viewBox="0 0 16 16" fill="none">
+                  <div className="flex items-center gap-4">
+                    <div className="flex w-10 h-10 items-center justify-center rounded-xl bg-[var(--lilac)]/10">
+                      <svg className="w-5 h-5 text-[var(--lilac)]" viewBox="0 0 16 16" fill="none">
                         <path d="M4 2h6l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2"/>
                         <path d="M9 2v4h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                       </svg>
                     </div>
                     <div>
-                      <p style={{ fontSize: "14px", fontWeight: 600, color: "#e0e2ed", marginBottom: "4px" }}>
+                      <p className="text-sm font-medium text-[var(--ink)] mb-1">
                         {DOC_LABELS[doc.document_type] ?? doc.document_type}
                       </p>
-                      <p style={{ fontSize: "12px", color: "#8d909f" }}>{doc.file_name}</p>
+                      <p className="text-xs text-[var(--ink3)]">{doc.file_name}</p>
                     </div>
                   </div>
-                  <svg style={{ width: "18px", height: "18px", flexShrink: 0, color: "#8d909f" }} viewBox="0 0 16 16" fill="none">
+                  <svg className="w-4 h-4 flex-shrink-0 text-[var(--ink4)]" viewBox="0 0 16 16" fill="none">
                     <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </a>
               ))}
             </div>
-            <p style={{ marginTop: "16px", fontSize: "11px", color: "#8d909f", lineHeight: "1.6" }}>
+            <p className="mt-4 text-[11px] text-[var(--ink4)] leading-relaxed">
               These documents were submitted by the issuer. Lacus does not verify the accuracy or authenticity of any uploaded document. Investors are solely responsible for conducting their own due diligence.
             </p>
           </div>
@@ -602,7 +466,7 @@ function BondDetailContent() {
 
 export default function BondDetailPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#05080f" }} />}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <BondDetailContent />
     </Suspense>
   );

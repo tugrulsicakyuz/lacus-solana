@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lacus - Current Orbit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050817;
+      --text: #f6f0ea;
+      --muted: #9eaacd;
+      --line: rgba(255,255,255,0.08);
+      --blue-1: #b8e8ff;
+      --blue-2: #86d4ff;
+      --blue-3: #6e9fff;
+      --lilac-1: #c4adff;
+      --lilac-2: #927dff;
+      --mint: #8fe7d4;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 14% 16%, rgba(184, 232, 255, 0.15), transparent 22%),
+        radial-gradient(circle at 82% 14%, rgba(196, 173, 255, 0.18), transparent 24%),
+        radial-gradient(circle at 50% 50%, rgba(110, 159, 255, 0.16), transparent 28%),
+        linear-gradient(180deg, #050817 0%, #091022 52%, #050817 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.16;
+      background-image:
+        linear-gradient(rgba(150, 190, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(150, 190, 255, 0.05) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(1100px 760px at 50% 14%, #000 32%, transparent 84%);
+      -webkit-mask-image: radial-gradient(1100px 760px at 50% 14%, #000 32%, transparent 84%);
+    }
+
+    .shell {
+      width: min(1240px, calc(100% - 36px));
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: "Sora", sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.05em;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(184, 232, 255, 0.96), rgba(146, 125, 255, 0.92));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), 0 14px 28px rgba(110, 159, 255, 0.18);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      inset: auto 5px 5px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(8, 13, 26, 0.36);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .header-right a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .wallet {
+      padding: 11px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-weight: 600;
+      backdrop-filter: blur(12px);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.02fr 0.98fr;
+      gap: 26px;
+      align-items: center;
+      padding: 34px 0 90px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(246, 240, 234, 0.78);
+    }
+
+    .eyebrow i {
+      display: block;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--mint);
+      box-shadow: 0 0 18px rgba(143, 231, 212, 0.7);
+    }
+
+    h1 {
+      margin: 20px 0 16px;
+      font-family: "Sora", sans-serif;
+      font-size: clamp(54px, 8vw, 96px);
+      line-height: 0.94;
+      letter-spacing: -0.07em;
+      max-width: 700px;
+    }
+
+    h1 .accent {
+      background: linear-gradient(135deg, var(--blue-1), var(--blue-3) 48%, var(--lilac-1) 84%, var(--lilac-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .lead {
+      max-width: 630px;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 18px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 28px 0 22px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 196px;
+      padding: 15px 18px;
+      border-radius: 18px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: transform 160ms ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn-primary {
+      color: #06111f;
+      background: linear-gradient(135deg, var(--blue-1), var(--blue-3) 52%, var(--lilac-1));
+      box-shadow: 0 18px 42px rgba(110, 159, 255, 0.2);
+    }
+
+    .btn-secondary {
+      color: var(--text);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(12px);
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chips span {
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      font-size: 13px;
+      color: rgba(246, 240, 234, 0.86);
+    }
+
+    .visual {
+      position: relative;
+      min-height: 640px;
+      perspective: 1600px;
+    }
+
+    .orbital-panel,
+    .orbital-back {
+      position: absolute;
+      inset: 0;
+      border-radius: 32px;
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 36px 80px rgba(0,0,0,0.3);
+    }
+
+    .orbital-back {
+      inset: 34px 18px 18px;
+      background: linear-gradient(180deg, rgba(25, 33, 60, 0.7), rgba(12, 17, 33, 0.74));
+      transform: translateZ(-28px) rotateY(-8deg) rotateX(6deg);
+      opacity: 0.72;
+    }
+
+    .orbital-panel {
+      background:
+        radial-gradient(circle at 86% 10%, rgba(196, 173, 255, 0.18), transparent 22%),
+        radial-gradient(circle at 18% 82%, rgba(184, 232, 255, 0.16), transparent 24%),
+        linear-gradient(180deg, rgba(17, 24, 45, 0.96), rgba(10, 16, 31, 0.94));
+      transform: rotateY(-4deg) rotateX(2deg);
+      padding: 22px;
+    }
+
+    .orbital-panel::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: 31px;
+      border: 1px solid rgba(255,255,255,0.04);
+      pointer-events: none;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(246, 240, 234, 0.56);
+      position: relative;
+      z-index: 1;
+    }
+
+    .dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+    }
+
+    .orbit-stack {
+      position: relative;
+      min-height: 560px;
+      z-index: 1;
+    }
+
+    .focus-ring,
+    .focus-ring-2 {
+      position: absolute;
+      left: 52%;
+      top: 48%;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .focus-ring {
+      width: 290px;
+      height: 290px;
+      background: radial-gradient(circle, rgba(110, 159, 255, 0.08), transparent 70%);
+    }
+
+    .focus-ring-2 {
+      width: 400px;
+      height: 400px;
+      border-color: rgba(196, 173, 255, 0.12);
+      background: radial-gradient(circle, rgba(196, 173, 255, 0.05), transparent 72%);
+    }
+
+    .center-card {
+      position: absolute;
+      left: 52%;
+      top: 48%;
+      transform: translate(-50%, -50%);
+      width: 290px;
+      padding: 20px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(28, 38, 70, 0.96), rgba(12, 19, 36, 0.96));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.24);
+    }
+
+    .center-card small,
+    .mini small {
+      display: block;
+      margin-bottom: 10px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(246, 240, 234, 0.55);
+    }
+
+    .center-card strong,
+    .mini strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 22px;
+      letter-spacing: -0.05em;
+    }
+
+    .center-card p,
+    .mini p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.62;
+    }
+
+    .bar {
+      margin-top: 14px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      width: 74%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue-2), var(--blue-3) 56%, var(--lilac-1));
+      box-shadow: 0 0 24px rgba(110, 159, 255, 0.34);
+    }
+
+    .mini {
+      position: absolute;
+      width: 220px;
+      padding: 16px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(23, 31, 57, 0.92), rgba(11, 17, 31, 0.94));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 22px 48px rgba(0,0,0,0.22);
+    }
+
+    .m-1 { left: 0; top: 54px; transform: rotate(-7deg); }
+    .m-2 { right: 0; top: 70px; transform: rotate(7deg); }
+    .m-3 { left: 16px; bottom: 40px; transform: rotate(6deg); }
+    .m-4 { right: 18px; bottom: 54px; transform: rotate(-6deg); }
+
+    .section {
+      padding-bottom: 84px;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: 1fr 0.94fr;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-family: "Sora", sans-serif;
+      font-size: clamp(34px, 4.8vw, 58px);
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+      max-width: 760px;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.72;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .tile {
+      padding: 20px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(16, 23, 40, 0.92), rgba(10, 16, 29, 0.92));
+      border: 1px solid rgba(255,255,255,0.07);
+      min-height: 230px;
+    }
+
+    .tile small {
+      display: block;
+      margin-bottom: 14px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(246, 240, 234, 0.55);
+    }
+
+    .tile h3 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      letter-spacing: -0.04em;
+    }
+
+    .tile p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.72;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .section-head,
+      .cards { grid-template-columns: 1fr; display: grid; }
+      .header-right a { display: none; }
+      .visual { min-height: auto; perspective: none; }
+      .orbital-back { display: none; }
+      .orbital-panel { position: relative; transform: none; }
+      .orbit-stack { min-height: auto; display: grid; gap: 12px; }
+      .focus-ring, .focus-ring-2, .center-card, .mini {
+        position: static;
+        transform: none;
+        width: auto;
+        margin: 0;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 24px, 1240px); }
+      h1 { font-size: 50px; }
+      .actions { flex-direction: column; }
+      .btn, .wallet { width: 100%; }
+      .header-right { gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <span>Lacus</span>
+      </div>
+      <div class="header-right">
+        <a href="#">Protocol</a>
+        <a href="#">Markets</a>
+        <a href="#">Issuers</a>
+        <a href="#">Docs</a>
+        <div class="wallet">Connect wallet</div>
+      </div>
+    </header>
+
+    <main class="hero">
+      <section>
+        <div class="eyebrow"><i></i> Solana devnet / issuer and investor surface</div>
+        <h1>Borrow on-chain. <span class="accent">Invest transparently.</span></h1>
+        <p class="lead">
+          Lacus connects companies that need financing with investors who want fixed-income exposure,
+          then keeps secondary trading and future structured credit visible instead of opaque.
+        </p>
+        <div class="actions">
+          <a class="btn btn-primary" href="#">Explore markets</a>
+          <a class="btn btn-secondary" href="#">Open issuance flow</a>
+        </div>
+        <div class="chips">
+          <span>Non-custodial routing</span>
+          <span>P2P secondary</span>
+          <span>Transparent packaging</span>
+          <span>Built for Solana</span>
+        </div>
+      </section>
+
+      <section class="visual">
+        <div class="orbital-back"></div>
+        <div class="orbital-panel">
+          <div class="panel-head">
+            <span>Lacus / current orbit</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+
+          <div class="orbit-stack">
+            <div class="focus-ring-2"></div>
+            <div class="focus-ring"></div>
+
+            <article class="center-card">
+              <small>featured market</small>
+              <strong>Launch debt without vanishing into paperwork</strong>
+              <p>Terms, docs, financing target, and market readiness stay in one live object the investor can actually read.</p>
+              <div class="bar"><span></span></div>
+            </article>
+
+            <article class="mini m-1">
+              <small>issuer access</small>
+              <strong>Startup credit can launch here.</strong>
+              <p>Smaller companies finally get a native path to debt financing.</p>
+            </article>
+
+            <article class="mini m-2">
+              <small>retail access</small>
+              <strong>Fixed income becomes reachable.</strong>
+              <p>Yield products stop being reserved for institutions and large funds.</p>
+            </article>
+
+            <article class="mini m-3">
+              <small>secondary market</small>
+              <strong>Exit stays immediate.</strong>
+              <p>Positions move peer-to-peer with instant settlement instead of dated fund mechanics.</p>
+            </article>
+
+            <article class="mini m-4">
+              <small>future packaging</small>
+              <strong>CDOs without blind spots.</strong>
+              <p>Baskets and structured credit can remain inspectable all the way down.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>The hybrid route: product clarity plus a stronger first impression.</h2>
+        <p>
+          This sits between `Signal Bloom` and `Liquid Terminal`: more cinematic than the terminal,
+          more actionable than the bloom, and very close to a real landing page direction.
+        </p>
+      </div>
+
+      <div class="cards">
+        <article class="tile">
+          <small>01 / balance</small>
+          <h3>Good if you want one direction to rule both landing and product shell</h3>
+          <p>The structure already hints at launchpad, bond detail, and portfolio modules without losing the wow factor.</p>
+        </article>
+        <article class="tile">
+          <small>02 / palette</small>
+          <h3>Lake-blue to lilac feels softer and more memorable</h3>
+          <p>It is still crypto-native, but not trapped in the same cyan-green palette every other protocol is using.</p>
+        </article>
+        <article class="tile">
+          <small>03 / message</small>
+          <h3>The copy now tracks the actual thesis</h3>
+          <p>Issuer access, retail participation, transparency, and future structured credit are all present without sounding like a whitepaper paragraph.</p>
+        </article>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

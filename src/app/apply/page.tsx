@@ -30,30 +30,6 @@ const REQUIRED_DOCS = [
 
 type DocType = typeof REQUIRED_DOCS[number]["type"];
 
-/* ── Shared input style ── */
-const inputStyle: React.CSSProperties = {
-  marginTop: 6,
-  width: "100%",
-  borderRadius: 12,
-  border: "1px solid rgba(255,255,255,0.1)",
-  background: "rgba(255,255,255,0.04)",
-  padding: "12px 16px",
-  fontSize: 14,
-  color: "rgba(255,255,255,0.85)",
-  outline: "none",
-  transition: "border-color 0.2s, background 0.2s",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: 11,
-  fontWeight: 600,
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  color: "rgba(255,255,255,0.4)",
-  marginBottom: 2,
-};
-
 export default function ApplyPage() {
   const { address, isConnected } = useAccount();
   const [mounted, setMounted] = useState(false);
@@ -428,10 +404,8 @@ export default function ApplyPage() {
   /* ── SSR guard ── */
   if (!mounted) {
     return (
-      <section style={{ background: "#05080f", paddingTop: 96 }}>
-        <div className="flex flex-col items-center justify-center py-32">
-          <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#4c7df4" }} />
-        </div>
+      <section className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--lilac)]" />
       </section>
     );
   }
@@ -439,23 +413,14 @@ export default function ApplyPage() {
   /* ── Not connected ── */
   if (!isConnected) {
     return (
-      <section style={{ background: "#05080f", paddingTop: 96 }}>
-        <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
-          <div
-            className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl"
-            style={{ background: "rgba(76,125,244,0.1)" }}
-          >
-            <ShieldCheck className="h-10 w-10" style={{ color: "#4c7df4" }} />
+      <section className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center text-center px-4">
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-[var(--lilac)]/10">
+            <ShieldCheck className="h-10 w-10 text-[var(--lilac)]" />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl" style={{ color: "rgba(255,255,255,0.85)" }}>
-            Connect Your Wallet
-          </h2>
-          <p className="mt-3 max-w-md text-base" style={{ color: "rgba(255,255,255,0.4)" }}>
-            Connect your wallet to apply for a bond listing. It only takes a few minutes.
-          </p>
-          <div className="mt-8">
-            <ConnectButton />
-          </div>
+          <h2 className="font-display text-[var(--ink)] text-2xl sm:text-3xl mb-3">Connect Your Wallet</h2>
+          <p className="text-base text-[var(--ink3)] max-w-md mb-8">Connect your wallet to apply for a bond listing.</p>
+          <ConnectButton />
         </div>
       </section>
     );
@@ -465,41 +430,37 @@ export default function ApplyPage() {
   if (submitted) {
     return (
       <>
-        <section style={{ background: "#05080f", paddingTop: 80, paddingBottom: 16 }}>
-          <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-            <div
-              className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
-              style={{ background: "rgba(52,211,153,0.1)" }}
-            >
-              <CheckCircle2 className="h-7 w-7" style={{ color: "#34d399" }} />
+        <section className="pt-20 pb-4">
+          <div className="max-w-3xl mx-auto px-4 text-center">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--aqua)]/10">
+              <CheckCircle2 className="h-7 w-7 text-[var(--aqua)]" />
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ color: "rgba(255,255,255,0.92)" }}>
+            <h1 className="font-display text-[var(--ink)] text-3xl sm:text-4xl">
               Your Bond is Live!
             </h1>
-            <p className="mt-3 text-base sm:text-lg" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <p className="mt-3 text-base sm:text-lg text-[var(--ink3)]">
               Your loan agreement has been signed and hashed on-chain. Your bond is now visible on the primary market.
             </p>
           </div>
         </section>
 
-        <section style={{ background: "#05080f", paddingTop: 24, paddingBottom: 56 }}>
-          <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
-            <div className="rounded-2xl p-6 sm:p-8 space-y-6" style={{ background: "#0c1018", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <div style={{ height: 1, background: "linear-gradient(to right, rgba(52,211,153,0.4), rgba(52,211,153,0.1), transparent)" }} />
+        <section className="pt-6 pb-14">
+          <div className="card-luminous rounded-2xl p-6 sm:p-8 space-y-6 max-w-2xl mx-auto">
+              <div className="h-px bg-gradient-to-r from-[var(--aqua)]/40 via-[var(--aqua)]/10 to-transparent" />
 
               {/* Bond summary */}
-              <div className="rounded-xl p-5 space-y-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.3)", fontWeight: 600 }}>Bond Summary</p>
+              <div className="rounded-xl p-5 space-y-4 bg-[var(--surface)] border border-[var(--rule)]">
+                <p className="eyebrow-dim">Bond Summary</p>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                   {[
                     { label: "Issuer", value: form.issuer_name },
                     { label: "Symbol", value: form.symbol.toUpperCase() },
-                    { label: "Annual Yield", value: `${form.apy}%`, highlight: "#34d399" },
+                    { label: "Annual Yield", value: `${form.apy}%`, highlight: "var(--aqua)" },
                     { label: "Maturity", value: `${form.maturity_months} months` },
                   ].map((item) => (
                     <div key={item.label}>
-                      <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.25)" }}>{item.label}</p>
-                      <p className="mt-0.5 text-sm font-semibold" style={{ color: item.highlight ?? "rgba(255,255,255,0.85)" }}>{item.value}</p>
+                      <p className="text-[10px] uppercase tracking-widest text-[var(--ink4)]">{item.label}</p>
+                      <p className="mt-0.5 text-sm font-semibold" style={{ color: item.highlight ?? 'var(--ink)' }}>{item.value}</p>
                     </div>
                   ))}
                 </div>
@@ -511,10 +472,7 @@ export default function ApplyPage() {
                   href={baseScanUrl(createdTxHash)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm transition-colors"
-                  style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.4)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#4c7df4"; e.currentTarget.style.borderColor = "rgba(76,125,244,0.3)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                  className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm border border-[var(--rule)] bg-[var(--surface)] text-[var(--ink3)] hover:text-[var(--lilac)] hover:border-[var(--lilac)]/30 transition-colors"
                 >
                   View transaction details →
                 </a>
@@ -524,11 +482,10 @@ export default function ApplyPage() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <a
                   href="/manage"
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg py-4 text-sm font-semibold text-white transition-opacity hover:opacity-85"
-                  style={{ background: "#4c7df4" }}
+                  className="btn-primary flex-1 flex items-center justify-center gap-2 py-4 text-sm"
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  Go to Issuer Dashboard
+                  Go to Dashboard
                 </a>
                 <button
                   type="button"
@@ -552,16 +509,12 @@ export default function ApplyPage() {
                     setUploadedDocs({});
                     setError(null);
                   }}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg py-4 text-sm font-semibold transition-colors"
-                  style={{ border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.7)" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                  className="btn-ghost flex-1 flex items-center justify-center gap-2 py-4 text-sm"
                 >
                   Create Another Bond
                 </button>
               </div>
             </div>
-          </div>
         </section>
       </>
     );
@@ -569,58 +522,43 @@ export default function ApplyPage() {
 
   /* ── Main wizard ── */
   return (
-    <div style={{ background: "#05080f", minHeight: "100vh", paddingTop: "80px", paddingBottom: "80px" }}>
-      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "48px 24px" }}>
+    <div className="min-h-screen pt-20 pb-20">
+      <div className="max-w-[1100px] mx-auto px-6 py-12">
         
         {/* Page Header */}
-        <div style={{ marginBottom: "24px" }}>
-          <p style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "#64748b", marginBottom: "8px" }}>
-            BOND APPLICATION
-          </p>
-          <h1 style={{ fontSize: "36px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>
-            Issue a Bond
-          </h1>
-          <p style={{ fontSize: "14px", color: "#64748b" }}>
-            Complete all steps to list your bond on Lacus Markets.
-          </p>
+        <div className="mb-6">
+          <p className="eyebrow eyebrow-rule mb-2">Bond Application</p>
+          <h1 className="font-display text-[var(--ink)] text-[2.25rem] mb-2">Issue a Bond</h1>
+          <p className="text-sm text-[var(--ink3)]">Complete all steps to list your bond on Lacus Markets.</p>
         </div>
 
         {/* Horizontal Step Progress Bar */}
-        <div style={{ marginTop: "24px", marginBottom: "40px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div className="mt-6 mb-10">
+          <div className="flex items-center justify-between">
             {STEPS.map((s, i) => {
               const isCompleted = step > s.number;
               const isActive = step === s.number;
               const isUpcoming = step < s.number;
               
               return (
-                <div key={s.number} style={{ display: "flex", alignItems: "center", flex: 1 }}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
+                <div key={s.number} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1">
                     <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-semibold mb-2 transition-all"
                       style={{
-                        width: "28px",
-                        height: "28px",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: isCompleted ? "rgba(52,211,153,0.15)" : isActive ? "#4c7df4" : "#0d1117",
-                        border: isCompleted ? "none" : isActive ? "none" : "1px solid rgba(255,255,255,0.1)",
-                        color: isCompleted ? "#34d399" : isActive ? "#fff" : "#475569",
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        marginBottom: "8px",
-                        transition: "all 0.2s"
+                        background: isCompleted ? "rgba(94,234,212,0.15)" : isActive ? "var(--lilac)" : "var(--surface)",
+                        border: isCompleted ? "none" : isActive ? "none" : "1px solid var(--rule)",
+                        color: isCompleted ? "var(--aqua)" : isActive ? "#fff" : "var(--ink4)",
                       }}
                     >
-                      {isCompleted ? <CheckCircle2 style={{ width: "16px", height: "16px" }} /> : s.number}
+                      {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : s.number}
                     </div>
-                    <p style={{ fontSize: "12px", textAlign: "center", color: isCompleted ? "#34d399" : isActive ? "#f1f5f9" : "#475569", fontWeight: 500 }}>
+                    <p className="text-[12px] text-center font-medium" style={{ color: isCompleted ? "var(--aqua)" : isActive ? "var(--ink)" : "var(--ink4)" }}>
                       {s.label}
                     </p>
                   </div>
                   {i < STEPS.length - 1 && (
-                    <div style={{ width: "100%", height: "1px", background: "rgba(255,255,255,0.07)", marginBottom: "32px" }} />
+                    <div className="w-full h-px bg-[var(--rule)] mb-8" />
                   )}
                 </div>
               );
@@ -629,17 +567,17 @@ export default function ApplyPage() {
         </div>
 
         {/* Form Card */}
-        <div style={{ background: "#0d1117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px", padding: "36px" }}>
+        <div className="card-luminous rounded-2xl p-9">
 
             {/* STEP 1: Issuer Info */}
             {step === 1 && (
               <div>
-                <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#f1f5f9", marginBottom: "4px" }}>Issuer Information</h2>
-                <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "28px" }}>Tell us about your organization.</p>
+                <h2 className="text-xl font-semibold text-[var(--ink)] mb-1">Issuer Information</h2>
+                <p className="text-[13px] text-[var(--ink3)] mb-7">Tell us about your organization.</p>
 
-                <div style={{ marginBottom: "20px" }}>
-                  <label htmlFor="issuer_name" style={{ display: "block", fontSize: "12px", color: "#64748b", marginBottom: "6px" }}>
-                    Issuer Name <span style={{ color: "#f87171" }}>*</span>
+                <div className="mb-5">
+                  <label htmlFor="issuer_name" className="block text-[11px] font-semibold uppercase tracking-widest text-[var(--ink3)] mb-1.5">
+                    Issuer Name <span className="text-[var(--coral)]">*</span>
                   </label>
                   <input
                     id="issuer_name"
@@ -649,24 +587,22 @@ export default function ApplyPage() {
                     value={form.issuer_name}
                     onChange={handleChange}
                     placeholder="e.g. Green Energy Corp"
-                    style={{ width: "100%", background: "#151c28", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "12px 16px", color: "#f1f5f9", fontSize: "14px", outline: "none" }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(76,125,244,0.5)"; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                    className="w-full bg-[var(--surface)] border border-[var(--rule)] focus:border-[var(--lilac)] rounded-xl px-4 py-3 text-sm text-[var(--ink)] outline-none transition-colors"
                   />
-                  <p style={{ fontSize: "12px", color: "#475569", marginTop: "4px" }}>This will appear as the bond issuer name on all listings.</p>
+                  <p className="text-xs text-[var(--ink4)] mt-1">This will appear as the bond issuer name on all listings.</p>
                 </div>
 
                 {error && (
-                  <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "10px", padding: "12px 16px", marginBottom: "20px" }}>
-                    <p style={{ fontSize: "14px", color: "#f87171" }}>{error}</p>
+                  <div className="rounded-xl px-4 py-3 bg-[var(--coral)]/8 border border-[var(--coral)]/20 mb-5">
+                    <p className="text-sm text-[var(--coral)]">{error}</p>
                   </div>
                 )}
 
-                <div style={{ marginTop: "28px", display: "flex", justifyContent: "flex-end" }}>
+                <div className="mt-7 flex justify-end">
                   <button
                     type="button"
                     onClick={handleNext}
-                    style={{ background: "#4c7df4", color: "#fff", borderRadius: "10px", padding: "10px 24px", fontSize: "14px", fontWeight: 500, border: "none", cursor: "pointer" }}
+                    className="btn-primary px-6 py-2.5 text-sm"
                   >
                     Continue
                   </button>
@@ -677,13 +613,13 @@ export default function ApplyPage() {
             {/* STEP 2: Bond Details */}
             {step === 2 && (
               <div>
-                <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#f1f5f9", marginBottom: "4px" }}>Bond Details</h2>
-                <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "28px" }}>Configure the financial parameters of your bond.</p>
+                <h2 className="text-xl font-semibold text-[var(--ink)] mb-1">Bond Details</h2>
+                <p className="text-[13px] text-[var(--ink3)] mb-7">Configure the financial parameters of your bond.</p>
 
                 {/* Bond Symbol */}
-                <div style={{ marginBottom: "20px" }}>
-                  <label htmlFor="symbol" style={{ display: "block", fontSize: "12px", color: "#64748b", marginBottom: "6px" }}>
-                    Bond Symbol <span style={{ color: "#f87171" }}>*</span>
+                <div className="mb-5">
+                  <label htmlFor="symbol" className="block text-[11px] font-semibold uppercase tracking-widest text-[var(--ink3)] mb-1.5">
+                    Bond Symbol <span className="text-[var(--coral)]">*</span>
                   </label>
                   <input
                     id="symbol"
@@ -698,22 +634,20 @@ export default function ApplyPage() {
                       setForm((prev) => ({ ...prev, symbol: cleaned }));
                     }}
                     placeholder="e.g. GRNE"
-                    style={{ width: "100%", background: "#151c28", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "12px 16px", color: "#f1f5f9", fontSize: "14px", outline: "none", textTransform: "uppercase" }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(76,125,244,0.5)"; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                    className="w-full bg-[var(--surface)] border border-[var(--rule)] focus:border-[var(--lilac)] rounded-xl px-4 py-3 text-sm text-[var(--ink)] outline-none transition-colors uppercase"
                   />
-                  <p style={{ fontSize: "12px", color: "#475569", marginTop: "4px" }}>Max 6 letters only. e.g. GRNE, USGB</p>
+                  <p className="text-xs text-[var(--ink4)] mt-1">Max 6 letters only. e.g. GRNE, USGB</p>
                 </div>
 
                 {/* APY + Maturity */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
+                <div className="grid grid-cols-2 gap-4 mb-5">
                   {[
                     { id: "apy", label: "Annual Yield Rate (%)", type: "number", step: "0.01", min: "0", placeholder: "e.g. 7.5" },
                     { id: "maturity_months", label: "Maturity (Months)", type: "number", min: "1", placeholder: "e.g. 24" },
                   ].map((field) => (
                     <div key={field.id}>
-                      <label htmlFor={field.id} style={{ display: "block", fontSize: "12px", color: "#64748b", marginBottom: "6px" }}>
-                        {field.label} <span style={{ color: "#f87171" }}>*</span>
+                      <label htmlFor={field.id} className="block text-[11px] font-semibold uppercase tracking-widest text-[var(--ink3)] mb-1.5">
+                        {field.label} <span className="text-[var(--coral)]">*</span>
                       </label>
                       <input
                         id={field.id}
@@ -725,23 +659,21 @@ export default function ApplyPage() {
                         value={form[field.id as keyof typeof form]}
                         onChange={handleChange}
                         placeholder={field.placeholder}
-                        style={{ width: "100%", background: "#151c28", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "12px 16px", color: "#f1f5f9", fontSize: "14px", outline: "none" }}
-                        onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(76,125,244,0.5)"; }}
-                        onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                        className="w-full bg-[var(--surface)] border border-[var(--rule)] focus:border-[var(--lilac)] rounded-xl px-4 py-3 text-sm text-[var(--ink)] outline-none transition-colors"
                       />
                     </div>
                   ))}
                 </div>
 
                 {/* Issue Size + Price */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
+                <div className="grid grid-cols-2 gap-4 mb-5">
                   {[
                     { id: "total_issue_size", label: "Total Issue Size ($)", type: "number", min: "0", placeholder: "e.g. 5000000" },
                     { id: "price_per_token", label: "Token Price ($)", type: "number", step: "0.01", min: "0", placeholder: "e.g. 102.50" },
                   ].map((field) => (
                     <div key={field.id}>
-                      <label htmlFor={field.id} style={{ display: "block", fontSize: "12px", color: "#64748b", marginBottom: "6px" }}>
-                        {field.label} <span style={{ color: "#f87171" }}>*</span>
+                      <label htmlFor={field.id} className="block text-[11px] font-semibold uppercase tracking-widest text-[var(--ink3)] mb-1.5">
+                        {field.label} <span className="text-[var(--coral)]">*</span>
                       </label>
                       <input
                         id={field.id}
@@ -753,32 +685,30 @@ export default function ApplyPage() {
                         value={form[field.id as keyof typeof form]}
                         onChange={handleChange}
                         placeholder={field.placeholder}
-                        style={{ width: "100%", background: "#151c28", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "12px 16px", color: "#f1f5f9", fontSize: "14px", outline: "none" }}
-                        onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(76,125,244,0.5)"; }}
-                        onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                        className="w-full bg-[var(--surface)] border border-[var(--rule)] focus:border-[var(--lilac)] rounded-xl px-4 py-3 text-sm text-[var(--ink)] outline-none transition-colors"
                       />
                     </div>
                   ))}
                 </div>
 
                 {error && (
-                  <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "10px", padding: "12px 16px", marginBottom: "20px" }}>
-                    <p style={{ fontSize: "14px", color: "#f87171" }}>{error}</p>
+                  <div className="rounded-xl px-4 py-3 bg-[var(--coral)]/8 border border-[var(--coral)]/20 mb-5">
+                    <p className="text-sm text-[var(--coral)]">{error}</p>
                   </div>
                 )}
 
-                <div style={{ marginTop: "28px", display: "flex", justifyContent: "space-between" }}>
+                <div className="mt-7 flex justify-between">
                   <button
                     type="button"
                     onClick={handleBack}
-                    style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "#64748b", borderRadius: "10px", padding: "10px 24px", fontSize: "14px", cursor: "pointer" }}
+                    className="btn-ghost px-6 py-2.5 text-sm"
                   >
                     Back
                   </button>
                   <button
                     type="button"
                     onClick={handleNext}
-                    style={{ background: "#4c7df4", color: "#fff", borderRadius: "10px", padding: "10px 24px", fontSize: "14px", fontWeight: 500, border: "none", cursor: "pointer" }}
+                    className="btn-primary px-6 py-2.5 text-sm"
                   >
                     Continue
                   </button>
@@ -789,48 +719,47 @@ export default function ApplyPage() {
             {/* STEP 3: Documents */}
             {step === 3 && (
               <div>
-                <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#f1f5f9", marginBottom: "4px" }}>Financial Documents</h2>
-                <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "28px" }}>
+                <h2 className="text-xl font-semibold text-[var(--ink)] mb-1">Financial Documents</h2>
+                <p className="text-[13px] text-[var(--ink3)] mb-7">
                   Upload all required documents. These will be visible to potential investors.
                 </p>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div className="flex flex-col gap-3">
                   {REQUIRED_DOCS.map((doc) => {
                     const uploaded = uploadedDocs[doc.type];
                     const isUploading = uploadingDoc === doc.type;
                     return (
                       <div
                         key={doc.type}
-                        className="flex items-center justify-between rounded-xl p-4"
-                        style={{
-                          background: uploaded ? "rgba(52,211,153,0.05)" : "rgba(255,255,255,0.03)",
-                          border: uploaded ? "1px solid rgba(52,211,153,0.2)" : "1px solid rgba(255,255,255,0.08)",
-                        }}
+                        className={`flex items-center justify-between rounded-xl p-4 border transition-colors ${
+                          uploaded
+                            ? 'bg-[var(--aqua)]/5 border-[var(--aqua)]/20'
+                            : 'bg-[var(--surface)] border-[var(--rule)]'
+                        }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           {uploaded ? (
-                            <FileCheck className="h-4 w-4 shrink-0" style={{ color: "#34d399" }} />
+                            <FileCheck className="h-4 w-4 shrink-0 text-[var(--aqua)]" />
                           ) : (
-                            <div className="h-4 w-4 shrink-0 rounded-full" style={{ border: "1.5px solid rgba(255,255,255,0.2)" }} />
+                            <div className="h-4 w-4 shrink-0 rounded-full border-[1.5px] border-[var(--rule)]" />
                           )}
                           <div className="min-w-0">
-                            <p className="text-sm font-medium truncate" style={{ color: uploaded ? "#34d399" : "rgba(255,255,255,0.7)" }}>
+                            <p className="text-sm font-medium truncate" style={{ color: uploaded ? 'var(--aqua)' : 'var(--ink2)' }}>
                               {doc.label}
                             </p>
-                            <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.3)" }}>
+                            <p className="text-xs truncate text-[var(--ink4)]">
                               {uploaded ? uploaded.name : doc.hint}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0 ml-3">
                           {isUploading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" style={{ color: "#4c7df4" }} />
+                            <Loader2 className="h-4 w-4 animate-spin text-[var(--lilac)]" />
                           ) : uploaded ? (
                             <button
                               type="button"
                               onClick={() => removeDoc(doc.type)}
-                              className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors"
-                              style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}
+                              className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--coral)]/10 text-[var(--coral)]"
                             >
                               <X className="h-3.5 w-3.5" />
                             </button>
@@ -846,10 +775,7 @@ export default function ApplyPage() {
                                   e.target.value = "";
                                 }}
                               />
-                              <span
-                                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-80"
-                                style={{ background: "rgba(76,125,244,0.12)", color: "#8eb4fb", border: "1px solid rgba(76,125,244,0.2)" }}
-                              >
+                              <span className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium btn-ghost hover:opacity-80">
                                 <Upload className="h-3 w-3" />
                                 Upload
                               </span>
@@ -862,19 +788,19 @@ export default function ApplyPage() {
                 </div>
 
                 {error && (
-                  <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "10px", padding: "12px 16px", marginBottom: "20px" }}>
-                    <p style={{ fontSize: "14px", color: "#f87171" }}>{error}</p>
+                  <div className="rounded-xl px-4 py-3 bg-[var(--coral)]/8 border border-[var(--coral)]/20 mb-5">
+                    <p className="text-sm text-[var(--coral)]">{error}</p>
                   </div>
                 )}
 
-                <div style={{ marginTop: "28px", display: "flex", justifyContent: "space-between" }}>
+                <div className="mt-7 flex justify-between">
                   <button type="button" onClick={handleBack}
-                    style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "#64748b", borderRadius: "10px", padding: "10px 24px", fontSize: "14px", cursor: "pointer" }}>
+                    className="btn-ghost px-6 py-2.5 text-sm">
                     Back
                   </button>
                   <button type="button" onClick={handleNext}
                     disabled={!allDocsUploaded || !!uploadingDoc}
-                    style={{ background: "#4c7df4", color: "#fff", borderRadius: "10px", padding: "10px 24px", fontSize: "14px", fontWeight: 500, border: "none", cursor: !allDocsUploaded || !!uploadingDoc ? "not-allowed" : "pointer", opacity: !allDocsUploaded || !!uploadingDoc ? 0.4 : 1 }}>
+                    className="btn-primary px-6 py-2.5 text-sm disabled:opacity-40 disabled:cursor-not-allowed">
                     Continue
                   </button>
                 </div>

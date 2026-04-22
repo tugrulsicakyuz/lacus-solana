@@ -517,109 +517,127 @@ function SecondaryPageContent() {
   const truncateAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 
   return (
-    <section style={{ background: "#10131b", minHeight: "100vh", paddingTop: "32px", paddingBottom: "48px" }}>
-      <div style={{ maxWidth: "1440px", margin: "0 auto", padding: "0 32px" }}>
+    <section className="min-h-screen pt-8 pb-16">
+      <div className="max-w-[1440px] mx-auto px-8">
         
         {/* Header with Tab Switcher */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "48px", flexWrap: "wrap", gap: "24px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.2em", color: "#c3c6d6", fontWeight: 500 }}>Secondary Market</p>
-            <h1 style={{ fontFamily: "Manrope, sans-serif", fontSize: "36px", fontWeight: 800, color: "#e0e2ed", letterSpacing: "-0.02em" }}>P2P Bond Exchange</h1>
+        <div className="pt-14 pb-12 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+          <div>
+            <div className="eyebrow eyebrow-rule mb-5 reveal" style={{ color: "var(--lilac)" }}>
+              Secondary Market
+            </div>
+            <h1
+              className="font-display text-[var(--ink)] leading-[0.97] tracking-tight reveal reveal-d1"
+              style={{ fontSize: "clamp(2.2rem, 3.5vw, 3.8rem)" }}
+            >
+              P2P Bond Exchange
+              <br />
+              <span className="italic grad-ink-interactive cursor-pointer">peer-to-peer.</span>
+            </h1>
           </div>
-          
+
           {/* Tab Switcher */}
-          <div style={{ background: "#181c23", padding: "4px", borderRadius: "8px", display: "inline-flex" }}>
-            <button
-              onClick={() => setActiveTab('buy')}
-              style={{
-                padding: "8px 32px",
-                borderRadius: "6px",
-                fontFamily: "Manrope, sans-serif",
-                fontWeight: 600,
-                fontSize: "13px",
-                border: "none",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                background: activeTab === 'buy' ? "linear-gradient(135deg, #b3c5ff 0%, #5e8bff 100%)" : "transparent",
-                color: activeTab === 'buy' ? "#001849" : "#c3c6d6",
-                boxShadow: activeTab === 'buy' ? "0 4px 12px rgba(179,197,255,0.15)" : "none"
-              }}
-            >
-              BUY MODE
-            </button>
-            <button
-              onClick={() => setActiveTab('sell')}
-              style={{
-                padding: "8px 32px",
-                borderRadius: "6px",
-                fontFamily: "Manrope, sans-serif",
-                fontWeight: 600,
-                fontSize: "13px",
-                border: "none",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                background: activeTab === 'sell' ? "linear-gradient(135deg, #b3c5ff 0%, #5e8bff 100%)" : "transparent",
-                color: activeTab === 'sell' ? "#001849" : "#c3c6d6",
-                boxShadow: activeTab === 'sell' ? "0 4px 12px rgba(179,197,255,0.15)" : "none"
-              }}
-            >
-              SELL MODE
-            </button>
+          <div
+            className="reveal reveal-d2 flex-shrink-0"
+            style={{
+              display: "inline-flex",
+              gap: "4px",
+              padding: "4px",
+              borderRadius: "14px",
+              border: "1px solid rgba(226,228,245,0.08)",
+              background: "rgba(10,12,30,0.6)",
+              backdropFilter: "blur(12px)",
+            }}
+          >
+            {(["buy", "sell"] as const).map((tab) => {
+              const active = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: "0.68rem",
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    padding: "10px 28px",
+                    borderRadius: "10px",
+                    border: active
+                      ? tab === "buy"
+                        ? "1px solid rgba(125,211,252,0.25)"
+                        : "1px solid rgba(196,181,253,0.25)"
+                      : "1px solid transparent",
+                    background: active
+                      ? tab === "buy"
+                        ? "rgba(125,211,252,0.08)"
+                        : "rgba(196,181,253,0.08)"
+                      : "transparent",
+                    color: active
+                      ? tab === "buy" ? "var(--aqua-bright)" : "var(--lilac)"
+                      : "var(--ink4)",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {tab === "buy" ? "Buy" : "Sell"}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Market Stats Grid */}
         {isConnected && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginBottom: "32px" }}>
-            <div style={{ background: "#181c23", padding: "24px", borderRadius: "12px", border: "1px solid rgba(67,70,84,0.1)" }}>
-              <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6", marginBottom: "8px", fontWeight: 600 }}>Active Listings</p>
-              <p style={{ fontFamily: "Manrope, sans-serif", fontSize: "24px", fontWeight: 700, color: "#e0e2ed" }}>{listings.length}</p>
-              <p style={{ fontSize: "11px", color: "rgba(195,198,214,0.6)", marginTop: "8px" }}>Across All Markets</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 reveal reveal-d2">
+            <div className="card-luminous rounded-xl px-6 py-5">
+              <p className="eyebrow-dim mb-2">Active Listings</p>
+              <p className="text-2xl font-semibold text-[var(--ink)] font-mono">{listings.length}</p>
+              <p className="text-[11px] text-[var(--ink4)] mt-2">Across All Markets</p>
             </div>
-            <div style={{ background: "#181c23", padding: "24px", borderRadius: "12px", border: "1px solid rgba(67,70,84,0.1)" }}>
-              <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6", marginBottom: "8px", fontWeight: 600 }}>Your Bonds</p>
-              <p style={{ fontFamily: "Manrope, sans-serif", fontSize: "24px", fontWeight: 700, color: "#e0e2ed" }}>{bonds.length}</p>
-              <p style={{ fontSize: "11px", color: "rgba(195,198,214,0.6)", marginTop: "8px" }}>Available to List</p>
+            <div className="card-luminous rounded-xl px-6 py-5">
+              <p className="eyebrow-dim mb-2">Your Bonds</p>
+              <p className="text-2xl font-semibold text-[var(--ink)] font-mono">{bonds.length}</p>
+              <p className="text-[11px] text-[var(--ink4)] mt-2">Available to List</p>
             </div>
           </div>
         )}
 
         {!isConnected ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", background: "#181c23", borderRadius: "12px", textAlign: "center" }}>
-            <Wallet style={{ width: "56px", height: "56px", color: "#b3c5ff", marginBottom: "20px", opacity: 0.5 }} />
-            <h3 style={{ fontFamily: "Manrope, sans-serif", fontSize: "20px", fontWeight: 700, color: "#e0e2ed", marginBottom: "8px" }}>Connect Your Wallet</h3>
-            <p style={{ fontSize: "14px", color: "#c3c6d6", marginBottom: "24px" }}>Connect to browse listings or post a sell offer</p>
+          <div className="card-luminous rounded-2xl flex flex-col items-center justify-center py-20 px-6 text-center">
+            <Wallet className="w-14 h-14 text-[var(--lilac)] mb-5 opacity-40" />
+            <h3 className="font-display text-[var(--ink)] text-xl mb-2">Connect Your Wallet</h3>
+            <p className="text-sm text-[var(--ink3)] mb-6">Connect to browse listings or post a sell offer</p>
             <ConnectButton />
           </div>
         ) : (
           <div>
             {/* BUY TAB CONTENT */}
             {activeTab === 'buy' && (
-              <div style={{ background: "#181c23", borderRadius: "12px", overflow: "hidden" }}>
+              <div className="card-luminous rounded-2xl overflow-hidden">
 
                 {loading ? (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 20px", gap: "12px" }}>
-                    <Loader2 style={{ width: "20px", height: "20px", color: "#b3c5ff" }} className="animate-spin" />
-                    <span style={{ fontSize: "14px", color: "#c3c6d6" }}>Loading listings...</span>
+                  <div className="flex items-center justify-center py-20 gap-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-[var(--lilac)]" />
+                    <span className="text-sm text-[var(--ink3)]">Loading listings...</span>
                   </div>
                 ) : listings.length === 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", textAlign: "center" }}>
-                    <Tag style={{ width: "56px", height: "56px", color: "#434654", marginBottom: "20px", opacity: 0.4 }} />
-                    <h3 style={{ fontFamily: "Manrope, sans-serif", fontSize: "18px", fontWeight: 700, color: "#e0e2ed", marginBottom: "8px" }}>No active listings</h3>
-                    <p style={{ fontSize: "14px", color: "#c3c6d6" }}>Check back later or list your own bonds</p>
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <Tag className="w-14 h-14 text-[var(--ink4)] mb-5 opacity-30" />
+                    <h3 className="text-lg font-medium text-[var(--ink)] mb-2">No active listings</h3>
+                    <p className="text-sm text-[var(--ink3)]">Check back later or list your own bonds</p>
                   </div>
                 ) : (
-                  <div style={{ width: "100%", overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <div className="w-full overflow-x-auto">
+                    <table className="w-full border-collapse">
                       <thead>
-                        <tr style={{ borderBottom: "1px solid rgba(67,70,84,0.2)" }}>
-                          <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}>Asset</th>
-                          <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}>Issuer</th>
-                          <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}>APY</th>
-                          <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}>Amount</th>
-                          <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}>Price</th>
-                          <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}>Seller</th>
-                          <th style={{ padding: "16px 24px", textAlign: "right", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}></th>
+                        <tr className="border-b border-[var(--rule)]">
+                          <th className="px-6 py-4 text-left eyebrow-dim">Asset</th>
+                          <th className="px-6 py-4 text-left eyebrow-dim">Issuer</th>
+                          <th className="px-6 py-4 text-left eyebrow-dim">APY</th>
+                          <th className="px-6 py-4 text-left eyebrow-dim">Amount</th>
+                          <th className="px-6 py-4 text-left eyebrow-dim">Price</th>
+                          <th className="px-6 py-4 text-left eyebrow-dim">Seller</th>
+                          <th className="px-6 py-4 text-right eyebrow-dim"></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -632,93 +650,51 @@ function SecondaryPageContent() {
                           return (
                             <tr 
                               key={listing.id}
-                              style={{ 
-                                borderBottom: "1px solid rgba(67,70,84,0.05)",
-                                transition: "background 0.2s",
-                                cursor: "default"
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.background = "#262a32"}
-                              onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                              className="border-b border-[var(--rule-soft)] hover:bg-[var(--surface)] transition-colors"
                             >
-                              <td style={{ padding: "20px 24px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#31353d", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                    <span style={{ fontSize: "10px", fontWeight: 700, color: "#b3c5ff" }}>{listing.bond_symbol.slice(0, 3).toUpperCase()}</span>
+                              <td className="px-6 py-5">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-[var(--lilac)]/10 flex items-center justify-center">
+                                    <span className="text-[10px] font-bold text-[var(--lilac)] font-mono">{listing.bond_symbol.slice(0, 3).toUpperCase()}</span>
                                   </div>
                                   <div>
-                                    <p style={{ fontSize: "13px", fontWeight: 700, color: "#e0e2ed" }}>{listing.bond_symbol}</p>
-                                    <p style={{ fontSize: "10px", color: "#c3c6d6" }}>Fixed Rate</p>
+                                    <p className="text-[13px] font-semibold text-[var(--ink)]">{listing.bond_symbol}</p>
+                                    <p className="text-[10px] text-[var(--ink3)]">Fixed Rate</p>
                                   </div>
                                 </div>
                               </td>
-                              <td style={{ padding: "20px 24px", fontSize: "13px", fontWeight: 500, color: "#e0e2ed" }}>{listing.issuer_name}</td>
-                              <td style={{ padding: "20px 24px" }}>
-                                <span style={{ fontFamily: "Manrope, sans-serif", fontSize: "14px", fontWeight: 700, color: "#45dfa4" }}>7.5%</span>
+                              <td className="px-6 py-5 text-[13px] font-medium text-[var(--ink)]">{listing.issuer_name}</td>
+                              <td className="px-6 py-5">
+                                <span className="text-sm font-semibold text-[var(--aqua-bright)] font-mono">7.5%</span>
                               </td>
-                              <td style={{ padding: "20px 24px" }}>
-                                <p style={{ fontSize: "13px", fontWeight: 600, color: "#e0e2ed" }}>{listing.amount} TKN</p>
-                                <p style={{ fontSize: "10px", color: "#c3c6d6" }}>${totalPrice} Val.</p>
+                              <td className="px-6 py-5">
+                                <p className="text-[13px] text-[var(--ink)] font-mono">{listing.amount} TKN</p>
+                                <p className="text-[10px] text-[var(--ink3)]">${totalPrice} Val.</p>
                               </td>
-                              <td style={{ padding: "20px 24px" }}>
-                                <p style={{ fontSize: "13px", fontWeight: 700, color: "#e0e2ed" }}>${listing.price_per_token.toFixed(2)} <span style={{ fontSize: "10px", fontWeight: 400, color: "#c3c6d6" }}>USDC</span></p>
+                              <td className="px-6 py-5">
+                                <p className="text-[13px] text-[var(--ink)] font-mono">${listing.price_per_token.toFixed(2)} <span className="text-[10px] text-[var(--ink3)]">USDC</span></p>
                               </td>
-                              <td style={{ padding: "20px 24px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                  <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#c3c6d6" }}>{truncateAddress(listing.seller_wallet)}</span>
+                              <td className="px-6 py-5">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-[11px] text-[var(--ink3)]">{truncateAddress(listing.seller_wallet)}</span>
                                 </div>
                               </td>
-                              <td style={{ padding: "20px 24px", textAlign: "right" }}>
+                              <td className="px-6 py-5 text-right">
                                 {isMyListing ? (
                                   <button
                                     onClick={() => handleCancel(listing)}
                                     disabled={isCancelling}
-                                    style={{
-                                      background: "linear-gradient(135deg, #ffb4ab 0%, #ff8a80 100%)",
-                                      color: "#690005",
-                                      fontWeight: 700,
-                                      fontSize: "12px",
-                                      padding: "6px 20px",
-                                      borderRadius: "6px",
-                                      border: "none",
-                                      cursor: isCancelling ? "not-allowed" : "pointer",
-                                      opacity: isCancelling ? 0.5 : 1,
-                                      transition: "transform 0.15s, box-shadow 0.15s",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: "6px"
-                                    }}
-                                    onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}
-                                    onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
-                                    onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                                    className="btn-ghost px-5 py-1.5 text-xs text-[var(--coral)] border-[var(--coral)]/30 hover:border-[var(--coral)]/60 flex items-center gap-1.5 disabled:opacity-50"
                                   >
-                                    {isCancelling ? <><Loader2 style={{ width: "12px", height: "12px" }} className="animate-spin" />Cancelling</> : "Cancel"}
+                                    {isCancelling ? <><Loader2 className="w-3 h-3 animate-spin" />Cancelling</> : "Cancel"}
                                   </button>
                                 ) : (
                                   <button
                                     onClick={() => handleBuy(listing)}
                                     disabled={isBuying || listing.escrow_listing_id == null}
-                                    style={{
-                                      background: "linear-gradient(135deg, #b3c5ff 0%, #5e8bff 100%)",
-                                      color: "#001849",
-                                      fontWeight: 700,
-                                      fontSize: "12px",
-                                      padding: "6px 20px",
-                                      borderRadius: "6px",
-                                      border: "none",
-                                      cursor: (isBuying || listing.escrow_listing_id == null) ? "not-allowed" : "pointer",
-                                      opacity: (isBuying || listing.escrow_listing_id == null) ? 0.4 : 1,
-                                      transition: "transform 0.15s, box-shadow 0.15s",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: "6px",
-                                      boxShadow: "0 4px 12px rgba(179,197,255,0.2)"
-                                    }}
-                                    onMouseEnter={(e) => { if (!isBuying && listing.escrow_listing_id != null) e.currentTarget.style.boxShadow = "0 6px 16px rgba(179,197,255,0.3)"; }}
-                                    onMouseLeave={(e) => { if (!isBuying && listing.escrow_listing_id != null) e.currentTarget.style.boxShadow = "0 4px 12px rgba(179,197,255,0.2)"; }}
-                                    onMouseDown={(e) => { if (!isBuying && listing.escrow_listing_id != null) e.currentTarget.style.transform = "scale(0.95)"; }}
-                                    onMouseUp={(e) => { if (!isBuying && listing.escrow_listing_id != null) e.currentTarget.style.transform = "scale(1)"; }}
+                                    className="btn-primary px-5 py-1.5 text-xs flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                                   >
-                                    {isBuying ? <><Loader2 style={{ width: "12px", height: "12px" }} className="animate-spin" />{buyStep === "approving_usdc" ? "Approving" : "Buying"}</> : "Buy"}
+                                    {isBuying ? <><Loader2 className="w-3 h-3 animate-spin" />{buyStep === "approving_usdc" ? "Approving" : "Buying"}</> : "Buy"}
                                   </button>
                                 )}
                               </td>
@@ -734,24 +710,24 @@ function SecondaryPageContent() {
 
             {/* SELL TAB CONTENT */}
             {activeTab === 'sell' && (
-              <div style={{ display: "grid", gridTemplateColumns: selectedBondSell ? "1fr 1.2fr" : "1fr", gap: "24px", transition: "grid-template-columns 0.3s" }}>
+              <div className="grid gap-6 transition-all duration-300" style={{ gridTemplateColumns: selectedBondSell ? "1fr 1.2fr" : "1fr" }}>
                 {/* Bonds List Panel */}
-                <div style={{ background: "#181c23", borderRadius: "12px", padding: "24px", minHeight: "400px" }}>
-                  <h2 style={{ fontFamily: "Manrope, sans-serif", fontSize: "16px", fontWeight: 700, color: "#e0e2ed", marginBottom: "20px", letterSpacing: "-0.01em" }}>Your Bonds</h2>
+                <div className="card-luminous rounded-2xl p-6 min-h-[400px]">
+                  <h2 className="text-base font-semibold text-[var(--ink)] mb-5">Your Bonds</h2>
                 
                   {loading ? (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 20px", gap: "12px" }}>
-                      <Loader2 style={{ width: "20px", height: "20px", color: "#b3c5ff" }} className="animate-spin" />
-                      <span style={{ fontSize: "14px", color: "#c3c6d6" }}>Loading bonds...</span>
+                    <div className="flex items-center justify-center py-20 gap-3">
+                      <Loader2 className="w-5 h-5 animate-spin text-[var(--lilac)]" />
+                      <span className="text-sm text-[var(--ink3)]">Loading bonds...</span>
                     </div>
                   ) : bonds.length === 0 ? (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 20px", textAlign: "center" }}>
-                      <CircleDollarSign style={{ width: "48px", height: "48px", color: "#434654", marginBottom: "16px", opacity: 0.3 }} />
-                      <h3 style={{ fontFamily: "Manrope, sans-serif", fontSize: "16px", fontWeight: 700, color: "#e0e2ed", marginBottom: "6px" }}>No bonds in your wallet</h3>
-                      <p style={{ fontSize: "13px", color: "#c3c6d6" }}>Purchase bonds from the primary market</p>
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                      <CircleDollarSign className="w-12 h-12 text-[var(--ink4)] mb-4 opacity-30" />
+                      <h3 className="text-base font-medium text-[var(--ink)] mb-2">No bonds in your wallet</h3>
+                      <p className="text-[13px] text-[var(--ink3)]">Purchase bonds from the primary market</p>
                     </div>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div className="flex flex-col gap-2">
                       {bonds.map((bond) => {
                         const isSelected = selectedBondSell?.id === bond.id;
                         return (
@@ -768,34 +744,29 @@ function SecondaryPageContent() {
                                 pendingSellRef.current = null;
                               }
                             }}
-                            style={{
-                              background: isSelected ? "#262a32" : "transparent",
-                              border: isSelected ? "1px solid rgba(179,197,255,0.3)" : "1px solid rgba(67,70,84,0.1)",
-                              borderRadius: "10px",
-                              padding: "16px",
-                              cursor: "pointer",
-                              transition: "all 0.2s"
-                            }}
-                            onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.background = "rgba(38,42,50,0.5)"; e.currentTarget.style.borderColor = "rgba(67,70,84,0.3)"; } }}
-                            onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(67,70,84,0.1)"; } }}
+                            className={`rounded-xl p-4 cursor-pointer transition-all border ${
+                              isSelected
+                                ? 'bg-[var(--surface)] border-[var(--lilac)]/30'
+                                : 'border-[var(--rule)] hover:bg-[var(--surface)] hover:border-[var(--rule-soft)]'
+                            }`}
                           >
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                              <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#31353d", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <span style={{ fontSize: "10px", fontWeight: 700, color: "#b3c5ff" }}>{bond.symbol.slice(0, 3).toUpperCase()}</span>
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-10 h-10 rounded-full bg-[var(--lilac)]/10 flex items-center justify-center">
+                                <span className="text-[10px] font-bold text-[var(--lilac)] font-mono">{bond.symbol.slice(0, 3).toUpperCase()}</span>
                               </div>
-                              <div style={{ flex: 1 }}>
-                                <h3 style={{ fontFamily: "Manrope, sans-serif", fontSize: "14px", fontWeight: 700, color: "#e0e2ed", marginBottom: "2px" }}>{bond.issuer_name}</h3>
-                                <p style={{ fontSize: "11px", color: "#c3c6d6" }}>{bond.symbol}</p>
+                              <div className="flex-1">
+                                <h3 className="text-sm font-semibold text-[var(--ink)] mb-0.5">{bond.issuer_name}</h3>
+                                <p className="text-[11px] text-[var(--ink3)] font-mono">{bond.symbol}</p>
                               </div>
                             </div>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                            <div className="grid grid-cols-2 gap-3">
                               <div>
-                                <p style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(195,198,214,0.7)", marginBottom: "4px" }}>Balance</p>
-                                <p style={{ fontSize: "13px", fontWeight: 600, color: "#e0e2ed" }}>{formattedSellBalance}</p>
+                                <p className="eyebrow-dim mb-1">Balance</p>
+                                <p className="text-[13px] font-medium text-[var(--ink)] font-mono">{formattedSellBalance}</p>
                               </div>
                               <div>
-                                <p style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(195,198,214,0.7)", marginBottom: "4px" }}>APY</p>
-                                <p style={{ fontFamily: "Manrope, sans-serif", fontSize: "13px", fontWeight: 700, color: "#45dfa4" }}>{bond.apy}%</p>
+                                <p className="eyebrow-dim mb-1">APY</p>
+                                <p className="text-[13px] font-semibold text-[var(--aqua-bright)] font-mono">{bond.apy}%</p>
                               </div>
                             </div>
                           </div>
@@ -807,26 +778,23 @@ function SecondaryPageContent() {
                 {/* Form Panel - Only visible when bond is selected */}
                 {selectedBondSell && (
                   <div 
+                    className="card-luminous rounded-2xl p-8 min-h-[400px]"
                     style={{
-                      background: "#181c23",
-                      borderRadius: "12px",
-                      padding: "32px",
-                      minHeight: "400px",
                       opacity: expandForm ? 1 : 0,
                       transform: expandForm ? "translateX(0)" : "translateX(20px)",
                       transition: "opacity 0.3s ease-out, transform 0.3s ease-out"
                     }}
                   >
-                    <div style={{ marginBottom: "28px" }}>
-                      <h3 style={{ fontFamily: "Manrope, sans-serif", fontSize: "18px", fontWeight: 700, color: "#e0e2ed", marginBottom: "4px" }}>Create Listing</h3>
-                      <p style={{ fontSize: "12px", color: "#c3c6d6" }}>Set your price and list {selectedBondSell.symbol} for sale</p>
+                    <div className="mb-7">
+                      <h3 className="font-display text-[var(--ink)] text-lg mb-1">Create Listing</h3>
+                      <p className="text-xs text-[var(--ink3)]">Set your price and list {selectedBondSell.symbol} for sale</p>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "24px" }}>
+                    <div className="grid grid-cols-2 gap-5 mb-6">
                       <div>
-                        <label style={{ fontSize: "10px", color: "#c3c6d6", marginBottom: "10px", display: "flex", justifyContent: "space-between", alignItems: "center", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>
+                        <label className="text-[10px] text-[var(--ink2)] uppercase tracking-widest font-semibold mb-2.5 flex justify-between items-center">
                           Amount
-                          <button onClick={() => setSellAmount(formattedSellBalance)} style={{ color: "#b3c5ff", background: "none", border: "none", cursor: "pointer", fontSize: "10px", textTransform: "none", fontWeight: 500 }}>
+                          <button onClick={() => setSellAmount(formattedSellBalance)} className="text-[var(--lilac)] text-[10px] font-medium hover:text-[var(--lilac-bright)] transition-colors bg-transparent border-none cursor-pointer">
                             Max: {formattedSellBalance}
                           </button>
                         </label>
@@ -836,99 +804,50 @@ function SecondaryPageContent() {
                           value={sellAmount}
                           onChange={(e) => setSellAmount(e.target.value)}
                           disabled={isSellLoading}
-                          style={{
-                            background: "#0a0e16",
-                            border: "1px solid rgba(67,70,84,0.2)",
-                            borderRadius: "8px",
-                            padding: "16px",
-                            color: "#e0e2ed",
-                            fontSize: "14px",
-                            fontWeight: 500,
-                            width: "100%",
-                            outline: "none",
-                            opacity: isSellLoading ? 0.5 : 1,
-                            transition: "border-color 0.2s"
-                          }}
-                          onFocus={(e) => e.currentTarget.style.borderColor = "rgba(179,197,255,0.5)"}
-                          onBlur={(e) => e.currentTarget.style.borderColor = "rgba(67,70,84,0.2)"}
+                          className="w-full bg-[var(--abyss)] border border-[var(--rule)] focus:border-[var(--lilac)] rounded-xl px-4 py-4 text-sm font-medium text-[var(--ink)] outline-none transition-colors disabled:opacity-50"
                         />
                       </div>
                       <div>
-                        <label style={{ fontSize: "10px", color: "#c3c6d6", marginBottom: "10px", display: "block", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>Price per Token (USDC)</label>
+                        <label className="text-[10px] text-[var(--ink2)] uppercase tracking-widest font-semibold mb-2.5 block">Price per Token (USDC)</label>
                         <input
                           type="number"
                           placeholder="0.00"
                           value={sellPrice}
                           onChange={(e) => setSellPrice(e.target.value)}
                           disabled={isSellLoading}
-                          style={{
-                            background: "#0a0e16",
-                            border: "1px solid rgba(67,70,84,0.2)",
-                            borderRadius: "8px",
-                            padding: "16px",
-                            color: "#e0e2ed",
-                            fontSize: "14px",
-                            fontWeight: 500,
-                            width: "100%",
-                            outline: "none",
-                            opacity: isSellLoading ? 0.5 : 1,
-                            transition: "border-color 0.2s"
-                          }}
-                          onFocus={(e) => e.currentTarget.style.borderColor = "rgba(179,197,255,0.5)"}
-                          onBlur={(e) => e.currentTarget.style.borderColor = "rgba(67,70,84,0.2)"}
+                          className="w-full bg-[var(--abyss)] border border-[var(--rule)] focus:border-[var(--lilac)] rounded-xl px-4 py-4 text-sm font-medium text-[var(--ink)] outline-none transition-colors disabled:opacity-50"
                         />
                       </div>
                     </div>
                     {totalSellValue && (
-                      <div style={{ display: "flex", justifyContent: "space-between", padding: "20px", background: "#0a0e16", borderRadius: "10px", marginBottom: "24px", border: "1px solid rgba(67,70,84,0.1)" }}>
-                        <span style={{ fontSize: "12px", color: "#c3c6d6", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>Total Value</span>
-                        <span style={{ fontFamily: "Manrope, sans-serif", fontSize: "20px", fontWeight: 800, color: "#e0e2ed" }}>${totalSellValue}</span>
+                      <div className="flex justify-between items-center p-5 bg-[var(--abyss)] rounded-xl mb-6 border border-[var(--rule)]">
+                        <span className="text-xs text-[var(--ink3)] uppercase tracking-widest font-semibold">Total Value</span>
+                        <span className="text-xl font-semibold text-[var(--ink)] font-mono">${totalSellValue}</span>
                       </div>
                     )}
 
                     {isSellLoading && (
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", background: "rgba(179,197,255,0.08)", borderRadius: "10px", marginBottom: "20px", border: "1px solid rgba(179,197,255,0.2)" }}>
-                        <Loader2 style={{ width: "16px", height: "16px", color: "#b3c5ff" }} className="animate-spin" />
-                        <span style={{ fontSize: "13px", color: "#b3c5ff", fontWeight: 500 }}>
+                      <div className="flex items-center gap-3 p-4 bg-[var(--lilac)]/8 rounded-xl mb-5 border border-[var(--lilac)]/20">
+                        <Loader2 className="w-4 h-4 text-[var(--lilac)] animate-spin" />
+                        <span className="text-sm text-[var(--lilac)] font-medium">
                           {sellStep === "approving_bond" ? "Approving bond tokens..." : "Creating listing..."}
                         </span>
                       </div>
                     )}
 
                     {sellStep === "done" && (
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px", background: "rgba(69,223,164,0.08)", borderRadius: "10px", marginBottom: "20px", border: "1px solid rgba(69,223,164,0.2)" }}>
-                        <CheckCircle style={{ width: "16px", height: "16px", color: "#45dfa4" }} />
-                        <span style={{ fontSize: "13px", color: "#45dfa4", fontWeight: 500 }}>Listing created successfully!</span>
+                      <div className="flex items-center gap-3 p-4 bg-[var(--aqua)]/8 rounded-xl mb-5 border border-[var(--aqua)]/20">
+                        <CheckCircle className="w-4 h-4 text-[var(--aqua)]" />
+                        <span className="text-sm text-[var(--aqua)] font-medium">Listing created successfully!</span>
                       </div>
                     )}
                     <button
                       onClick={handleCreateListing}
                       disabled={isSellLoading || !sellAmount || !sellPrice}
-                      style={{
-                        width: "100%",
-                        background: "linear-gradient(135deg, #b3c5ff 0%, #5e8bff 100%)",
-                        color: "#001849",
-                        borderRadius: "8px",
-                        padding: "16px",
-                        fontSize: "14px",
-                        fontWeight: 700,
-                        border: "none",
-                        cursor: (isSellLoading || !sellAmount || !sellPrice) ? "not-allowed" : "pointer",
-                        opacity: (isSellLoading || !sellAmount || !sellPrice) ? 0.4 : 1,
-                        transition: "transform 0.15s, box-shadow 0.15s",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        boxShadow: "0 4px 12px rgba(179,197,255,0.25)"
-                      }}
-                      onMouseEnter={(e) => { if (!isSellLoading && sellAmount && sellPrice) e.currentTarget.style.boxShadow = "0 6px 16px rgba(179,197,255,0.35)"; }}
-                      onMouseLeave={(e) => { if (!isSellLoading && sellAmount && sellPrice) e.currentTarget.style.boxShadow = "0 4px 12px rgba(179,197,255,0.25)"; }}
-                      onMouseDown={(e) => { if (!isSellLoading && sellAmount && sellPrice) e.currentTarget.style.transform = "scale(0.95)"; }}
-                      onMouseUp={(e) => { if (!isSellLoading && sellAmount && sellPrice) e.currentTarget.style.transform = "scale(1)"; }}
+                      className="w-full btn-primary py-4 text-sm flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {isSellLoading ? (
-                        <><Loader2 style={{ width: "16px", height: "16px" }} className="animate-spin" />{sellStep === "approving_bond" ? "Approving..." : "Creating..."}</>
+                        <><Loader2 className="w-4 h-4 animate-spin" />{sellStep === "approving_bond" ? "Approving..." : "Creating..."}</>
                       ) : (
                         "Create Listing"
                       )}
@@ -943,19 +862,17 @@ function SecondaryPageContent() {
 
       {/* Buy Modal */}
       {activeListing && buyStep !== "idle" && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-          <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ background: "#0c1018", border: "1px solid rgba(255,255,255,0.10)" }}>
-            <div className="p-6 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/75">
+          <div className="w-full max-w-md card-luminous rounded-2xl overflow-hidden">
+            <div className="p-6 flex items-center justify-between border-b border-[var(--rule)]">
               <div>
-                <h3 className="font-semibold" style={{ color: "#e8ecf4" }}>Buy {activeListing.bond_symbol}</h3>
-                <p className="text-sm mt-0.5" style={{ color: "#8896b3" }}>
+                <h3 className="font-semibold text-[var(--ink)]">Buy {activeListing.bond_symbol}</h3>
+                <p className="text-sm mt-0.5 text-[var(--ink3)]">
                   {activeListing.amount} tokens · ${(activeListing.amount * activeListing.price_per_token).toFixed(2)} USDC
                 </p>
               </div>
               {buyStep !== "buying" && buyStep !== "done" && (
-                <button onClick={() => { setActiveListing(null); setBuyStep("idle"); }} style={{ color: "#4f5f7a" }}
-                  onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.color = "#e8ecf4"}
-                  onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.color = "#4f5f7a"}>
+                <button onClick={() => { setActiveListing(null); setBuyStep("idle"); }} className="text-[var(--ink4)] hover:text-[var(--ink)] transition-colors">
                   <X className="h-5 w-5" />
                 </button>
               )}
@@ -967,27 +884,27 @@ function SecondaryPageContent() {
                 <div className="flex items-center gap-1.5">
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
                     style={{
-                      border: `1px solid ${usdcApproveSuccess || buyStep === "buying" || buyStep === "done" ? "#34d399" : "#4c7df4"}`,
-                      background: usdcApproveSuccess || buyStep === "buying" || buyStep === "done" ? "rgba(52,211,153,0.15)" : "rgba(76,125,244,0.15)",
-                      color: usdcApproveSuccess || buyStep === "buying" || buyStep === "done" ? "#34d399" : "#8eb4fb",
+                      border: `1px solid ${usdcApproveSuccess || buyStep === "buying" || buyStep === "done" ? "var(--aqua)" : "var(--lilac)"}`,
+                      background: usdcApproveSuccess || buyStep === "buying" || buyStep === "done" ? "rgba(52,211,153,0.15)" : "rgba(196,181,253,0.15)",
+                      color: usdcApproveSuccess || buyStep === "buying" || buyStep === "done" ? "var(--aqua)" : "var(--lilac)",
                     }}>
                     {usdcApproveSuccess || buyStep === "buying" || buyStep === "done" ? <CheckCircle className="h-3 w-3" /> : "1"}
                   </div>
-                  <span style={{ color: usdcApproveSuccess || buyStep === "buying" || buyStep === "done" ? "#34d399" : "#4c7df4" }}>
+                  <span className={usdcApproveSuccess || buyStep === "buying" || buyStep === "done" ? "text-[var(--aqua)]" : "text-[var(--lilac)]" }>
                     Approve USDC
                   </span>
                 </div>
-                <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.07)" }} />
+                <div className="flex-1 h-px bg-[var(--rule)]" />
                 <div className="flex items-center gap-1.5">
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
                     style={{
-                      border: `1px solid ${buyStep === "done" ? "#34d399" : buyStep === "buying" ? "#4c7df4" : "rgba(255,255,255,0.12)"}`,
-                      background: buyStep === "done" ? "rgba(52,211,153,0.15)" : buyStep === "buying" ? "rgba(76,125,244,0.15)" : "transparent",
-                      color: buyStep === "done" ? "#34d399" : "#8eb4fb",
+                      border: `1px solid ${buyStep === "done" ? "var(--aqua)" : buyStep === "buying" ? "var(--lilac)" : "var(--rule)"}`,
+                      background: buyStep === "done" ? "rgba(52,211,153,0.15)" : buyStep === "buying" ? "rgba(196,181,253,0.15)" : "transparent",
+                      color: buyStep === "done" ? "var(--aqua)" : "var(--lilac)",
                     }}>
                     {buyStep === "done" ? <CheckCircle className="h-3 w-3" /> : "2"}
                   </div>
-                  <span style={{ color: buyStep === "done" ? "#34d399" : buyStep === "buying" ? "#4c7df4" : "#4f5f7a" }}>
+                  <span className={buyStep === "done" ? "text-[var(--aqua)]" : buyStep === "buying" ? "text-[var(--lilac)]" : "text-[var(--ink4)]" }>
                     Atomic Trade
                   </span>
                 </div>
@@ -995,58 +912,56 @@ function SecondaryPageContent() {
 
               {buyStep === "done" ? (
                 <div className="text-center py-4">
-                  <div className="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{ background: "rgba(52,211,153,0.1)" }}>
-                    <CheckCircle className="h-8 w-8" style={{ color: "#34d399" }} />
+                  <div className="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center bg-[var(--aqua)]/10">
+                    <CheckCircle className="h-8 w-8 text-[var(--aqua)]" />
                   </div>
-                  <h4 className="text-lg font-semibold mb-1" style={{ color: "#e8ecf4" }}>Trade Complete!</h4>
-                  <p className="text-sm mb-1" style={{ color: "#8896b3" }}>
+                  <h4 className="text-lg font-semibold text-[var(--ink)] mb-1">Trade Complete!</h4>
+                  <p className="text-sm text-[var(--ink3)] mb-1">
                     {activeListing.amount} {activeListing.bond_symbol} tokens are now in your wallet.
                   </p>
-                  <p className="text-xs mb-5" style={{ color: "#4f5f7a" }}>
+                  <p className="text-xs text-[var(--ink4)] mb-5">
                     USDC was sent to the seller atomically in the same transaction.
                   </p>
                   {buyListingTxHash && (
                     <a href={`https://sepolia.basescan.org/tx/${buyListingTxHash}`} target="_blank" rel="noopener noreferrer"
-                      className="block text-xs mb-4" style={{ color: "#4c7df4" }}>
+                      className="block text-xs text-[var(--lilac)] hover:text-[var(--lilac-bright)] transition-colors mb-4">
                       View atomic trade details ↗
                     </a>
                   )}
                   <button onClick={() => { setActiveListing(null); setBuyStep("idle"); }}
-                    className="px-6 py-2.5 rounded-lg text-white font-medium transition-opacity hover:opacity-90"
-                    style={{ background: "#4c7df4" }}>
+                    className="btn-primary px-6 py-2.5">
                     Done
                   </button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {/* Escrow protection notice */}
-                  <div className="rounded-lg p-3" style={{ background: "rgba(52,211,153,0.05)", border: "1px solid rgba(52,211,153,0.12)" }}>
+                  <div className="rounded-xl p-3 bg-[var(--aqua)]/5 border border-[var(--aqua)]/12">
                     <div className="flex items-start gap-2">
-                      <ShieldCheck className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: "#34d399" }} />
-                      <p className="text-xs" style={{ color: "#5a7a65" }}>
+                      <ShieldCheck className="h-4 w-4 mt-0.5 flex-shrink-0 text-[var(--aqua)]" />
+                      <p className="text-xs text-[var(--aqua)]/70">
                         Step 1 approves USDC. Step 2 atomically transfers USDC to the seller and bonds to you in a single on-chain transaction — you cannot lose USDC without receiving bonds.
                       </p>
                     </div>
                   </div>
 
                   {/* Trade summary */}
-                  <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="rounded-xl p-3 space-y-1.5 bg-[var(--surface)] border border-[var(--rule)]">
                     <div className="flex justify-between text-sm">
-                      <span style={{ color: "#4f5f7a" }}>You pay</span>
-                      <span className="font-semibold" style={{ color: "#e8ecf4" }}>
+                      <span className="text-[var(--ink3)]">You pay</span>
+                      <span className="text-sm font-semibold text-[var(--ink)] font-mono">
                         ${(activeListing.amount * activeListing.price_per_token).toFixed(2)} USDC
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span style={{ color: "#4f5f7a" }}>You receive</span>
-                      <span className="font-semibold" style={{ color: "#34d399" }}>
+                      <span className="text-[var(--ink3)]">You receive</span>
+                      <span className="text-sm font-semibold text-[var(--aqua-bright)] font-mono">
                         {activeListing.amount} {activeListing.bond_symbol} tokens
                       </span>
                     </div>
-                    <div className="flex justify-between text-xs pt-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                      <span style={{ color: "#4f5f7a" }}>Seller</span>
-                      <span className="font-mono" style={{ color: "#4f5f7a" }}>
+                    <div className="flex justify-between text-xs pt-1.5 border-t border-[var(--rule-soft)]">
+                      <span className="text-[var(--ink3)]">Seller</span>
+                      <span className="font-mono text-[var(--ink4)]">
                         {activeListing.seller_wallet.slice(0, 6)}...{activeListing.seller_wallet.slice(-4)}
                       </span>
                     </div>
@@ -1054,10 +969,9 @@ function SecondaryPageContent() {
 
                   {/* Status indicator */}
                   {(buyStep === "approving_usdc" || buyStep === "buying") && (
-                    <div className="flex items-center gap-2.5 p-3 rounded-lg"
-                      style={{ background: "rgba(76,125,244,0.08)", border: "1px solid rgba(76,125,244,0.15)" }}>
-                      <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" style={{ color: "#4c7df4" }} />
-                      <p className="text-xs" style={{ color: "#8eb4fb" }}>
+                    <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[var(--lilac)]/8 border border-[var(--lilac)]/15">
+                      <Loader2 className="h-4 w-4 animate-spin flex-shrink-0 text-[var(--lilac)]" />
+                      <p className="text-xs text-[var(--lilac-bright)]">
                         {buyStep === "approving_usdc"
                           ? (usdcApprovePending ? "Confirm USDC approval in your wallet..." : "Confirming approval...")
                           : (buyListingPending ? "Confirm atomic trade in your wallet..." : "Executing atomic trade on-chain...")}
@@ -1067,13 +981,13 @@ function SecondaryPageContent() {
 
                   {usdcApproveTxHash && (
                     <a href={`https://sepolia.basescan.org/tx/${usdcApproveTxHash}`} target="_blank" rel="noopener noreferrer"
-                      className="block text-center text-xs" style={{ color: "#4c7df4" }}>
+                      className="block text-center text-xs text-[var(--lilac)] hover:text-[var(--lilac-bright)] transition-colors">
                       USDC approval tx ↗
                     </a>
                   )}
                   {buyListingTxHash && (
                     <a href={`https://sepolia.basescan.org/tx/${buyListingTxHash}`} target="_blank" rel="noopener noreferrer"
-                      className="block text-center text-xs" style={{ color: "#4c7df4" }}>
+                      className="block text-center text-xs text-[var(--lilac)] hover:text-[var(--lilac-bright)] transition-colors">
                       View trade tx details ↗
                     </a>
                   )}
@@ -1090,8 +1004,8 @@ function SecondaryPageContent() {
 export default function SecondaryPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#05080f" }}>
-        <Loader2 className="h-6 w-6 animate-spin" style={{ color: "#4c7df4" }} />
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-[var(--lilac)]" />
       </div>
     }>
       <SecondaryPageContent />

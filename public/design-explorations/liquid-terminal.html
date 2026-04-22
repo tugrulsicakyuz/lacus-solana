@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lacus - Liquid Terminal v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050817;
+      --bg-2: #0a1024;
+      --panel: rgba(13, 18, 37, 0.9);
+      --panel-2: rgba(18, 26, 48, 0.92);
+      --line: rgba(255,255,255,0.08);
+      --text: #f6f0ea;
+      --muted: #97a5c6;
+      --blue-1: #b8e7ff;
+      --blue-2: #82cfff;
+      --blue-3: #6a9dff;
+      --lilac-1: #c0a9ff;
+      --lilac-2: #907bff;
+      --mint: #8fe7d4;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 14% 12%, rgba(184, 231, 255, 0.16), transparent 20%),
+        radial-gradient(circle at 84% 16%, rgba(192, 169, 255, 0.18), transparent 22%),
+        radial-gradient(circle at 55% 46%, rgba(106, 157, 255, 0.16), transparent 26%),
+        linear-gradient(180deg, #050817 0%, #091023 54%, #050817 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.2;
+      background:
+        linear-gradient(rgba(141, 185, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(141, 185, 255, 0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,0.72) 56%, transparent 100%);
+      -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,0.72) 56%, transparent 100%);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.14;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.86  0 0 0 0 0.9  0 0 0 0 1  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      mix-blend-mode: screen;
+    }
+
+    .shell {
+      width: min(1260px, calc(100% - 40px));
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: rgba(246, 240, 234, 0.62);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .status-left,
+    .status-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .status i {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--mint);
+      box-shadow: 0 0 18px rgba(143, 231, 212, 0.72);
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 0 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: "Outfit", sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(184, 231, 255, 0.96), rgba(144, 123, 255, 0.9));
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        0 16px 28px rgba(106, 157, 255, 0.18);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(8, 14, 28, 0.24);
+    }
+
+    .menu {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .menu a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .menu .cta {
+      padding: 12px 16px;
+      border-radius: 16px;
+      color: #071120;
+      background: linear-gradient(135deg, var(--blue-1), var(--blue-3) 52%, var(--lilac-1));
+      font-weight: 700;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 0.98fr;
+      gap: 24px;
+      padding: 34px 0 84px;
+      align-items: stretch;
+    }
+
+    .hero-copy {
+      padding: 18px 0 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: rgba(246, 240, 234, 0.8);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow b {
+      color: var(--blue-2);
+      font-weight: 500;
+    }
+
+    h1 {
+      margin: 18px 0 16px;
+      font-family: "Outfit", sans-serif;
+      font-size: clamp(56px, 7.8vw, 94px);
+      line-height: 0.92;
+      letter-spacing: -0.07em;
+      max-width: 720px;
+    }
+
+    h1 .accent {
+      background: linear-gradient(135deg, var(--blue-1), var(--blue-3) 48%, var(--lilac-1) 84%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .lead {
+      max-width: 620px;
+      color: var(--muted);
+      line-height: 1.78;
+      font-size: 18px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 196px;
+      padding: 15px 18px;
+      border-radius: 18px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: transform 160ms ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn-primary {
+      color: #071120;
+      background: linear-gradient(135deg, var(--blue-1), var(--blue-3) 52%, var(--lilac-1));
+      box-shadow: 0 18px 42px rgba(106, 157, 255, 0.2);
+    }
+
+    .btn-secondary {
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .panel-wrap {
+      position: relative;
+      perspective: 1600px;
+      min-height: 640px;
+    }
+
+    .back-panel,
+    .mid-panel,
+    .front-panel {
+      position: absolute;
+      inset: 0;
+      border-radius: 30px;
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+      box-shadow: 0 34px 80px rgba(0,0,0,0.28);
+    }
+
+    .back-panel {
+      inset: 50px 28px 26px 28px;
+      background: linear-gradient(180deg, rgba(28, 34, 64, 0.65), rgba(13, 18, 34, 0.72));
+      transform: translateZ(-60px) rotateY(-11deg) rotateX(8deg);
+      opacity: 0.66;
+    }
+
+    .mid-panel {
+      inset: 28px 14px 14px 14px;
+      background: linear-gradient(180deg, rgba(24, 31, 58, 0.78), rgba(12, 18, 35, 0.84));
+      transform: translateZ(-20px) rotateY(-7deg) rotateX(4deg);
+      opacity: 0.88;
+    }
+
+    .front-panel {
+      padding: 20px;
+      background:
+        radial-gradient(circle at 82% 10%, rgba(192, 169, 255, 0.18), transparent 22%),
+        radial-gradient(circle at 12% 88%, rgba(184, 231, 255, 0.16), transparent 28%),
+        linear-gradient(180deg, rgba(17, 24, 45, 0.96), rgba(10, 16, 31, 0.94));
+      transform: rotateY(-3deg) rotateX(2deg);
+    }
+
+    .front-panel::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: 29px;
+      border: 1px solid rgba(255,255,255,0.04);
+      pointer-events: none;
+    }
+
+    .terminal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      color: rgba(246, 240, 234, 0.56);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+    }
+
+    .dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+    }
+
+    .hero-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.04fr 0.96fr;
+      gap: 14px;
+    }
+
+    .block {
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      min-height: 176px;
+    }
+
+    .block small {
+      display: block;
+      margin-bottom: 12px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      color: rgba(246, 240, 234, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .block strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 24px;
+      letter-spacing: -0.05em;
+    }
+
+    .block p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.62;
+    }
+
+    .meter {
+      margin-top: 16px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+
+    .meter span {
+      display: block;
+      width: 69%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue-2), var(--blue-3) 56%, var(--lilac-1));
+      box-shadow: 0 0 20px rgba(106, 157, 255, 0.34);
+    }
+
+    .rail {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .rail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .rail-item strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .rail-item span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .rail-item b {
+      font-size: 14px;
+      color: var(--blue-2);
+      font-family: "IBM Plex Mono", monospace;
+      text-transform: uppercase;
+    }
+
+    .float-note {
+      position: absolute;
+      right: -16px;
+      bottom: 38px;
+      width: 230px;
+      padding: 16px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(29, 37, 66, 0.92), rgba(14, 20, 37, 0.95));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 22px 50px rgba(0,0,0,0.22);
+      backdrop-filter: blur(16px);
+      z-index: 2;
+    }
+
+    .float-note small {
+      display: block;
+      margin-bottom: 10px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(246, 240, 234, 0.54);
+    }
+
+    .float-note strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 20px;
+      letter-spacing: -0.05em;
+    }
+
+    .float-note p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .section {
+      padding-bottom: 84px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-family: "Outfit", sans-serif;
+      font-size: clamp(34px, 4.6vw, 58px);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+      max-width: 760px;
+    }
+
+    .section-head p {
+      margin: 0;
+      max-width: 420px;
+      color: var(--muted);
+      line-height: 1.72;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      padding: 20px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(16, 23, 40, 0.92), rgba(10, 16, 29, 0.92));
+      border: 1px solid rgba(255,255,255,0.07);
+      min-height: 232px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: auto -16% -44% auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(192, 169, 255, 0.16), transparent 70%);
+      filter: blur(14px);
+    }
+
+    .card small {
+      display: block;
+      margin-bottom: 14px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      color: rgba(246, 240, 234, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      letter-spacing: -0.04em;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .hero-grid,
+      .cards,
+      .section-head { grid-template-columns: 1fr; display: grid; }
+      .section-head { align-items: start; }
+      .menu a { display: none; }
+      .panel-wrap { min-height: auto; perspective: none; }
+      .back-panel, .mid-panel {
+        display: none;
+      }
+      .front-panel {
+        position: relative;
+        transform: none;
+      }
+      .float-note {
+        position: static;
+        width: auto;
+        margin-top: 14px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .status { display: none; }
+      .shell { width: min(100% - 24px, 1260px); }
+      h1 { font-size: 50px; }
+      .hero-actions { flex-direction: column; }
+      .btn, .menu .cta { width: 100%; }
+      .menu { gap: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="status">
+      <div class="status-left">
+        <span><i></i>Solana Devnet</span>
+        <span>Docs hashed</span>
+        <span>Settlement instant</span>
+      </div>
+      <div class="status-right">
+        <span>TVL 1.24M</span>
+        <span>Avg APY 9.84%</span>
+        <span>Issuers 128</span>
+      </div>
+    </div>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <span>Lacus</span>
+      </div>
+      <div class="menu">
+        <a href="#">Markets</a>
+        <a href="#">Issuers</a>
+        <a href="#">Transparency</a>
+        <a href="#">Docs</a>
+        <a class="cta" href="#">Connect wallet</a>
+      </div>
+    </header>
+
+    <main class="hero">
+      <section class="hero-copy">
+        <div class="eyebrow">Signal mode <b>/ live credit terminal</b></div>
+        <h1>A live market for <span class="accent">transparent credit</span>.</h1>
+        <p class="lead">
+          Lacus puts issuance, investing, secondary trading, and documentation into one on-chain surface
+          so companies can raise, investors can access fixed income, and future credit baskets stay inspectable.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#">Launch the market</a>
+          <a class="btn btn-secondary" href="#">Preview issuer flow</a>
+        </div>
+      </section>
+
+      <section class="panel-wrap">
+        <div class="back-panel"></div>
+        <div class="mid-panel"></div>
+        <div class="front-panel">
+          <div class="terminal-top">
+            <span>Lacus / liquid terminal</span>
+            <div class="dots"><span></span><span></span><span></span></div>
+          </div>
+
+          <div class="hero-grid">
+            <article class="block">
+              <small>featured issuance</small>
+              <strong>Northline Robotics - working capital note</strong>
+              <p>Issuer terms, legal packet, maturity, and investor access all present inside one live card instead of a stale PDF workflow.</p>
+              <div class="meter"><span></span></div>
+            </article>
+
+            <article class="block">
+              <small>retail access</small>
+              <strong>10.8% visible yield</strong>
+              <p>Fixed-income exposure appears in a wallet-native market rather than behind institutional walls.</p>
+            </article>
+          </div>
+
+          <div class="rail">
+            <div class="rail-item">
+              <div>
+                <strong>Loan packet verified</strong>
+                <span>Financials and agreement hash attached before investors enter the book</span>
+              </div>
+              <b>ready</b>
+            </div>
+            <div class="rail-item">
+              <div>
+                <strong>Secondary listing matched</strong>
+                <span>Peer-to-peer exit route filled with immediate settlement</span>
+              </div>
+              <b>filled</b>
+            </div>
+            <div class="rail-item">
+              <div>
+                <strong>Basket transparency preserved</strong>
+                <span>Future structured credit keeps underlying positions readable</span>
+              </div>
+              <b>open</b>
+            </div>
+          </div>
+
+          <article class="float-note">
+            <small>non-custodial posture</small>
+            <strong>The protocol routes, not holds.</strong>
+            <p>That keeps the product closer to infrastructure than balance-sheet intermediation while still making the flow feel seamless.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Same dashboard sharpness, but with more dimensionality and less Bloomberg energy.</h2>
+        <p>
+          This version keeps the crypto-native information density you liked, then softens it with a blue-lilac palette and stacked panel depth.
+        </p>
+      </div>
+
+      <div class="cards">
+        <article class="card">
+          <small>01 / strongest trait</small>
+          <h3>Closest to a real product shell</h3>
+          <p>If we want to move into the actual Next.js app quickly afterward, this is the easiest concept to extend into launchpad, portfolio, and detail pages.</p>
+        </article>
+        <article class="card">
+          <small>02 / narrative fit</small>
+          <h3>More faithful to the protocol</h3>
+          <p>The messaging now points directly at issuer access, retail participation, transparent structuring, and instant secondary settlement.</p>
+        </article>
+        <article class="card">
+          <small>03 / visual update</small>
+          <h3>Layered instead of flat</h3>
+          <p>The stacked terminal panels, floating note, and softened glow give the page much more depth than the earlier single-surface version.</p>
+        </article>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

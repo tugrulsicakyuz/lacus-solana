@@ -1,111 +1,68 @@
 "use client";
 
 import Link from "next/link";
+import Logo from "./Logo";
 
-const footerLinks = [
-  { label: "Markets", href: "/launchpad" },
-  { label: "Primary Market", href: "/primary" },
-  { label: "Secondary Market", href: "/secondary" },
-  { label: "Portfolio", href: "/dashboard" },
-  { label: "Management", href: "/manage" },
-  { label: "Issue Request", href: "/apply" },
-];
 
 export default function Footer() {
   return (
-    <footer
-      style={{
-        borderTop: "1px solid rgba(255,255,255,0.06)",
-        background: "#05080f",
-      }}
-    >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Main row */}
-        <div className="flex flex-col items-center gap-6 py-10 sm:flex-row sm:justify-between">
-          <div className="flex flex-col items-center gap-1 sm:items-start">
-            <Link
-              href="/"
-              className="flex items-center gap-2"
-              style={{ textDecoration: "none" }}
-            >
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  background: "rgba(76,125,244,0.15)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 28 28"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M7 14C7 10.134 10.134 7 14 7C17.866 7 21 10.134 21 14"
-                    stroke="#4c7df4"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M10 17.5C10 15.567 11.791 14 14 14C16.209 14 18 15.567 18 17.5"
-                    stroke="#4c7df4"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                  />
-                  <circle cx="14" cy="20.5" r="1.5" fill="#4c7df4" />
-                </svg>
-              </div>
-              <span
-                style={{
-                  fontSize: 15,
-                  fontWeight: 700,
-                  letterSpacing: "0.06em",
-                  color: "rgba(255,255,255,0.85)",
-                  textTransform: "uppercase",
-                }}
-              >
-                Lacus
-              </span>
-            </Link>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>
-              Transparent Credit Infrastructure
-            </p>
-          </div>
-
-          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
-            {footerLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", textDecoration: "none", transition: "color 0.2s" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
-            &copy; {new Date().getFullYear()} Lacus
+    <footer className="relative border-t border-[var(--rule)]">
+      <div className="max-w-[1280px] mx-auto px-8 py-14 grid grid-cols-12 gap-8 items-start">
+        <div className="col-span-12 md:col-span-5 flex flex-col gap-4">
+          <Link href="/" className="flex items-center gap-3 group" aria-label="Lacus home">
+            <Logo size="footer" />
+            <span className="wordmark" style={{ fontSize: '1.35rem' }}>Lacus</span>
+          </Link>
+          <p className="eyebrow-dim mt-1">Credit markets with luminous depth.</p>
+          <p className="text-[var(--ink3)] text-[0.88rem] leading-[1.6] mt-2 max-w-[36ch]">
+            A Solana-native protocol for tokenized fixed-income. Open, continuous, and observable by default.
           </p>
         </div>
 
-        {/* Legal disclaimer */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: 16, paddingBottom: 16 }}>
-          <p style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.18)", lineHeight: 1.6 }}>
-            This prototype is for demonstration purposes only and should be used with test assets
-            while the Lacus product stack migrates toward{" "}
-            <span style={{ color: "rgba(255,255,255,0.35)" }}>Solana Devnet</span>. Nothing on
-            this site constitutes financial, legal, or investment advice.
-          </p>
+        <div className="col-span-6 md:col-span-2 flex flex-col gap-3">
+          <div className="eyebrow-dim mb-1">Protocol</div>
+          <Link href="#markets" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
+            Markets
+          </Link>
+          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
+            Portfolio
+          </Link>
+          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
+            Governance
+          </Link>
+        </div>
+
+        <div className="col-span-6 md:col-span-2 flex flex-col gap-3">
+          <div className="eyebrow-dim mb-1">Resources</div>
+          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
+            Whitepaper
+          </Link>
+          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
+            Docs
+          </Link>
+          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
+            Audits
+          </Link>
+        </div>
+
+        <div className="col-span-12 md:col-span-3 flex flex-col gap-3">
+          <div className="eyebrow-dim mb-1">Elsewhere</div>
+          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
+            GitHub
+          </Link>
+          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
+            X (Twitter)
+          </Link>
+          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
+            Mirror
+          </Link>
+        </div>
+      </div>
+
+      <div className="border-t border-[var(--rule)]">
+        <div className="max-w-[1280px] mx-auto px-8 py-5 flex flex-wrap items-center justify-between gap-3">
+          <p className="eyebrow-dim">© 2026 · Lacus Protocol · Built on Solana</p>
+          <p className="font-display italic text-[var(--ink3)] text-[0.9rem]">Deep water stays clear.</p>
         </div>
       </div>
     </footer>

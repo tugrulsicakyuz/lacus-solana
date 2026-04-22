@@ -35,15 +35,15 @@ function calcMaturityDate(createdAt: string, maturityMonths: number): string {
 }
 
 function txBadgeStyle(type: string): { bg: string; color: string } {
-  if (type === "BUY")   return { bg: "rgba(52,211,153,0.1)",  color: "#34d399" };
-  if (type === "SELL")  return { bg: "rgba(239,68,68,0.1)", color: "#ef4444" };
-  if (type === "CLAIM") return { bg: "rgba(76,125,244,0.1)", color: "#4c7df4" };
-  return { bg: "rgba(148,163,184,0.1)", color: "#94a3b8" };
+  if (type === "BUY")   return { bg: "rgba(94,234,212,0.10)",  color: "var(--aqua-bright)" };
+  if (type === "SELL")  return { bg: "rgba(253,164,175,0.10)", color: "var(--coral)" };
+  if (type === "CLAIM") return { bg: "rgba(196,181,253,0.10)", color: "var(--lilac)" };
+  return { bg: "rgba(124,125,153,0.10)", color: "var(--ink3)" };
 }
 
 function DashboardSkeleton() {
   return (
-    <section className="pb-16 pt-16 sm:pt-20" style={{ background: "#05080f" }}>
+    <section className="pb-16 pt-16 sm:pt-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6">
@@ -57,7 +57,7 @@ function DashboardSkeleton() {
         {/* Summary cards */}
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {[1,2,3].map(i => (
-            <div key={i} className="rounded-xl p-5" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div key={i} className="card-luminous rounded-xl p-5">
               <div className="skeleton h-3 w-24 rounded" />
               <div className="skeleton mt-3 h-7 w-32 rounded" />
             </div>
@@ -69,7 +69,7 @@ function DashboardSkeleton() {
           <div className="skeleton mb-4 h-5 w-28 rounded" />
           <div className="space-y-3">
             {[1,2].map(i => (
-              <div key={i} className="rounded-xl p-5" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div key={i} className="card-luminous rounded-xl p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="skeleton h-4 w-36 rounded" />
@@ -93,9 +93,9 @@ function DashboardSkeleton() {
         {/* Transaction history */}
         <div className="mt-8">
           <div className="skeleton mb-4 h-5 w-40 rounded" />
-          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="card-luminous rounded-xl overflow-hidden">
             {[1,2,3,4,5].map(i => (
-              <div key={i} className="flex items-center justify-between px-4 py-3" style={{ borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+              <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-[var(--rule)] last:border-b-0">
                 <div className="flex items-center gap-3">
                   <div className="skeleton h-6 w-14 rounded-md" />
                   <div className="skeleton h-3 w-20 rounded" />
@@ -215,14 +215,14 @@ export default function DashboardPage() {
 
   if (!isConnected) {
     return (
-      <section className="pt-16 sm:pt-20" style={{ background: "#05080f" }}>
-        <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
-          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: "rgba(76,125,244,0.08)" }}>
-            <Wallet className="h-8 w-8" style={{ color: "#4c7df4" }} />
+      <section className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center text-center px-4">
+          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--lilac)]/10">
+            <Wallet className="h-8 w-8 text-[var(--lilac)]" />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl" style={{ color: "#e8ecf4" }}>Connect Your Wallet</h2>
-          <p className="mt-3 max-w-md text-base" style={{ color: "#8896b3" }}>Connect your wallet to view your portfolio, track your bonds, and claim your yields.</p>
-          <div className="mt-8"><ConnectButton /></div>
+          <h2 className="font-display text-[var(--ink)] text-2xl mb-3">Connect Your Wallet</h2>
+          <p className="text-[var(--ink3)] text-base max-w-md mb-8">Connect your wallet to view your portfolio, track your bonds, and claim your yields.</p>
+          <ConnectButton />
         </div>
       </section>
     );
@@ -234,13 +234,12 @@ export default function DashboardPage() {
 
   if (fetchError) {
     return (
-      <section className="pb-4 pt-16 sm:pt-20" style={{ background: "#05080f" }}>
-        <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
-          <p className="text-sm mb-4" style={{ color: "#f87171" }}>{fetchError}</p>
+      <section className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center text-center px-4 gap-4">
+          <p className="text-sm text-[var(--coral)]">{fetchError}</p>
           <button
             onClick={() => { setFetchError(null); setLoading(true); fetchPortfolio(); }}
-            className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
-            style={{ background: "rgba(76,125,244,0.12)", color: "#8eb4fb", border: "1px solid rgba(76,125,244,0.2)" }}
+            className="btn-ghost px-5 py-2.5 text-sm"
           >
             Try again
           </button>
@@ -251,50 +250,70 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Page Layout */}
-      <section style={{ background: "#05080f", minHeight: "100vh", paddingTop: "48px", paddingBottom: "48px" }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
-          
-          {/* Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px", flexWrap: "wrap", gap: "16px" }}>
-            <h1 style={{ fontSize: "32px", fontWeight: 700, color: "#f1f5f9" }}>My Portfolio</h1>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#0d1117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "20px", padding: "8px 14px" }}>
-              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#34d399" }} />
-              <span style={{ fontSize: "13px", color: "#64748b" }}>{address ? truncateAddress(address) : ""}</span>
+      <section className="min-h-screen pb-20">
+        <div className="max-w-[1100px] mx-auto px-6">
+
+          {/* Page Header */}
+          <div className="pt-16 pb-12 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+            <div>
+              <div className="eyebrow eyebrow-rule mb-5 reveal" style={{ color: "var(--lilac)" }}>
+                Investor View
+              </div>
+              <h1
+                className="font-display text-[var(--ink)] leading-[0.97] tracking-tight reveal reveal-d1"
+                style={{ fontSize: "clamp(2.2rem, 3.5vw, 3.8rem)" }}
+              >
+                My Portfolio
+                <br />
+                <span className="italic grad-ink-interactive cursor-pointer">at a glance.</span>
+              </h1>
+            </div>
+            <div className="flex items-center gap-2 card-luminous rounded-full px-4 py-2.5 reveal reveal-d1 flex-shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--aqua-bright)" }} />
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "0.72rem",
+                  letterSpacing: "0.06em",
+                  color: "var(--ink3)",
+                }}
+              >
+                {address ? truncateAddress(address) : ""}
+              </span>
             </div>
           </div>
 
           {/* Stat Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "48px" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
             {[
-              { label: "TOTAL PORTFOLIO VALUE", value: fmtCurrency(totalPortfolioValue), color: "#f1f5f9" },
-              { label: "AVERAGE APY", value: totalPortfolioValue > 0 ? `${averageAPY.toFixed(2)}%` : "—", color: "#34d399" },
-              { label: "NEXT PAYMENT", value: nextPaymentValue, color: hasUnclaimedYield ? "#4c7df4" : hasBonds ? "#64748b" : "#64748b", fontSize: hasUnclaimedYield ? "36px" : hasBonds ? "24px" : "36px" },
+              { label: "TOTAL PORTFOLIO VALUE", value: fmtCurrency(totalPortfolioValue), color: "text-[var(--ink)]" },
+              { label: "AVERAGE APY", value: totalPortfolioValue > 0 ? `${averageAPY.toFixed(2)}%` : "—", color: "text-[var(--aqua-bright)]" },
+              { label: "NEXT PAYMENT", value: nextPaymentValue, color: hasUnclaimedYield ? "text-[var(--lilac)]" : "text-[var(--ink3)]", fontSize: hasUnclaimedYield ? "text-[2.25rem]" : hasBonds ? "text-[1.5rem]" : "text-[2.25rem]" },
             ].map((card) => (
-              <div key={card.label} style={{ background: "#0d1117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px", padding: "28px 24px" }}>
-                <p style={{ fontSize: "11px", textTransform: "uppercase", color: "#64748b", letterSpacing: "0.1em", marginBottom: "12px" }}>{card.label}</p>
-                <p style={{ fontSize: card.fontSize || "36px", fontWeight: 700, color: card.color }}>{card.value}</p>
+              <div key={card.label} className="card-luminous rounded-2xl px-6 py-7">
+                <p className="eyebrow-dim mb-3">{card.label}</p>
+                <p className={`${card.fontSize || 'text-[2.25rem]'} font-semibold font-mono leading-none ${card.color}`}>{card.value}</p>
               </div>
             ))}
           </div>
 
           {/* My Bonds */}
-          <div style={{ marginBottom: "48px" }}>
-            <h2 style={{ fontSize: "11px", textTransform: "uppercase", color: "#64748b", letterSpacing: "0.1em", marginBottom: "16px" }}>MY BONDS</h2>
+          <div className="mb-12 reveal">
+            <h2 className="eyebrow mb-4">MY BONDS</h2>
             
             {holdings.length === 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 20px", background: "#0d1117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px" }}>
-                <CircleDollarSign style={{ width: "48px", height: "48px", color: "#4c7df4", marginBottom: "16px" }} />
-                <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#f1f5f9", marginBottom: "8px" }}>No bonds in your portfolio yet</h3>
-                <p style={{ fontSize: "14px", color: "#64748b", textAlign: "center", maxWidth: "400px" }}>Start building your portfolio by purchasing bonds and earn yield.</p>
+              <div className="card-luminous rounded-2xl flex flex-col items-center justify-center py-16 px-6 text-center">
+                <CircleDollarSign className="w-12 h-12 text-[var(--lilac)] mb-4 opacity-50" />
+                <h3 className="text-base font-medium text-[var(--ink)] mb-2">No bonds in your portfolio yet</h3>
+                <p className="text-sm text-[var(--ink3)] max-w-[400px]">Start building your portfolio by purchasing bonds and earn yield.</p>
               </div>
             ) : (
-              <div style={{ background: "#0d1117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px", overflow: "hidden" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <div className="card-luminous rounded-2xl overflow-hidden">
+                <table className="w-full border-collapse">
                   <thead>
-                    <tr style={{ background: "transparent", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                    <tr className="border-b border-[var(--rule)]">
                       {["ASSET", "BALANCE", "CURRENT VALUE", "APY", "MATURES", "UNCLAIMED YIELD", "ACTION"].map((h) => (
-                        <th key={h} style={{ padding: "10px 16px", fontSize: "11px", textTransform: "uppercase", color: "#64748b", letterSpacing: "0.08em", textAlign: "left", fontWeight: 600 }}>{h}</th>
+                        <th key={h} className="px-5 py-3 text-left eyebrow-dim">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -302,49 +321,33 @@ export default function DashboardPage() {
                     {holdings.map((h) => {
                       const hasYield = h.unclaimedYield > 0;
                       return (
-                        <tr key={h.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                          <td style={{ padding: "16px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                              <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "#1a2744", color: "#4c7df4", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <tr key={h.id} className="border-b border-[var(--rule-soft)] hover:bg-[var(--surface)] transition-colors last:border-b-0">
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-[var(--lilac)]/10 text-[var(--lilac)] text-[10px] font-bold font-mono flex items-center justify-center">
                                 {h.symbol.slice(0, 3).toUpperCase()}
                               </div>
-                              <span style={{ fontSize: "14px", fontWeight: 500, color: "#f1f5f9" }}>{h.issuer_name}</span>
+                              <span className="text-sm font-medium text-[var(--ink)]">{h.issuer_name}</span>
                             </div>
                           </td>
-                          <td style={{ padding: "16px", fontSize: "14px", color: "#94a3b8" }}>{h.balance}</td>
-                          <td style={{ padding: "16px", fontSize: "14px", color: "#94a3b8" }}>{fmtCurrency(h.currentValue)}</td>
-                          <td style={{ padding: "16px", fontSize: "14px", fontWeight: 600, color: "#34d399" }}>{h.apy.toFixed(2)}%</td>
-                          <td style={{ padding: "16px", fontSize: "14px", color: "#94a3b8" }}>{h.maturityDate}</td>
-                          <td style={{ padding: "16px", fontSize: "14px", color: hasYield ? "#f1f5f9" : "#475569" }}>
+                          <td className="px-5 py-4 text-sm text-[var(--ink2)] font-mono">{h.balance}</td>
+                          <td className="px-5 py-4 text-sm text-[var(--ink2)] font-mono">{fmtCurrency(h.currentValue)}</td>
+                          <td className="px-5 py-4 text-sm font-semibold text-[var(--aqua-bright)] font-mono">{h.apy.toFixed(2)}%</td>
+                          <td className="px-5 py-4 text-sm text-[var(--ink2)] font-mono">{h.maturityDate}</td>
+                          <td className={`px-5 py-4 text-sm font-mono ${hasYield ? 'text-[var(--ink)]' : 'text-[var(--ink4)]'}`}>
                             {hasYield ? fmtCurrency(h.unclaimedYield) : "—"}
                           </td>
-                          <td style={{ padding: "16px" }}>
+                          <td className="px-5 py-4">
                             {hasYield ? (
                               <button
                                 onClick={() => handleClaimYield(h.symbol)}
                                 disabled={claimingBond === h.symbol}
-                                style={{
-                                  border: "1px solid #4c7df4",
-                                  color: "#4c7df4",
-                                  background: "transparent",
-                                  borderRadius: "8px",
-                                  padding: "6px 16px",
-                                  fontSize: "13px",
-                                  fontWeight: 500,
-                                  cursor: claimingBond === h.symbol ? "not-allowed" : "pointer",
-                                  opacity: claimingBond === h.symbol ? 0.5 : 1,
-                                  transition: "background 0.15s",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "6px"
-                                }}
-                                onMouseEnter={(e) => { if (claimingBond !== h.symbol) e.currentTarget.style.background = "rgba(76,125,244,0.1)"; }}
-                                onMouseLeave={(e) => { if (claimingBond !== h.symbol) e.currentTarget.style.background = "transparent"; }}
+                                className="btn-primary px-4 py-1.5 text-[13px] flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                {claimingBond === h.symbol ? <><Loader2 style={{ width: "14px", height: "14px" }} className="animate-spin" />Claiming</> : "Claim"}
+                                {claimingBond === h.symbol ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Claiming</> : "Claim"}
                               </button>
                             ) : (
-                              <span style={{ fontSize: "13px", color: "#475569" }}>No yield</span>
+                              <span className="text-[13px] text-[var(--ink4)]">No yield</span>
                             )}
                           </td>
                         </tr>
@@ -358,34 +361,31 @@ export default function DashboardPage() {
 
           {/* Transaction History */}
           {transactions.length > 0 && (
-            <div>
-              <h2 style={{ fontSize: "11px", textTransform: "uppercase", color: "#64748b", letterSpacing: "0.1em", marginBottom: "16px" }}>TRANSACTION HISTORY</h2>
-              
-              <div style={{ background: "#0d1117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px", overflow: "hidden" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <div className="reveal">
+              <h2 className="eyebrow mb-4">TRANSACTION HISTORY</h2>
+              <div className="card-luminous rounded-2xl overflow-hidden">
+                <table className="w-full border-collapse">
                   <thead>
-                    <tr style={{ background: "transparent", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                    <tr className="border-b border-[var(--rule)]">
                       {["TYPE", "BOND", "AMOUNT", "USDC", "DATE"].map((h) => (
-                        <th key={h} style={{ padding: "10px 16px", fontSize: "11px", textTransform: "uppercase", color: "#64748b", letterSpacing: "0.08em", textAlign: "left", fontWeight: 600 }}>{h}</th>
+                        <th key={h} className="px-5 py-3 text-left eyebrow-dim">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedTransactions.map((tx) => {
-                      const bs = txBadgeStyle(tx.transaction_type);
+                    {paginatedTransactions.map((t, i) => {
+                      const bs = txBadgeStyle(t.transaction_type);
                       return (
-                        <tr key={tx.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                          <td style={{ padding: "16px" }}>
-                            <span style={{ background: bs.bg, color: bs.color, borderRadius: "20px", padding: "3px 10px", fontSize: "12px", fontWeight: 500 }}>
-                              {tx.transaction_type === "BUY" ? "BUY" : tx.transaction_type === "SELL" ? "SELL" : "CLAIM"}
+                        <tr key={i} className="border-b border-[var(--rule-soft)] hover:bg-[var(--surface)] transition-colors last:border-b-0">
+                          <td className="px-5 py-4">
+                            <span className="rounded-full px-3 py-1 text-[12px] font-medium font-mono" style={{ background: bs.bg, color: bs.color }}>
+                              {t.transaction_type}
                             </span>
                           </td>
-                          <td style={{ padding: "16px", fontSize: "14px", color: "#94a3b8" }}>{tx.bond_symbol}</td>
-                          <td style={{ padding: "16px", fontSize: "14px", color: "#94a3b8" }}>
-                            {tx.transaction_type === "CLAIM" ? "—" : tx.token_amount}
-                          </td>
-                          <td style={{ padding: "16px", fontSize: "14px", color: "#94a3b8" }}>{fmtCurrency(tx.usdc_amount)}</td>
-                          <td style={{ padding: "16px", fontSize: "14px", color: "#94a3b8" }}>{fmtDate(tx.created_at)}</td>
+                          <td className="px-5 py-4 text-sm text-[var(--ink2)] font-mono">{t.bond_symbol}</td>
+                          <td className="px-5 py-4 text-sm text-[var(--ink2)] font-mono">{t.token_amount}</td>
+                          <td className="px-5 py-4 text-sm text-[var(--ink2)] font-mono">{fmtCurrency(t.usdc_amount)}</td>
+                          <td className="px-5 py-4 text-sm text-[var(--ink2)] font-mono">{fmtDate(t.created_at)}</td>
                         </tr>
                       );
                     })}
@@ -394,22 +394,10 @@ export default function DashboardPage() {
               </div>
               
               {hasMoreTx && (
-                <div style={{ marginTop: "20px", display: "flex", justifyContent: "center" }}>
+                <div className="mt-5 flex justify-center">
                   <button
                     onClick={() => setTxPage((p) => p + 1)}
-                    style={{
-                      background: "#0d1117",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                      color: "#94a3b8",
-                      borderRadius: "8px",
-                      padding: "8px 20px",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      cursor: "pointer",
-                      transition: "background 0.15s"
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.04)"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = "#0d1117"}
+                    className="btn-ghost px-6 py-2.5 text-sm"
                   >
                     Load More ({transactions.length - txPage * TX_PER_PAGE} remaining)
                   </button>

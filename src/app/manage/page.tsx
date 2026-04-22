@@ -312,20 +312,22 @@ export default function ManagePage() {
 
   if (!mounted) {
     return (
-      <section style={{ background: "#10131b", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", paddingTop: "80px" }}>
-        <Loader2 style={{ width: "32px", height: "32px", color: "#b3c5ff" }} className="animate-spin" />
+      <section className="min-h-screen flex items-center justify-center pt-20">
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--lilac)]" />
       </section>
     );
   }
 
   if (!isConnected) {
     return (
-      <section style={{ background: "#10131b", minHeight: "100vh", paddingTop: "120px", paddingBottom: "48px" }}>
-        <div style={{ maxWidth: "1440px", margin: "0 auto", padding: "0 32px" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", background: "#181c23", borderRadius: "12px", textAlign: "center" }}>
-            <Wallet style={{ width: "56px", height: "56px", color: "#b3c5ff", marginBottom: "20px", opacity: 0.5 }} />
-            <h3 style={{ fontFamily: "Manrope, sans-serif", fontSize: "20px", fontWeight: 700, color: "#e0e2ed", marginBottom: "8px" }}>Connect Your Wallet</h3>
-            <p style={{ fontSize: "14px", color: "#c3c6d6", marginBottom: "24px" }}>Connect your wallet to manage your issued bonds and distribute yield</p>
+      <section className="min-h-screen pt-20 pb-12">
+        <div className="max-w-[1440px] mx-auto px-8">
+          <div className="card-luminous rounded-2xl flex flex-col items-center justify-center py-20 px-5 text-center">
+            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--lilac)]/10">
+              <Wallet className="h-7 w-7 text-[var(--lilac)]" />
+            </div>
+            <h3 className="font-display text-[var(--ink)] text-xl mb-2">Connect Your Wallet</h3>
+            <p className="text-sm text-[var(--ink3)] max-w-md mb-6">Connect your wallet to manage your issued bonds and distribute yield</p>
             <ConnectButton />
           </div>
         </div>
@@ -335,11 +337,11 @@ export default function ManagePage() {
 
   if (loading) {
     return (
-      <section style={{ background: "#10131b", minHeight: "100vh", paddingTop: "120px", paddingBottom: "48px" }}>
-        <div style={{ maxWidth: "1440px", margin: "0 auto", padding: "0 32px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 20px", gap: "12px" }}>
-            <Loader2 style={{ width: "20px", height: "20px", color: "#b3c5ff" }} className="animate-spin" />
-            <span style={{ fontSize: "14px", color: "#c3c6d6" }}>Loading bonds...</span>
+      <section className="min-h-screen pt-20 pb-12">
+        <div className="max-w-[1440px] mx-auto px-8">
+          <div className="flex items-center justify-center py-20 gap-3">
+            <Loader2 className="h-5 w-5 animate-spin text-[var(--lilac)]" />
+            <span className="text-sm text-[var(--ink3)]">Loading bonds...</span>
           </div>
         </div>
       </section>
@@ -347,34 +349,36 @@ export default function ManagePage() {
   }
 
   return (
-    <section style={{ background: "#10131b", minHeight: "100vh", paddingTop: "120px", paddingBottom: "48px" }}>
-      <div style={{ maxWidth: "1440px", margin: "0 auto", padding: "0 32px" }}>
+    <section className="min-h-screen pt-28 pb-12">
+      <div className="max-w-[1440px] mx-auto px-8">
         
         {/* Header */}
-        <div style={{ marginBottom: "48px" }}>
-          <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.2em", color: "#c3c6d6", fontWeight: 500, marginBottom: "8px" }}>Issuer Dashboard</p>
-          <h1 style={{ fontFamily: "Manrope, sans-serif", fontSize: "36px", fontWeight: 800, color: "#e0e2ed", letterSpacing: "-0.02em", marginBottom: "8px" }}>Manage Offerings</h1>
-          <p style={{ fontSize: "14px", color: "#8d909f" }}>Distribute yield to bondholders and manage your debt obligations</p>
+        <div className="mb-12">
+          <p className="eyebrow eyebrow-rule mb-2">Issuer Dashboard</p>
+          <h1 className="font-display text-[var(--ink)] text-[2.25rem] mb-2">Manage Offerings</h1>
+          <p className="text-sm text-[var(--ink3)]">Distribute yield to bondholders and manage your debt obligations</p>
         </div>
 
         {bonds.length === 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", textAlign: "center", background: "#181c23", borderRadius: "12px" }}>
-            <Shield style={{ width: "56px", height: "56px", color: "#434654", marginBottom: "20px", opacity: 0.4 }} />
-            <h3 style={{ fontFamily: "Manrope, sans-serif", fontSize: "18px", fontWeight: 700, color: "#e0e2ed", marginBottom: "8px" }}>No bonds issued yet</h3>
-            <p style={{ fontSize: "14px", color: "#c3c6d6" }}>This wallet hasn't issued any bonds</p>
+          <div className="card-luminous rounded-2xl flex flex-col items-center justify-center py-20 px-5 text-center">
+            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--rule)]/40">
+              <Shield className="h-7 w-7 text-[var(--ink4)]" />
+            </div>
+            <h3 className="font-display text-[var(--ink)] text-lg mb-2">No bonds issued yet</h3>
+            <p className="text-sm text-[var(--ink3)]">This wallet hasn't issued any bonds</p>
           </div>
         ) : (
           <div>
             {/* Bonds Table */}
-            <div style={{ background: "#181c23", borderRadius: "12px", overflow: "hidden", marginBottom: "32px" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <div className="card-luminous rounded-2xl overflow-hidden mb-8">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr style={{ borderBottom: "1px solid rgba(67,70,84,0.2)" }}>
-                    <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}>Bond</th>
-                    <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}>APY</th>
-                    <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}>Price</th>
-                    <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}>Maturity</th>
-                    <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#c3c6d6" }}>Yield Distribution</th>
+                  <tr className="border-b border-[var(--rule)]">
+                    <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink3)]">Bond</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink3)]">APY</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink3)]">Price</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink3)]">Maturity</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink3)]">Yield Distribution</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -382,56 +386,48 @@ export default function ManagePage() {
                     const flow = getFlow(bond.symbol);
                     const btnState = getButtonState(bond.symbol);
                     return (
-                      <tr key={bond.id} style={{ borderBottom: "1px solid rgba(67,70,84,0.1)" }}>
+                      <tr key={bond.id} className="ledger-row">
                         {/* Bond Column */}
-                        <td style={{ padding: "20px 24px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: flow === 'done' ? "#00bd85" : flow === 'approved' ? "#b3c5ff" : "#434654", flexShrink: 0 }} />
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-2 h-2 rounded-full shrink-0"
+                              style={{ background: flow === 'done' ? "var(--aqua)" : flow === 'approved' ? "var(--lilac)" : "var(--rule)" }}
+                            />
                             <div>
-                              <Link href={`/bond/${bond.symbol}`} style={{ textDecoration: "none" }}>
-                                <p style={{ fontFamily: "Manrope, sans-serif", fontSize: "14px", fontWeight: 700, color: "#e0e2ed", marginBottom: "2px" }}>{bond.symbol}</p>
+                              <Link href={`/bond/${bond.symbol}`} className="font-semibold text-sm text-[var(--ink)] hover:text-[var(--lilac)] transition-colors">
+                                {bond.symbol}
                               </Link>
-                              <p style={{ fontSize: "12px", color: "#8d909f" }}>{bond.issuer_name}</p>
+                              <p className="text-xs text-[var(--ink4)] mt-0.5">{bond.issuer_name}</p>
                             </div>
                           </div>
                         </td>
 
                         {/* APY Column */}
-                        <td style={{ padding: "20px 24px" }}>
-                          <p style={{ fontFamily: "Manrope, sans-serif", fontSize: "14px", fontWeight: 600, color: "#00bd85" }}>{bond.apy}%</p>
+                        <td className="px-6 py-5">
+                          <p className="font-semibold text-sm text-[var(--aqua)]">{bond.apy}%</p>
                         </td>
 
                         {/* Price Column */}
-                        <td style={{ padding: "20px 24px" }}>
-                          <p style={{ fontFamily: "Manrope, sans-serif", fontSize: "14px", fontWeight: 600, color: "#e0e2ed" }}>{fmtCurrency(bond.price_per_token)}</p>
+                        <td className="px-6 py-5">
+                          <p className="font-semibold text-sm text-[var(--ink)]">{fmtCurrency(bond.price_per_token)}</p>
                         </td>
 
                         {/* Maturity Column */}
-                        <td style={{ padding: "20px 24px" }}>
-                          <p style={{ fontSize: "13px", color: "#c3c6d6" }}>{bond.maturity_months} months</p>
+                        <td className="px-6 py-5">
+                          <p className="text-sm text-[var(--ink3)]">{bond.maturity_months} months</p>
                         </td>
 
                         {/* Yield Distribution Column */}
-                        <td style={{ padding: "20px 24px" }}>
-                          <div style={{ display: "flex", gap: "8px", alignItems: "center", minWidth: "320px" }}>
+                        <td className="px-6 py-5">
+                          <div className="flex gap-2 items-center min-w-[320px]">
                             <input
                               type="number" min="0" step="0.01" placeholder="0.00"
                               value={yieldInputs[bond.symbol] || ""}
                               onChange={(e) => handleInputChange(bond.symbol, e.target.value)}
                               disabled={flow !== 'idle'}
-                              style={{
-                                flex: 1,
-                                padding: "10px 14px",
-                                borderRadius: "6px",
-                                background: "#0a0e16",
-                                border: "1px solid rgba(67,70,84,0.2)",
-                                color: "#e0e2ed",
-                                fontSize: "13px",
-                                outline: "none",
-                                opacity: flow !== 'idle' ? 0.5 : 1
-                              }}
-                              onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(179,197,255,0.5)"; }}
-                              onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(67,70,84,0.2)"; }}
+                              className="flex-1 bg-[var(--surface)] border border-[var(--rule)] focus:border-[var(--lilac)] rounded-xl px-4 py-2.5 text-sm text-[var(--ink)] outline-none transition-colors disabled:cursor-not-allowed"
+                              style={{ opacity: flow !== 'idle' ? 0.5 : 1 }}
                             />
                             <button
                               onClick={() => btnState.action()}
@@ -441,12 +437,11 @@ export default function ManagePage() {
                                 alignItems: "center",
                                 gap: "6px",
                                 padding: "10px 18px",
-                                borderRadius: "6px",
-                                background: flow === 'approved' ? "linear-gradient(135deg, #00e0a1 0%, #00bd85 100%)" : "linear-gradient(135deg, #b3c5ff 0%, #5e8bff 100%)",
+                                borderRadius: "8px",
+                                background: flow === 'approved' ? "linear-gradient(135deg, var(--aqua) 0%, #00bd85 100%)" : "linear-gradient(135deg, var(--lilac) 0%, #5e8bff 100%)",
                                 color: flow === 'approved' ? "#00291a" : "#001849",
                                 fontSize: "12px",
                                 fontWeight: 700,
-                                fontFamily: "Manrope, sans-serif",
                                 border: "none",
                                 cursor: btnState.disabled ? "not-allowed" : "pointer",
                                 opacity: btnState.disabled ? 0.4 : 1,
@@ -455,7 +450,7 @@ export default function ManagePage() {
                               }}
                             >
                               {['approving', 'depositing'].includes(flow) ? (
-                                <><Loader2 style={{ width: "14px", height: "14px" }} className="animate-spin" />{btnState.text}</>
+                                <><Loader2 className="h-3.5 w-3.5 animate-spin" />{btnState.text}</>
                               ) : (
                                 btnState.text
                               )}
@@ -470,11 +465,11 @@ export default function ManagePage() {
             </div>
 
             {/* Info box */}
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", padding: "20px 24px", borderRadius: "12px", background: "rgba(179,197,255,0.05)", border: "1px solid rgba(179,197,255,0.1)" }}>
-              <Info style={{ width: "18px", height: "18px", flexShrink: 0, marginTop: "2px", color: "#b3c5ff" }} />
+            <div className="flex items-start gap-4 rounded-xl px-6 py-5 bg-[var(--lilac)]/5 border border-[var(--lilac)]/10">
+              <Info className="h-4.5 w-4.5 shrink-0 mt-0.5 text-[var(--lilac)]" />
               <div>
-                <p style={{ fontSize: "13px", fontWeight: 600, color: "#e0e2ed", marginBottom: "6px" }}>How Yield Distribution Works</p>
-                <p style={{ fontSize: "13px", color: "#8d909f", lineHeight: "1.6" }}>
+                <p className="text-sm font-semibold text-[var(--ink)] mb-1.5">How Yield Distribution Works</p>
+                <p className="text-sm text-[var(--ink4)] leading-relaxed">
                   Enter the USDC amount per token. The system automatically calculates and distributes
                   yield proportionally to all investors based on their balances.
                 </p>
