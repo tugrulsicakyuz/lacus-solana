@@ -184,7 +184,7 @@ export default function ApplyPage() {
     });
     const encoder = new TextEncoder();
     const data = encoder.encode(canonicalData);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data as BufferSource);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = "0x" + hashArray.map((b) => b.toString(16).padStart(2, "0")).join("") as `0x${string}`;
     setLoanAgreementHash(hashHex);

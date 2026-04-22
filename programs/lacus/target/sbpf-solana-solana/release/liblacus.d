@@ -1,0 +1,1 @@
+/Users/tugrulsicakyuz/Documents/New\ project/lacus-solana/programs/lacus/target/sbpf-solana-solana/release/liblacus.rlib: /Users/tugrulsicakyuz/Documents/New\ project/lacus-solana/programs/lacus/src/lib.rs

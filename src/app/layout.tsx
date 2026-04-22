@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Web3Provider from "@/components/Web3Provider";
+import SolanaWalletProvider from "@/components/SolanaWalletProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Toaster } from "sonner";
@@ -73,14 +74,16 @@ export default function RootLayout({
         </div>
 
         <Web3Provider>
-          <GlobalInteractions />
-          <ChainGuard />
-          <Navbar />
-          <main className="flex-1">
-            <ErrorBoundary>{children}</ErrorBoundary>
-          </main>
-          <Footer />
-          <Toaster theme="dark" richColors position="top-right" />
+          <SolanaWalletProvider>
+            <GlobalInteractions />
+            <ChainGuard />
+            <Navbar />
+            <main className="flex-1">
+              <ErrorBoundary>{children}</ErrorBoundary>
+            </main>
+            <Footer />
+            <Toaster theme="dark" richColors position="top-right" />
+          </SolanaWalletProvider>
         </Web3Provider>
       </body>
     </html>

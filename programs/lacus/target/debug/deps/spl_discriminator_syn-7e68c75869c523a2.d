@@ -1,0 +1,9 @@
+/Users/tugrulsicakyuz/Documents/New project/lacus-solana/programs/lacus/target/debug/deps/spl_discriminator_syn-7e68c75869c523a2.d: /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/lib.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/error.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/parser.rs
+
+/Users/tugrulsicakyuz/Documents/New project/lacus-solana/programs/lacus/target/debug/deps/libspl_discriminator_syn-7e68c75869c523a2.rlib: /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/lib.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/error.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/parser.rs
+
+/Users/tugrulsicakyuz/Documents/New project/lacus-solana/programs/lacus/target/debug/deps/libspl_discriminator_syn-7e68c75869c523a2.rmeta: /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/lib.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/error.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/parser.rs
+
+/Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/lib.rs:
+/Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/error.rs:
+/Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-discriminator-syn-0.2.1/src/parser.rs:

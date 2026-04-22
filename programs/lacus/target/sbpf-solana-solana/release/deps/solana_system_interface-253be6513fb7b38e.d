@@ -1,0 +1,9 @@
+/Users/tugrulsicakyuz/Documents/New project/lacus-solana/programs/lacus/target/sbpf-solana-solana/release/deps/solana_system_interface-253be6513fb7b38e.d: /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/lib.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/error.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/instruction.rs
+
+/Users/tugrulsicakyuz/Documents/New project/lacus-solana/programs/lacus/target/sbpf-solana-solana/release/deps/libsolana_system_interface-253be6513fb7b38e.rlib: /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/lib.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/error.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/instruction.rs
+
+/Users/tugrulsicakyuz/Documents/New project/lacus-solana/programs/lacus/target/sbpf-solana-solana/release/deps/libsolana_system_interface-253be6513fb7b38e.rmeta: /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/lib.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/error.rs /Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/instruction.rs
+
+/Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/lib.rs:
+/Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/error.rs:
+/Users/tugrulsicakyuz/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-system-interface-1.0.0/src/instruction.rs:

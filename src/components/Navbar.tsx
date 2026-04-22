@@ -1,13 +1,12 @@
 "use client";
 
+import '@solana/wallet-adapter-react-ui/styles.css';
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Droplet, Loader2, ChevronDown } from "lucide-react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { toast } from "sonner";
-import { CONTRACTS } from "@/config/contracts";
+import { Menu, X, ChevronDown } from "lucide-react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import Logo from "./Logo";
 
 /* ── Dropdown panel ── */
@@ -121,56 +120,11 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [tradeOpen, setTradeOpen] = useState(false);
   const [issueOpen, setIssueOpen] = useState(false);
-  const { address, isConnected } = useAccount();
+  const { connected } = useWallet();
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const { data: usdcBalance, refetch: refetchBalance } = useReadContract({
-    address: CONTRACTS.mockUSDC.address,
-    abi: CONTRACTS.mockUSDC.abi,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
-    query: { enabled: !!address },
-  });
-
-  const { data: hash, writeContract, isPending: isWritePending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({ hash });
-
-  const handleFaucet = () => {
-    writeContract(
-      {
-        address: CONTRACTS.mockUSDC.address,
-        abi: CONTRACTS.mockUSDC.abi,
-        functionName: "faucet",
-      },
-      {
-        onSuccess: () =>
-          toast.loading("Minting test USDC...", { id: "faucet-tx" }),
-        onError: (error) => toast.error("Failed: " + error.message),
-      }
-    );
-  };
-
-  useEffect(() => {
-    if (isConfirmed) {
-      toast.success("10,000 test USDC received", { id: "faucet-tx" });
-      refetchBalance();
-    }
-  }, [isConfirmed, refetchBalance]);
-
-  const formattedBalance = usdcBalance
-    ? (() => {
-        const n = Number(usdcBalance) / 1e6;
-        if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-        if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-        return n.toFixed(2);
-      })()
-    : "0.00";
-
-  const isPending = isWritePending || isConfirming;
 
   const tradeItems = [
     { label: "Buy Bonds", href: "/primary", desc: "Primary issuances" },
@@ -434,171 +388,23 @@ export default function Navbar() {
               Solana
             </span>
 
-            {/* USDC balance + Faucet (wallet connected) */}
-            {mounted && isConnected && (
-              <>
-                <div
-                  className="hidden sm:flex items-center gap-2"
-                  style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: "0.68rem",
-                    letterSpacing: "0.06em",
-                    padding: "5px 12px",
-                    borderRadius: "9px",
-                    border: "1px solid rgba(196,181,253,0.16)",
-                    background: "rgba(196,181,253,0.04)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <span style={{ color: "var(--ink4)", fontSize: "0.60rem", letterSpacing: "0.16em", textTransform: "uppercase" }}>
-                    USDC
-                  </span>
-                  <span style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' }}>
-                    ${formattedBalance}
-                  </span>
-                </div>
-
-                <button
-                  onClick={handleFaucet}
-                  disabled={isPending}
-                  className="hidden sm:inline-flex items-center gap-1.5"
-                  style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: "0.60rem",
-                    letterSpacing: "0.16em",
-                    textTransform: "uppercase",
-                    padding: "5px 12px",
-                    borderRadius: "9px",
-                    border: isPending
-                      ? "1px solid rgba(226,228,245,0.07)"
-                      : "1px solid rgba(125,211,252,0.22)",
-                    background: isPending ? "transparent" : "rgba(125,211,252,0.05)",
-                    color: isPending ? "var(--ink4)" : "var(--aqua-soft)",
-                    cursor: isPending ? "not-allowed" : "pointer",
-                    opacity: isPending ? 0.5 : 1,
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  {isPending ? (
-                    <Loader2 style={{ width: "10px", height: "10px", animation: "spin 1s linear infinite" }} />
-                  ) : (
-                    <Droplet style={{ width: "10px", height: "10px" }} />
-                  )}
-                  Faucet
-                </button>
-              </>
-            )}
-
-            {/* Connect / Account button */}
-            {mounted ? (
-              <ConnectButton.Custom>
-                {({
-                  account,
-                  chain,
-                  openAccountModal,
-                  openChainModal,
-                  openConnectModal,
-                  authenticationStatus,
-                  mounted: rkMounted,
-                }) => {
-                  const ready =
-                    rkMounted && authenticationStatus !== "loading";
-                  const connected =
-                    ready &&
-                    account &&
-                    chain &&
-                    (!authenticationStatus ||
-                      authenticationStatus === "authenticated");
-
-                  return (
-                    <div
-                      aria-hidden={!ready}
-                      style={{
-                        opacity: !ready ? 0 : 1,
-                        pointerEvents: !ready ? "none" : "auto",
-                        userSelect: !ready ? "none" : "auto",
-                      }}
-                    >
-                      {!connected ? (
-                        <button
-                          onClick={openConnectModal}
-                          className="btn-primary btn-magnetic"
-                          style={{ padding: "8px 20px", fontSize: "0.75rem" }}
-                        >
-                          Connect
-                        </button>
-                      ) : chain.unsupported ? (
-                        <button
-                          onClick={openChainModal}
-                          style={{
-                            fontFamily: "'JetBrains Mono', monospace",
-                            fontSize: "0.68rem",
-                            letterSpacing: "0.08em",
-                            padding: "7px 16px",
-                            borderRadius: "9px",
-                            border: "1px solid rgba(253,164,175,0.28)",
-                            background: "rgba(253,164,175,0.06)",
-                            color: "var(--coral)",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Wrong network
-                        </button>
-                      ) : (
-                        <button
-                          onClick={openAccountModal}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            fontFamily: "'JetBrains Mono', monospace",
-                            fontSize: "0.68rem",
-                            letterSpacing: "0.06em",
-                            padding: "5px 14px 5px 8px",
-                            borderRadius: "10px",
-                            border: "1px solid rgba(125,211,252,0.18)",
-                            background: "rgba(125,211,252,0.04)",
-                            cursor: "pointer",
-                            color: "var(--ink2)",
-                            transition: "all 0.2s ease",
-                          }}
-                        >
-                          {/* Gradient avatar */}
-                          <span
-                            style={{
-                              width: "24px",
-                              height: "24px",
-                              borderRadius: "50%",
-                              background:
-                                "linear-gradient(135deg, var(--aqua-soft), var(--lilac-deep))",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "0.55rem",
-                              color: "var(--abyss)",
-                              fontWeight: 700,
-                              flexShrink: 0,
-                              letterSpacing: "0.04em",
-                            }}
-                          >
-                            {account.displayName.slice(0, 2).toUpperCase()}
-                          </span>
-                          {account.displayName}
-                        </button>
-                      )}
-                    </div>
-                  );
-                }}
-              </ConnectButton.Custom>
-            ) : (
-              <div
-                style={{
-                  height: "34px",
-                  width: "100px",
-                  borderRadius: "9px",
-                  background: "rgba(226,228,245,0.05)",
-                }}
-              />
+            {/* Solana Wallet Connect Button */}
+            {mounted && (
+              <div style={{ 
+                display: 'flex',
+                alignItems: 'center',
+              }}>
+                <WalletMultiButton 
+                  style={{ 
+                    backgroundColor: '#1e293b',
+                    border: '1px solid #334155',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    height: '36px',
+                    padding: '0 16px',
+                  }} 
+                />
+              </div>
             )}
 
             {/* Mobile hamburger */}
@@ -680,13 +486,13 @@ export default function Navbar() {
             </div>
 
             {[
-              { label: "Markets", href: "/launchpad" },
-              { label: "Secondary Market", href: "/secondary" },
-              { label: "Buy Bonds", href: "/primary" },
+              { label: "Home", href: "/" },
+              { label: "Launchpad", href: "/launchpad" },
+              { label: "Primary Market", href: "/primary" },
+              { label: "Issue Bond", href: "/manage/issue" },
               { label: "Portfolio", href: "/dashboard" },
-              { label: "Issue Bonds", href: "/apply" },
               { label: "Manage", href: "/manage" },
-              { label: "Docs", href: "#" },
+              { label: "About", href: "/about" },
             ].map((item) => {
               const isActive =
                 pathname === item.href ||
@@ -719,94 +525,6 @@ export default function Navbar() {
                 </Link>
               );
             })}
-
-            {/* Wallet section */}
-            {mounted && isConnected && (
-              <div
-                style={{
-                  marginTop: "20px",
-                  paddingTop: "20px",
-                  borderTop: "1px solid rgba(226,228,245,0.06)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: "0.58rem",
-                    letterSpacing: "0.22em",
-                    textTransform: "uppercase",
-                    color: "var(--ink4)",
-                    padding: "0 12px",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Wallet
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "12px 16px",
-                    borderRadius: "10px",
-                    border: "1px solid rgba(196,181,253,0.12)",
-                    background: "rgba(196,181,253,0.04)",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: "0.68rem",
-                      color: "var(--ink3)",
-                      letterSpacing: "0.06em",
-                    }}
-                  >
-                    USDC Balance
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: "0.82rem",
-                      color: "var(--ink)",
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    ${formattedBalance}
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    handleFaucet();
-                    setMobileOpen(false);
-                  }}
-                  disabled={isPending}
-                  style={{
-                    width: "100%",
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: "0.70rem",
-                    letterSpacing: "0.16em",
-                    textTransform: "uppercase",
-                    padding: "13px 16px",
-                    borderRadius: "10px",
-                    border: "1px solid rgba(125,211,252,0.20)",
-                    background: "rgba(125,211,252,0.04)",
-                    color: "var(--aqua-soft)",
-                    cursor: isPending ? "not-allowed" : "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    justifyContent: "center",
-                    opacity: isPending ? 0.5 : 1,
-                  }}
-                >
-                  <Droplet style={{ width: "14px", height: "14px" }} />
-                  Get Test USDC
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}

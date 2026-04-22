@@ -2,32 +2,61 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { Search, ChevronRight, AlertTriangle } from "lucide-react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { supabase } from "@/lib/supabase";
+import { useLacusProgram } from "@/hooks/useLacus";
 import { useScrollReveal } from "@/lib/useClientInteractions";
 
 interface Bond {
-  id: number;
+  bondId: number;
+  issuer: string;
   issuer_name: string;
   symbol: string;
+  name: string;
   apy: number;
   maturity_months: number;
+  maturity_date: string;
   total_issue_size: number;
   price_per_token: number;
   filled_percentage: number;
-  documents_complete: boolean;
+  faceValue: number;
+  couponRateBps: number;
+  maxSupply: number;
+  tokensSold: number;
+  maturityTimestamp: number;
+  description?: string;
+  logo_url?: string;
 }
 
 function fmtCurrency(n: number): string {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 }
 
+function timestampToMonths(timestamp: number): number {
+  const now = Math.floor(Date.now() / 1000);
+  const diffSeconds = timestamp - now;
+  return Math.max(0, Math.round(diffSeconds / (30 * 24 * 60 * 60)));
+}
+
+function formatMaturityDate(timestamp: number): string {
+  return new Date(timestamp * 1000).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default function LaunchpadPage() {
   useScrollReveal();
   const router = useRouter();
+  const { connected } = useWallet();
+  const { fetchAllBonds } = useLacusProgram();
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFallbackMode, setIsFallbackMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"apy" | "size" | "filled" | "default">("default");
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,15 +65,94 @@ export default function LaunchpadPage() {
   const fetchBonds = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await supabase
-      .from("bonds")
-      .select("*")
-      .eq("documents_complete", true)
-      .order("id", { ascending: true });
-    if (fetchError) { console.error("Failed to fetch bonds:", fetchError); setError(fetchError.message); }
-    else setBonds(data as Bond[]);
+    setIsFallbackMode(false);
+
+    try {
+      // 1. Fetch on-chain bonds (source of truth for financial data)
+      const onChainBonds = await fetchAllBonds();
+
+      // 2. Fetch Supabase metadata for enrichment (issuer name, description, logo)
+      const { data: supabaseBonds } = await supabase
+        .from('bonds')
+        .select('symbol, issuer_name, description, logo_url, documents_complete');
+
+      // 3. Merge: match by bondId or fallback to index matching
+      const merged: Bond[] = onChainBonds.map((bond: any, index: number) => {
+        const meta = supabaseBonds?.find(
+          (s: any) => s.symbol?.toLowerCase() === (bond.symbol || `BOND-${bond.bondId}`)?.toLowerCase()
+        ) || supabaseBonds?.[index];
+
+        const faceValueUSDC = bond.faceValue / 1_000_000;
+        const fillPercentage = bond.maxSupply > 0 
+          ? Math.min((bond.tokensSold / bond.maxSupply) * 100, 100)
+          : 0;
+        const totalRaise = faceValueUSDC * bond.maxSupply;
+
+        return {
+          bondId: bond.bondId,
+          issuer: bond.issuer,
+          issuer_name: meta?.issuer_name || bond.issuer?.slice(0, 8) + '...' || 'Unknown',
+          symbol: bond.symbol || meta?.symbol || `BOND-${bond.bondId}`,
+          name: bond.name || meta?.issuer_name || 'Unnamed Bond',
+          apy: bond.couponRateBps / 100,
+          maturity_months: timestampToMonths(bond.maturityTimestamp),
+          maturity_date: formatMaturityDate(bond.maturityTimestamp),
+          total_issue_size: totalRaise,
+          price_per_token: faceValueUSDC,
+          filled_percentage: fillPercentage,
+          faceValue: bond.faceValue,
+          couponRateBps: bond.couponRateBps,
+          maxSupply: bond.maxSupply,
+          tokensSold: bond.tokensSold,
+          maturityTimestamp: bond.maturityTimestamp,
+          description: meta?.description || 'On-chain tokenized bond',
+          logo_url: meta?.logo_url || null,
+        };
+      });
+
+      setBonds(merged);
+    } catch (err) {
+      console.error('Failed to fetch on-chain bonds:', err);
+      setIsFallbackMode(true);
+      
+      // Fallback to Supabase-only data
+      const { data, error: fetchError } = await supabase
+        .from("bonds")
+        .select("*")
+        .eq("documents_complete", true)
+        .order("id", { ascending: true });
+      
+      if (fetchError) {
+        console.error("Failed to fetch fallback bonds:", fetchError);
+        setError(fetchError.message);
+      } else {
+        // Map Supabase data to Bond interface
+        const fallbackBonds: Bond[] = (data || []).map((b: any) => ({
+          bondId: b.id,
+          issuer: '',
+          issuer_name: b.issuer_name || 'Unknown',
+          symbol: b.symbol || '',
+          name: b.issuer_name || '',
+          apy: b.apy || 0,
+          maturity_months: b.maturity_months || 0,
+          maturity_date: '',
+          total_issue_size: b.total_issue_size || 0,
+          price_per_token: b.price_per_token || 0,
+          filled_percentage: b.filled_percentage || 0,
+          faceValue: 0,
+          couponRateBps: 0,
+          maxSupply: 0,
+          tokensSold: 0,
+          maturityTimestamp: 0,
+          description: b.description,
+          logo_url: b.logo_url,
+        }));
+        setBonds(fallbackBonds);
+      }
+    }
+
     setLoading(false);
-  }, []);
+  }, [fetchAllBonds]);
 
   useEffect(() => { fetchBonds(); }, [fetchBonds]);
 
@@ -62,7 +170,7 @@ export default function LaunchpadPage() {
       if (sortBy === "apy") return b.apy - a.apy;
       if (sortBy === "size") return b.total_issue_size - a.total_issue_size;
       if (sortBy === "filled") return b.filled_percentage - a.filled_percentage;
-      return a.id - b.id;
+      return a.bondId - b.bondId;
     });
 
   const totalPages = Math.ceil(filteredBonds.length / BONDS_PER_PAGE);
@@ -130,6 +238,16 @@ export default function LaunchpadPage() {
             </div>
           </div>
         </div>
+
+        {/* Fallback Mode Warning */}
+        {isFallbackMode && (
+          <div className="mb-6 flex items-start gap-3 rounded-xl px-4 py-3 bg-[var(--coral)]/5 border border-[var(--coral)]/20">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-[var(--coral)]" />
+            <p className="text-sm text-[var(--ink3)]">
+              <strong className="text-[var(--coral)]">Showing cached data</strong> — on-chain connection unavailable. Data may be outdated.
+            </p>
+          </div>
+        )}
 
         {/* Search & Filter Bar */}
         <div className="flex gap-3 items-center mb-8 flex-wrap reveal reveal-d1">
@@ -202,16 +320,23 @@ export default function LaunchpadPage() {
             </button>
           </div>
         ) : filteredBonds.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <p className="text-sm text-[var(--ink3)]">
-              {bonds.length === 0 ? "No active bond offerings at this time." : "No bonds match your search criteria."}
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <p className="text-sm text-[var(--ink3)] text-center">
+              {bonds.length === 0 
+                ? "No bonds issued yet on Solana devnet. Be the first to issue a bond." 
+                : "No bonds match your search criteria."}
             </p>
+            {bonds.length === 0 && (
+              <Link href="/manage/issue" className="btn-primary px-6 py-3">
+                Issue Your First Bond
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {paginatedBonds.map((bond, idx) => (
               <div
-                key={bond.id}
+                key={bond.bondId}
                 onClick={() => router.push(`/primary?bond=${bond.symbol}`)}
                 className={`card-luminous card-tilt rounded-2xl p-6 cursor-pointer reveal ${idx < 3 ? `reveal-d${idx + 1}` : ""}`}
               >
@@ -273,7 +398,7 @@ export default function LaunchpadPage() {
                   onClick={(e) => { e.stopPropagation(); router.push(`/primary?bond=${bond.symbol}`); }}
                   className="w-full btn-ghost flex items-center justify-center gap-2"
                 >
-                  View Bond
+                  {connected ? 'View Bond' : 'Connect Wallet to Buy'}
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>

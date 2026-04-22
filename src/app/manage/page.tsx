@@ -359,6 +359,30 @@ export default function ManagePage() {
           <p className="text-sm text-[var(--ink3)]">Distribute yield to bondholders and manage your debt obligations</p>
         </div>
 
+        {/* Issue New Bond Card */}
+        <Link
+          href="/manage/issue"
+          className="block mb-8 card-luminous rounded-2xl p-6 hover:border-[var(--lilac)] transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--lilac)]/10 group-hover:bg-[var(--lilac)]/20 transition-colors">
+                <TrendingUp className="h-6 w-6 text-[var(--lilac)]" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-base text-[var(--ink)] mb-1">Issue New Bond on Solana</h3>
+                <p className="text-sm text-[var(--ink3)]">Create a new tokenized bond and deploy to Solana devnet</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm font-medium text-[var(--lilac)] opacity-0 group-hover:opacity-100 transition-opacity">
+              <span>Get Started</span>
+              <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+                <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </Link>
+
         {bonds.length === 0 ? (
           <div className="card-luminous rounded-2xl flex flex-col items-center justify-center py-20 px-5 text-center">
             <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--rule)]/40">
