@@ -402,13 +402,12 @@ function PrimaryPageContent() {
                     onClick={async () => {
                       try {
                         const result = await requestTestUSDC();
-                        if (result?.fallback) {
-                          toast.info('Opening faucet in new tab — paste your wallet address and request USDC-Dev');
-                        } else {
-                          toast.success('1,000 test USDC requested! It may take a few seconds to arrive.');
+                        if (result?.success) {
+                          toast.success('✅ 1,000 test USDC minted! Check your wallet.');
                         }
                       } catch (e) {
-                        toast.error('Failed to request test USDC');
+                        const errorMsg = e instanceof Error ? e.message : 'Failed to request test USDC';
+                        toast.error(errorMsg);
                       }
                     }}
                     className="w-full btn-ghost py-2 text-xs mb-3 text-[var(--aqua-bright)] border-[var(--aqua-bright)]/20"

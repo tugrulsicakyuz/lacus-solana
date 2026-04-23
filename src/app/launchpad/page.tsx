@@ -52,6 +52,7 @@ function formatMaturityDate(timestamp: number): string {
 
 export default function LaunchpadPage() {
   useScrollReveal();
+  
   const router = useRouter();
   const { connected } = useWallet();
   const { fetchAllBonds } = useLacusProgram();
@@ -64,6 +65,25 @@ export default function LaunchpadPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const BONDS_PER_PAGE = 12;
+
+  useEffect(() => {
+    if (loading) return;
+    const revealEls = document.querySelectorAll('.reveal:not(.visible)');
+    if (!revealEls.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.10, rootMargin: '0px 0px -40px 0px' }
+    );
+    revealEls.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [loading, bonds]);
 
   useEffect(() => {
     async function fetchBonds() {

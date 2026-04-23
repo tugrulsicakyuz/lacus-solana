@@ -202,22 +202,24 @@ export function useLacusProgram() {
   const requestTestUSDC = useCallback(async () => {
     if (!wallet) throw new Error('Wallet not connected');
     
-    // SPL Token Faucet API for devnet
-    const response = await fetch(
-      `https://faucet.solana.com/api/get_token?mint=${USDC_DEVNET_MINT}&wallet=${wallet.publicKey.toString()}&amount=1000000000`,
-      { method: 'POST' }
-    );
-    
-    if (!response.ok) {
-      // Fallback: open spl-token-faucet.com in new tab
-      window.open(
-        `https://spl-token-faucet.com/?token-name=USDC-Dev&wallet=${wallet.publicKey.toString()}`,
-        '_blank'
-      );
-      return { fallback: true };
+    try {
+      const response = await fetch('/api/faucet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallet: wallet.publicKey.toString() }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Failed to request test USDC');
+      }
+      
+      return data;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Test USDC request failed: ${errorMessage}`);
     }
-    
-    return response.json();
   }, [wallet]);
 
   const depositYield = useCallback(async (bondId: number, amountUsdc: number) => {
@@ -234,6 +236,14 @@ export function useLacusProgram() {
       wallet.publicKey
     );
 
+    // Create instruction to initialize issuer's USDC ATA if it doesn't exist
+    const createIssuerUsdcAtaIx = createAssociatedTokenAccountIdempotentInstruction(
+      wallet.publicKey,        // payer
+      issuerUsdcAta,           // ata
+      wallet.publicKey,        // owner
+      new PublicKey(USDC_DEVNET_MINT)
+    );
+
     const tx = await program.methods
       .depositYield(new BN(amountUsdc))
       .accounts({
@@ -243,9 +253,9 @@ export function useLacusProgram() {
         bondYieldVault,
         usdcMint: new PublicKey(USDC_DEVNET_MINT),
         tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
+      .preInstructions([createIssuerUsdcAtaIx])
       .rpc();
 
     return tx;
