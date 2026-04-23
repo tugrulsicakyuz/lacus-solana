@@ -199,5 +199,57 @@ export function useLacusProgram() {
     return tx;
   }, [program, wallet]);
 
-  return { program, fetchAllBonds, fetchMyBonds, fetchBond, issueBond, buyBond, error };
+  const requestTestUSDC = useCallback(async () => {
+    if (!wallet) throw new Error('Wallet not connected');
+    
+    // SPL Token Faucet API for devnet
+    const response = await fetch(
+      `https://faucet.solana.com/api/get_token?mint=${USDC_DEVNET_MINT}&wallet=${wallet.publicKey.toString()}&amount=1000000000`,
+      { method: 'POST' }
+    );
+    
+    if (!response.ok) {
+      // Fallback: open spl-token-faucet.com in new tab
+      window.open(
+        `https://spl-token-faucet.com/?token-name=USDC-Dev&wallet=${wallet.publicKey.toString()}`,
+        '_blank'
+      );
+      return { fallback: true };
+    }
+    
+    return response.json();
+  }, [wallet]);
+
+  const depositYield = useCallback(async (bondId: number, amountUsdc: number) => {
+    if (!program || !wallet) throw new Error('Wallet not connected');
+
+    const [bondStatePDA] = getBondStatePDA(bondId);
+    const bondYieldVault = await getAssociatedTokenAddress(
+      new PublicKey(USDC_DEVNET_MINT),
+      bondStatePDA,
+      true
+    );
+    const issuerUsdcAta = await getAssociatedTokenAddress(
+      new PublicKey(USDC_DEVNET_MINT),
+      wallet.publicKey
+    );
+
+    const tx = await program.methods
+      .depositYield(new BN(amountUsdc))
+      .accounts({
+        bondState: bondStatePDA,
+        issuer: wallet.publicKey,
+        issuerUsdcAta,
+        bondYieldVault,
+        usdcMint: new PublicKey(USDC_DEVNET_MINT),
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc();
+
+    return tx;
+  }, [program, wallet]);
+
+  return { program, fetchAllBonds, fetchMyBonds, fetchBond, issueBond, buyBond, requestTestUSDC, depositYield, error };
 }

@@ -45,7 +45,7 @@ function formatDate(timestamp: number): string {
 function PrimaryPageContent() {
   const searchParams = useSearchParams();
   const { publicKey, connected } = useWallet();
-  const { fetchAllBonds, fetchBond, buyBond } = useLacusProgram();
+  const { fetchAllBonds, fetchBond, buyBond, requestTestUSDC } = useLacusProgram();
 
   const [onChainBonds, setOnChainBonds] = useState<OnChainBond[]>([]);
   const [bondMetadata, setBondMetadata] = useState<BondMetadata[]>([]);
@@ -397,6 +397,25 @@ function PrimaryPageContent() {
                 </div>
               ) : (
                 <>
+                  {/* Get Test USDC Button */}
+                  <button
+                    onClick={async () => {
+                      try {
+                        const result = await requestTestUSDC();
+                        if (result?.fallback) {
+                          toast.info('Opening faucet in new tab — paste your wallet address and request USDC-Dev');
+                        } else {
+                          toast.success('1,000 test USDC requested! It may take a few seconds to arrive.');
+                        }
+                      } catch (e) {
+                        toast.error('Failed to request test USDC');
+                      }
+                    }}
+                    className="w-full btn-ghost py-2 text-xs mb-3 text-[var(--aqua-bright)] border-[var(--aqua-bright)]/20"
+                  >
+                    🚰 Get 1,000 Test USDC (Devnet)
+                  </button>
+
                   {/* You Pay */}
                   <div className="rounded-xl p-4 bg-[var(--surface)] border border-[var(--rule)] focus-within:border-[var(--lilac)] transition-colors mb-3">
                     <div className="flex items-center justify-between eyebrow-dim mb-2">

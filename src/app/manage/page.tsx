@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useLacusProgram } from "@/hooks/useLacus";
 import { useWallet } from "@solana/wallet-adapter-react";
 import type { BondState } from "@/types/lacus";
+import { toast } from "sonner";
 
 interface Bond {
   id: number; issuer_name: string; symbol: string; apy: number; price_per_token: number;
@@ -20,9 +21,11 @@ function fmtCurrency(n: number): string {
 
 export default function ManagePage() {
   const { connected } = useWallet();
-  const { fetchMyBonds } = useLacusProgram();
+  const { fetchMyBonds, depositYield } = useLacusProgram();
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [loading, setLoading] = useState(true);
+  const [depositingYield, setDepositingYield] = useState<number | null>(null);
+  const [yieldAmounts, setYieldAmounts] = useState<Record<number, string>>({});
 
   useEffect(() => {
     async function fetchBonds() {
@@ -99,6 +102,34 @@ export default function ManagePage() {
     fetchBonds();
   }, [connected, fetchMyBonds]);
 
+  const handleDepositYield = async (bondId: number, amount: number) => {
+    if (!amount || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    setDepositingYield(bondId);
+    try {
+      // Convert to USDC with 6 decimals
+      const amountInMicroUsdc = Math.floor(amount * 1_000_000);
+      const tx = await depositYield(bondId, amountInMicroUsdc);
+      
+      toast.success('Yield deposited successfully!', {
+        description: `Deposited ${amount} USDC`,
+      });
+      
+      // Clear the input
+      setYieldAmounts(prev => ({ ...prev, [bondId]: '' }));
+    } catch (error: any) {
+      console.error('Deposit yield failed:', error);
+      toast.error('Failed to deposit yield', {
+        description: error?.message || 'Unknown error',
+      });
+    } finally {
+      setDepositingYield(null);
+    }
+  };
+
   return (
     <section className="min-h-screen pt-28 pb-12">
       <div className="max-w-[1440px] mx-auto px-8">
@@ -158,6 +189,7 @@ export default function ManagePage() {
                   <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink3)]">Price</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink3)]">Maturity</th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink3)]">Total Size</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink3)]">Pay Yield</th>
                 </tr>
               </thead>
               <tbody>
@@ -182,6 +214,28 @@ export default function ManagePage() {
                     </td>
                     <td className="px-6 py-5">
                       <p className="text-sm text-[var(--ink)]">{fmtCurrency(bond.total_issue_size)}</p>
+                    </td>
+                    <td className="px-6 py-5">
+                      {bond.source === 'onchain' ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            placeholder="USDC"
+                            value={yieldAmounts[bond.bondId!] || ''}
+                            onChange={(e) => setYieldAmounts(prev => ({ ...prev, [bond.bondId!]: e.target.value }))}
+                            className="w-24 bg-[var(--surface)] border border-[var(--rule)] rounded-lg px-2 py-1 text-xs text-[var(--ink)] outline-none focus:border-[var(--lilac)] transition-colors"
+                          />
+                          <button
+                            onClick={() => handleDepositYield(bond.bondId!, parseFloat(yieldAmounts[bond.bondId!] || '0'))}
+                            disabled={depositingYield === bond.bondId}
+                            className="btn-ghost px-3 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {depositingYield === bond.bondId ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Pay'}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-[var(--ink4)]">—</span>
+                      )}
                     </td>
                   </tr>
                 ))}
