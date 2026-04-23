@@ -218,10 +218,10 @@ export default function IssueBondPage() {
                 </label>
                 <input
                   type="number"
-                  min="0"
-                  step="50"
+                  min="1"
+                  step="1"
                   value={couponRateBps}
-                  onChange={(e) => setCouponRateBps(parseInt(e.target.value) || 800)}
+                  onChange={(e) => setCouponRateBps(e.target.value === '' ? 0 : parseInt(e.target.value) || 0)}
                   className="w-full bg-[var(--surface)] border border-[var(--rule)] focus:border-[var(--lilac)] rounded-xl px-4 py-3 text-sm text-[var(--ink)] font-mono outline-none transition-colors"
                 />
                 <p className="mt-1 text-xs text-[var(--ink4)]">

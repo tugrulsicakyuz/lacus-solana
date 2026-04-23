@@ -24,7 +24,19 @@ export function useLacusProgram() {
       setError(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const bonds = await (program.account as any).bondState.all();
-      return bonds.map((b: { account: BondState }) => b.account);
+      const validBonds = bonds
+        .map((b: { account: BondState }) => b.account)
+        .filter((bond: BondState) => {
+          // Filter out bonds with garbage deserialized data from old struct
+          return (
+            bond.name && bond.name.trim().length > 0 &&
+            bond.symbol && bond.symbol.trim().length > 0 &&
+            Number(bond.faceValue) > 0 &&
+            Number(bond.maxSupply) > 0 &&
+            Number(bond.maturityTimestamp) > 1700000000 // after Nov 2023
+          );
+        });
+      return validBonds;
     } catch (e) {
       console.error('fetchAllBonds error:', e);
       const errorMessage = e instanceof Error ? e.message : 'Unknown error';
@@ -45,7 +57,18 @@ export function useLacusProgram() {
       const allBonds = await (program.account as any).bondState.all();
       const myBonds = allBonds
         .map((b: { account: BondState }) => b.account)
-        .filter((bond: BondState) => bond.issuer.toString() === wallet.publicKey.toString());
+        .filter((bond: BondState) => {
+          // Filter out bonds with garbage deserialized data from old struct
+          const isValid = (
+            bond.name && bond.name.trim().length > 0 &&
+            bond.symbol && bond.symbol.trim().length > 0 &&
+            Number(bond.faceValue) > 0 &&
+            Number(bond.maxSupply) > 0 &&
+            Number(bond.maturityTimestamp) > 1700000000 // after Nov 2023
+          );
+          const isMine = bond.issuer.toString() === wallet.publicKey.toString();
+          return isValid && isMine;
+        });
       return myBonds;
     } catch (e) {
       console.error('fetchMyBonds error:', e);
@@ -121,9 +144,6 @@ export function useLacusProgram() {
     }
 
     const bondId = factoryState.bondCount.toNumber();
-    const [bondStatePDA] = getBondStatePDA(bondId);
-    const [bondMintPDA] = getBondMintPDA(bondStatePDA);
-    const bondTokenVault = await getAssociatedTokenAddress(bondMintPDA, bondStatePDA, true);
 
     const hashArray = Array.from(params.loanAgreementHash);
 
@@ -138,14 +158,7 @@ export function useLacusProgram() {
         loanAgreementHash: hashArray,
       })
       .accounts({
-        factoryState: factoryStatePDA,
-        bondState: bondStatePDA,
-        bondMint: bondMintPDA,
-        bondTokenVault,
         issuer: wallet.publicKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
       })
       .rpc();
 
