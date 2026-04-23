@@ -38,3 +38,7 @@ out/
 
 # Misc
 .turbo
+# Rust/Anchor build artifacts
+target/
+programs/lacus/target/
+.anchor/
