@@ -154,7 +154,9 @@ export function useLacusProgram() {
     }
 
     const bondId = factoryState.bondCount.toNumber();
-
+    const [bondStatePDA] = getBondStatePDA(bondId);
+    const [bondMintPDA] = getBondMintPDA(bondStatePDA);
+    const bondTokenVault = await getAssociatedTokenAddress(bondMintPDA, bondStatePDA, true);
     const hashArray = Array.from(params.loanAgreementHash);
 
     const tx = await program.methods
@@ -168,7 +170,14 @@ export function useLacusProgram() {
         loanAgreementHash: hashArray,
       })
       .accounts({
+        factoryState: factoryStatePDA,
+        bondState: bondStatePDA,
+        bondMint: bondMintPDA,
+        bondTokenVault,
         issuer: wallet.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .transaction();
 
