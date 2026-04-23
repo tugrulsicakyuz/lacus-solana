@@ -6,8 +6,9 @@ import Link from "next/link";
 import { Search, ChevronRight, AlertTriangle } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { supabase } from "@/lib/supabase";
-import { useLacusProgram } from "@/hooks/useLacus";
+import { useLacusProgram } from '@/hooks/useLacus';
 import { useScrollReveal } from "@/lib/useClientInteractions";
+import type { BondState } from '@/types/lacus';
 
 interface Bond {
   bondId: number;
@@ -77,34 +78,36 @@ export default function LaunchpadPage() {
         .select('symbol, issuer_name, description, logo_url, documents_complete');
 
       // 3. Merge: match by bondId or fallback to index matching
-      const merged: Bond[] = onChainBonds.map((bond: any, index: number) => {
+      const merged: Bond[] = onChainBonds.map((bond: BondState, index: number) => {
         const meta = supabaseBonds?.find(
-          (s: any) => s.symbol?.toLowerCase() === (bond.symbol || `BOND-${bond.bondId}`)?.toLowerCase()
+          (s: { symbol?: string }) => s.symbol?.toLowerCase() === (bond.symbol || `BOND-${Number(bond.bondId)}`)?.toLowerCase()
         ) || supabaseBonds?.[index];
 
-        const faceValueUSDC = bond.faceValue / 1_000_000;
-        const fillPercentage = bond.maxSupply > 0 
-          ? Math.min((bond.tokensSold / bond.maxSupply) * 100, 100)
+        const faceValueUSDC = Number(bond.faceValue) / 1_000_000;
+        const maxSupplyNum = Number(bond.maxSupply);
+        const tokensSoldNum = Number(bond.tokensSold);
+        const fillPercentage = maxSupplyNum > 0 
+          ? Math.min((tokensSoldNum / maxSupplyNum) * 100, 100)
           : 0;
-        const totalRaise = faceValueUSDC * bond.maxSupply;
+        const totalRaise = faceValueUSDC * maxSupplyNum;
 
         return {
-          bondId: bond.bondId,
-          issuer: bond.issuer,
-          issuer_name: meta?.issuer_name || bond.issuer?.slice(0, 8) + '...' || 'Unknown',
-          symbol: bond.symbol || meta?.symbol || `BOND-${bond.bondId}`,
+          bondId: Number(bond.bondId),
+          issuer: bond.issuer.toString(),
+          issuer_name: meta?.issuer_name || bond.issuer.toString().slice(0, 8) + '...' || 'Unknown',
+          symbol: bond.symbol || meta?.symbol || `BOND-${Number(bond.bondId)}`,
           name: bond.name || meta?.issuer_name || 'Unnamed Bond',
           apy: bond.couponRateBps / 100,
-          maturity_months: timestampToMonths(bond.maturityTimestamp),
-          maturity_date: formatMaturityDate(bond.maturityTimestamp),
+          maturity_months: timestampToMonths(Number(bond.maturityTimestamp)),
+          maturity_date: formatMaturityDate(Number(bond.maturityTimestamp)),
           total_issue_size: totalRaise,
           price_per_token: faceValueUSDC,
           filled_percentage: fillPercentage,
-          faceValue: bond.faceValue,
+          faceValue: Number(bond.faceValue),
           couponRateBps: bond.couponRateBps,
-          maxSupply: bond.maxSupply,
-          tokensSold: bond.tokensSold,
-          maturityTimestamp: bond.maturityTimestamp,
+          maxSupply: maxSupplyNum,
+          tokensSold: tokensSoldNum,
+          maturityTimestamp: Number(bond.maturityTimestamp),
           description: meta?.description || 'On-chain tokenized bond',
           logo_url: meta?.logo_url || null,
         };
@@ -127,7 +130,18 @@ export default function LaunchpadPage() {
         setError(fetchError.message);
       } else {
         // Map Supabase data to Bond interface
-        const fallbackBonds: Bond[] = (data || []).map((b: any) => ({
+        const fallbackBonds: Bond[] = (data || []).map((b: {
+          id: number;
+          issuer_name?: string;
+          symbol?: string;
+          apy?: number;
+          maturity_months?: number;
+          total_issue_size?: number;
+          price_per_token?: number;
+          filled_percentage?: number;
+          description?: string;
+          logo_url?: string;
+        }) => ({
           bondId: b.id,
           issuer: '',
           issuer_name: b.issuer_name || 'Unknown',

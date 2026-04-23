@@ -46,6 +46,11 @@ export default function IssueBondPage() {
       return;
     }
 
+    if (!loanAgreementUrl || loanAgreementUrl.trim() === '') {
+      toast.error('Loan agreement URL is required');
+      return;
+    }
+
     const maturityTimestamp = Math.floor(new Date(maturityDate).getTime() / 1000);
     if (maturityTimestamp <= Math.floor(Date.now() / 1000)) {
       toast.error('Maturity date must be in the future');
@@ -55,7 +60,7 @@ export default function IssueBondPage() {
     setIsLoading(true);
     try {
       const encoder = new TextEncoder();
-      const data = encoder.encode(loanAgreementUrl || 'placeholder-' + Date.now());
+      const data = encoder.encode(loanAgreementUrl);
       const hashBuffer = await crypto.subtle.digest('SHA-256', data as BufferSource);
       const hashArray = new Uint8Array(hashBuffer);
 

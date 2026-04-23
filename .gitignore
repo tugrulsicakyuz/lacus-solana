@@ -35,6 +35,7 @@ yarn-error.log*
 # Next.js
 .next/
 out/
+tsconfig.tsbuildinfo
 
 # Misc
 .turbo

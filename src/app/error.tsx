@@ -30,7 +30,7 @@ export default function Error({
             onClick={reset}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all duration-300 hover:bg-blue-400 hover:shadow-blue-500/30 active:scale-[0.97]"
           >
-            Tekrar Dene
+            Try Again
           </button>
           <Link
             href="/"

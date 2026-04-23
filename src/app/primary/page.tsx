@@ -389,7 +389,7 @@ function PrimaryPageContent() {
 
                   {/* Details */}
                   <div className="mt-4 space-y-2 rounded-xl px-4 py-3 bg-[var(--surface)] mb-5">
-                    {[
+                    {([
                       {
                         label: "Face Value",
                         value: selectedBond ? `${fmtCurrency(faceValueUSDC)} / token` : "—",
@@ -399,7 +399,7 @@ function PrimaryPageContent() {
                         value: payAmount && parseFloat(payAmount) > 0 ? fmtCurrency(parseFloat(payAmount)) : "—",
                       },
                       { label: "Network", value: "Solana Devnet", green: true },
-                    ].map((row) => (
+                    ] as Array<{ label: string; value: string; green?: boolean }>).map((row) => (
                       <div key={row.label} className="flex items-center justify-between text-xs">
                         <span className="flex items-center gap-1 text-[var(--ink3)]">
                           <Info className="h-3 w-3" />
@@ -407,7 +407,7 @@ function PrimaryPageContent() {
                         </span>
                         <span
                           className="font-medium font-mono"
-                          style={{ color: (row as any).green ? "var(--aqua-bright)" : "var(--ink2)" }}
+                          style={{ color: row.green ? "var(--aqua-bright)" : "var(--ink2)" }}
                         >
                           {row.value}
                         </span>

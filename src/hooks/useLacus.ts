@@ -6,6 +6,7 @@ import { BN } from '@coral-xyz/anchor';
 import { useCallback } from 'react';
 import { getLacusProgram, getFactoryStatePDA, getBondStatePDA, getBondMintPDA } from '@/lib/lacus-program';
 import { USDC_DEVNET_MINT } from '@/config/solana';
+import type { BondState, FactoryState } from '@/types/lacus';
 
 export function useLacusProgram() {
   const wallet = useAnchorWallet();
@@ -16,8 +17,9 @@ export function useLacusProgram() {
   const fetchAllBonds = useCallback(async () => {
     if (!program) return [];
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const bonds = await (program.account as any).bondState.all();
-      return bonds.map((b: any) => b.account);
+      return bonds.map((b: { account: BondState }) => b.account);
     } catch (e) {
       console.error('fetchAllBonds error:', e);
       return [];
@@ -28,7 +30,8 @@ export function useLacusProgram() {
     if (!program) return null;
     const [bondStatePDA] = getBondStatePDA(bondId);
     try {
-      return await (program.account as any).bondState.fetch(bondStatePDA);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (await (program.account as any).bondState.fetch(bondStatePDA)) as BondState;
     } catch (e) {
       return null;
     }
@@ -46,9 +49,10 @@ export function useLacusProgram() {
     if (!program || !wallet) throw new Error('Wallet not connected');
 
     const [factoryStatePDA] = getFactoryStatePDA();
-    let factoryState: any;
+    let factoryState: FactoryState;
     try {
-      factoryState = await (program.account as any).factoryState.fetch(factoryStatePDA);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      factoryState = (await (program.account as any).factoryState.fetch(factoryStatePDA)) as FactoryState;
     } catch {
       throw new Error('Factory not initialized');
     }
@@ -83,7 +87,7 @@ export function useLacusProgram() {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
-      } as any)
+      })
       .rpc();
 
     return { tx, bondId };
@@ -93,7 +97,8 @@ export function useLacusProgram() {
     if (!program || !wallet) throw new Error('Wallet not connected');
 
     const [bondStatePDA] = getBondStatePDA(bondId);
-    const bondState = await (program.account as any).bondState.fetch(bondStatePDA);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const bondState = (await (program.account as any).bondState.fetch(bondStatePDA)) as BondState;
     const [bondMintPDA] = getBondMintPDA(bondStatePDA);
 
     const buyerBondAta = await getAssociatedTokenAddress(bondMintPDA, wallet.publicKey);
@@ -114,7 +119,7 @@ export function useLacusProgram() {
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
-      } as any)
+      })
       .rpc();
 
     return tx;
