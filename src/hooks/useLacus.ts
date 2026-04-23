@@ -1,11 +1,10 @@
 'use client';
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createAssociatedTokenAccountIdempotentInstruction } from '@solana/spl-token';
+import { PublicKey, SystemProgram } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 import { BN } from '@coral-xyz/anchor';
 import { useCallback, useState, useMemo } from 'react';
 import { getLacusProgram, getFactoryStatePDA, getBondStatePDA, getBondMintPDA } from '@/lib/lacus-program';
-import { USDC_DEVNET_MINT } from '@/config/solana';
 import type { BondState, FactoryState } from '@/types/lacus';
 
 export function useLacusProgram() {
@@ -124,7 +123,6 @@ export function useLacusProgram() {
     const bondId = factoryState.bondCount.toNumber();
     const [bondStatePDA] = getBondStatePDA(bondId);
     const [bondMintPDA] = getBondMintPDA(bondStatePDA);
-    const bondYieldVault = await getAssociatedTokenAddress(new PublicKey(USDC_DEVNET_MINT), bondStatePDA, true);
     const bondTokenVault = await getAssociatedTokenAddress(bondMintPDA, bondStatePDA, true);
 
     const hashArray = Array.from(params.loanAgreementHash);
@@ -143,14 +141,11 @@ export function useLacusProgram() {
         factoryState: factoryStatePDA,
         bondState: bondStatePDA,
         bondMint: bondMintPDA,
-        bondYieldVault,
         bondTokenVault,
         issuer: wallet.publicKey,
-        usdcMint: new PublicKey(USDC_DEVNET_MINT),
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY,
       })
       .rpc();
 
@@ -166,17 +161,6 @@ export function useLacusProgram() {
     const [bondMintPDA] = getBondMintPDA(bondStatePDA);
 
     const buyerBondAta = await getAssociatedTokenAddress(bondMintPDA, wallet.publicKey);
-    const buyerUsdcAta = await getAssociatedTokenAddress(new PublicKey(USDC_DEVNET_MINT), wallet.publicKey);
-    const issuerUsdcAta = await getAssociatedTokenAddress(new PublicKey(USDC_DEVNET_MINT), new PublicKey(bondState.issuer));
-
-    // Create instruction to initialize issuer's USDC ATA if it doesn't exist
-    // This is idempotent - if account already exists, it does nothing
-    const createIssuerAtaIx = createAssociatedTokenAccountIdempotentInstruction(
-      wallet.publicKey, // payer
-      issuerUsdcAta, // ata
-      new PublicKey(bondState.issuer), // owner
-      new PublicKey(USDC_DEVNET_MINT) // mint
-    );
 
     const tx = await program.methods
       .buyBond(new BN(amount))
@@ -184,82 +168,34 @@ export function useLacusProgram() {
         bondState: bondStatePDA,
         buyer: wallet.publicKey,
         buyerBondAta,
-        issuerUsdcAta,
+        issuer: new PublicKey(bondState.issuer),
         bondTokenVault: bondState.bondTokenVault,
         bondMint: bondMintPDA,
-        buyerUsdcAta,
-        usdcMint: new PublicKey(USDC_DEVNET_MINT),
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
-      .preInstructions([createIssuerAtaIx]) // Add pre-instruction to create ATA if needed
       .rpc();
 
     return tx;
   }, [program, wallet]);
 
-  const requestTestUSDC = useCallback(async () => {
-    if (!wallet) throw new Error('Wallet not connected');
-    
-    try {
-      const response = await fetch('/api/faucet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wallet: wallet.publicKey.toString() }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok || data.error) {
-        throw new Error(data.error || 'Failed to request test USDC');
-      }
-      
-      return data;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Test USDC request failed: ${errorMessage}`);
-    }
-  }, [wallet]);
-
-  const depositYield = useCallback(async (bondId: number, amountUsdc: number) => {
+  const depositYield = useCallback(async (bondId: number, amountLamports: number) => {
     if (!program || !wallet) throw new Error('Wallet not connected');
 
     const [bondStatePDA] = getBondStatePDA(bondId);
-    const bondYieldVault = await getAssociatedTokenAddress(
-      new PublicKey(USDC_DEVNET_MINT),
-      bondStatePDA,
-      true
-    );
-    const issuerUsdcAta = await getAssociatedTokenAddress(
-      new PublicKey(USDC_DEVNET_MINT),
-      wallet.publicKey
-    );
-
-    // Create instruction to initialize issuer's USDC ATA if it doesn't exist
-    const createIssuerUsdcAtaIx = createAssociatedTokenAccountIdempotentInstruction(
-      wallet.publicKey,        // payer
-      issuerUsdcAta,           // ata
-      wallet.publicKey,        // owner
-      new PublicKey(USDC_DEVNET_MINT)
-    );
 
     const tx = await program.methods
-      .depositYield(new BN(amountUsdc))
+      .depositYield(new BN(amountLamports))
       .accounts({
         bondState: bondStatePDA,
         issuer: wallet.publicKey,
-        issuerUsdcAta,
-        bondYieldVault,
-        usdcMint: new PublicKey(USDC_DEVNET_MINT),
-        tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
-      .preInstructions([createIssuerUsdcAtaIx])
       .rpc();
 
     return tx;
   }, [program, wallet]);
 
-  return { program, fetchAllBonds, fetchMyBonds, fetchBond, issueBond, buyBond, requestTestUSDC, depositYield, error };
+  return { program, fetchAllBonds, fetchMyBonds, fetchBond, issueBond, buyBond, depositYield, error };
 }

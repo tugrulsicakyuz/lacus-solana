@@ -158,13 +158,13 @@ export default function LaunchpadPage() {
           (s: { symbol?: string }) => s.symbol?.toLowerCase() === (bond.symbol || `BOND-${Number(bond.bondId)}`)?.toLowerCase()
         ) || supabaseBonds?.[index];
 
-        const faceValueUSDC = Number(bond.faceValue) / 1_000_000;
+        const faceValueSOL = Number(bond.faceValue) / 1_000_000_000;
         const maxSupplyNum = Number(bond.maxSupply);
         const tokensSoldNum = Number(bond.tokensSold);
         const fillPercentage = maxSupplyNum > 0 
           ? Math.min((tokensSoldNum / maxSupplyNum) * 100, 100)
           : 0;
-        const totalRaise = faceValueUSDC * maxSupplyNum;
+        const totalRaise = faceValueSOL * maxSupplyNum;
 
         return {
           bondId: Number(bond.bondId),
@@ -176,7 +176,7 @@ export default function LaunchpadPage() {
           maturity_months: timestampToMonths(Number(bond.maturityTimestamp)),
           maturity_date: formatMaturityDate(Number(bond.maturityTimestamp)),
           total_issue_size: totalRaise,
-          price_per_token: faceValueUSDC,
+          price_per_token: faceValueSOL,
           filled_percentage: fillPercentage,
           faceValue: Number(bond.faceValue),
           couponRateBps: bond.couponRateBps,

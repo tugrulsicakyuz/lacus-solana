@@ -51,7 +51,6 @@ pub mod lacus {
         bond_state.principal_deposited = false;
         bond_state.loan_agreement_hash = params.loan_agreement_hash;
         bond_state.bond_mint = ctx.accounts.bond_mint.key();
-        bond_state.usdc_vault = ctx.accounts.bond_yield_vault.key();
         bond_state.bond_token_vault = ctx.accounts.bond_token_vault.key();
         bond_state.bump = ctx.bumps.bond_state;
 
@@ -97,13 +96,12 @@ pub mod lacus {
             .checked_mul(amount)
             .ok_or(LacusError::InvalidAmount)?;
 
-        token::transfer(
+        anchor_lang::system_program::transfer(
             CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.buyer_usdc_ata.to_account_info(),
-                    to: ctx.accounts.issuer_usdc_ata.to_account_info(),
-                    authority: ctx.accounts.buyer.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                anchor_lang::system_program::Transfer {
+                    from: ctx.accounts.buyer.to_account_info(),
+                    to: ctx.accounts.issuer.to_account_info(),
                 },
             ),
             total_cost,
@@ -139,13 +137,12 @@ pub mod lacus {
     pub fn deposit_yield(ctx: Context<DepositYield>, amount: u64) -> Result<()> {
         require!(amount > 0, LacusError::InvalidAmount);
 
-        token::transfer(
+        anchor_lang::system_program::transfer(
             CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.issuer_usdc_ata.to_account_info(),
-                    to: ctx.accounts.bond_yield_vault.to_account_info(),
-                    authority: ctx.accounts.issuer.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                anchor_lang::system_program::Transfer {
+                    from: ctx.accounts.issuer.to_account_info(),
+                    to: ctx.accounts.bond_state.to_account_info(),
                 },
             ),
             amount,
@@ -160,13 +157,12 @@ pub mod lacus {
     pub fn deposit_principal(ctx: Context<DepositPrincipal>, amount: u64) -> Result<()> {
         require!(amount > 0, LacusError::InvalidAmount);
 
-        token::transfer(
+        anchor_lang::system_program::transfer(
             CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.issuer_usdc_ata.to_account_info(),
-                    to: ctx.accounts.bond_yield_vault.to_account_info(),
-                    authority: ctx.accounts.issuer.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                anchor_lang::system_program::Transfer {
+                    from: ctx.accounts.issuer.to_account_info(),
+                    to: ctx.accounts.bond_state.to_account_info(),
                 },
             ),
             amount,
@@ -204,26 +200,8 @@ pub mod lacus {
 
         require!(claimable > 0, LacusError::NothingToClaim);
 
-        let bond_id_bytes = bond_state.bond_id.to_le_bytes();
-        let seeds = &[
-            b"bond",
-            bond_id_bytes.as_ref(),
-            &[bond_state.bump],
-        ];
-        let signer = &[&seeds[..]];
-
-        token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.bond_yield_vault.to_account_info(),
-                    to: ctx.accounts.investor_usdc_ata.to_account_info(),
-                    authority: ctx.accounts.bond_state.to_account_info(),
-                },
-                signer,
-            ),
-            claimable,
-        )?;
+        **ctx.accounts.bond_state.to_account_info().try_borrow_mut_lamports()? -= claimable;
+        **ctx.accounts.investor.to_account_info().try_borrow_mut_lamports()? += claimable;
 
         investor_position.last_yield_snapshot = bond_state.total_yield_deposited;
 
@@ -253,14 +231,6 @@ pub mod lacus {
             .checked_div(bond_state.max_supply)
             .ok_or(LacusError::InvalidAmount)?;
 
-        let bond_id_bytes = bond_state.bond_id.to_le_bytes();
-        let seeds = &[
-            b"bond",
-            bond_id_bytes.as_ref(),
-            &[bond_state.bump],
-        ];
-        let signer = &[&seeds[..]];
-
         token::burn(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -273,18 +243,8 @@ pub mod lacus {
             investor_balance,
         )?;
 
-        token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.bond_yield_vault.to_account_info(),
-                    to: ctx.accounts.investor_usdc_ata.to_account_info(),
-                    authority: ctx.accounts.bond_state.to_account_info(),
-                },
-                signer,
-            ),
-            principal_amount,
-        )?;
+        **ctx.accounts.bond_state.to_account_info().try_borrow_mut_lamports()? -= principal_amount;
+        **ctx.accounts.investor.to_account_info().try_borrow_mut_lamports()? += principal_amount;
 
         Ok(())
     }
@@ -342,13 +302,6 @@ pub struct IssueBond<'info> {
     )]
     pub bond_mint: Account<'info, Mint>,
     #[account(
-        init_if_needed,
-        payer = issuer,
-        associated_token::mint = usdc_mint,
-        associated_token::authority = bond_state
-    )]
-    pub bond_yield_vault: Account<'info, TokenAccount>,
-    #[account(
         init,
         payer = issuer,
         associated_token::mint = bond_mint,
@@ -357,11 +310,9 @@ pub struct IssueBond<'info> {
     pub bond_token_vault: Account<'info, TokenAccount>,
     #[account(mut)]
     pub issuer: Signer<'info>,
-    pub usdc_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
@@ -381,12 +332,9 @@ pub struct BuyBond<'info> {
         associated_token::authority = buyer
     )]
     pub buyer_bond_ata: Account<'info, TokenAccount>,
-    /// CHECK: validated by constraint
-    #[account(
-        mut,
-        constraint = issuer_usdc_ata.owner == bond_state.issuer
-    )]
-    pub issuer_usdc_ata: Account<'info, TokenAccount>,
+    /// CHECK: issuer receives SOL payment
+    #[account(mut, constraint = issuer.key() == bond_state.issuer @ LacusError::NotAuthorized)]
+    pub issuer: AccountInfo<'info>,
     #[account(
         mut,
         constraint = bond_token_vault.key() == bond_state.bond_token_vault
@@ -397,9 +345,6 @@ pub struct BuyBond<'info> {
         constraint = bond_mint.key() == bond_state.bond_mint
     )]
     pub bond_mint: Account<'info, Mint>,
-    #[account(mut)]
-    pub buyer_usdc_ata: Account<'info, TokenAccount>,
-    pub usdc_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
@@ -414,16 +359,8 @@ pub struct DepositYield<'info> {
         constraint = bond_state.issuer == issuer.key() @ LacusError::NotAuthorized
     )]
     pub bond_state: Account<'info, BondState>,
-    #[account(
-        mut,
-        constraint = bond_yield_vault.key() == bond_state.usdc_vault
-    )]
-    pub bond_yield_vault: Account<'info, TokenAccount>,
-    pub issuer: Signer<'info>,
     #[account(mut)]
-    pub issuer_usdc_ata: Account<'info, TokenAccount>,
-    pub usdc_mint: Account<'info, Mint>,
-    pub token_program: Program<'info, Token>,
+    pub issuer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -436,22 +373,15 @@ pub struct DepositPrincipal<'info> {
         constraint = bond_state.issuer == issuer.key() @ LacusError::NotAuthorized
     )]
     pub bond_state: Account<'info, BondState>,
-    #[account(
-        mut,
-        constraint = bond_yield_vault.key() == bond_state.usdc_vault
-    )]
-    pub bond_yield_vault: Account<'info, TokenAccount>,
-    pub issuer: Signer<'info>,
     #[account(mut)]
-    pub issuer_usdc_ata: Account<'info, TokenAccount>,
-    pub usdc_mint: Account<'info, Mint>,
-    pub token_program: Program<'info, Token>,
+    pub issuer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct ClaimYield<'info> {
     #[account(
+        mut,
         seeds = [b"bond", bond_state.bond_id.to_le_bytes().as_ref()],
         bump = bond_state.bump
     )]
@@ -467,14 +397,6 @@ pub struct ClaimYield<'info> {
     #[account(mut)]
     pub investor: Signer<'info>,
     pub investor_bond_ata: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub investor_usdc_ata: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        constraint = bond_yield_vault.key() == bond_state.usdc_vault
-    )]
-    pub bond_yield_vault: Account<'info, TokenAccount>,
-    pub usdc_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
@@ -491,19 +413,11 @@ pub struct RedeemBond<'info> {
     pub investor: Signer<'info>,
     #[account(mut)]
     pub investor_bond_ata: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub investor_usdc_ata: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        constraint = bond_yield_vault.key() == bond_state.usdc_vault
-    )]
-    pub bond_yield_vault: Account<'info, TokenAccount>,
     #[account(
         mut,
         constraint = bond_mint.key() == bond_state.bond_mint
     )]
     pub bond_mint: Account<'info, Mint>,
-    pub usdc_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
@@ -536,7 +450,6 @@ pub struct BondState {
     pub principal_deposited: bool,
     pub loan_agreement_hash: [u8; 32],
     pub bond_mint: Pubkey,
-    pub usdc_vault: Pubkey,
     pub bond_token_vault: Pubkey,
     pub bump: u8,
 }

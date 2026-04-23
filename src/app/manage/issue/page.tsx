@@ -14,14 +14,14 @@ export default function IssueBondPage() {
 
   const [bondName, setBondName] = useState('');
   const [bondSymbol, setBondSymbol] = useState('');
-  const [faceValueUSDC, setFaceValueUSDC] = useState(100);
+  const [faceValueSOL, setFaceValueSOL] = useState(0.1);
   const [couponRateBps, setCouponRateBps] = useState(800);
   const [maturityDate, setMaturityDate] = useState('');
   const [maxSupply, setMaxSupply] = useState(1000);
   const [loanAgreementUrl, setLoanAgreementUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const totalRaise = faceValueUSDC * maxSupply;
+  const totalRaise = faceValueSOL * maxSupply;
   const apyDisplay = couponRateBps / 100;
 
   const handleIssueBond = async () => {
@@ -77,9 +77,9 @@ export default function IssueBondPage() {
     }
 
     // Validation: Face value
-    if (faceValueUSDC <= 0) {
+    if (faceValueSOL <= 0) {
       toast.error('Invalid face value', {
-        description: 'Face value must be greater than 0 USDC',
+        description: 'Face value must be greater than 0 SOL',
       });
       return;
     }
@@ -100,7 +100,7 @@ export default function IssueBondPage() {
       const result = await issueBond({
         name: bondName,
         symbol: bondSymbol,
-        faceValue: Math.round(faceValueUSDC * 1_000_000),
+        faceValue: Math.round(faceValueSOL * 1_000_000_000),
         couponRateBps: couponRateBps,
         maturityTimestamp: maturityTimestamp,
         maxSupply: maxSupply,
@@ -121,7 +121,7 @@ export default function IssueBondPage() {
 
       setBondName('');
       setBondSymbol('');
-      setFaceValueUSDC(100);
+      setFaceValueSOL(0.1);
       setCouponRateBps(800);
       setMaxSupply(1000);
       setLoanAgreementUrl('');
@@ -198,14 +198,14 @@ export default function IssueBondPage() {
               <div>
                 <label className="flex items-center gap-2 text-[13px] font-medium text-[var(--ink3)] mb-2">
                   <DollarSign className="w-3.5 h-3.5" />
-                  Face Value per Token (USDC)
+                  Face Value per Token (SOL)
                 </label>
                 <input
                   type="number"
-                  min="1"
-                  step="1"
-                  value={faceValueUSDC}
-                  onChange={(e) => setFaceValueUSDC(parseFloat(e.target.value) || 100)}
+                  min="0.001"
+                  step="0.01"
+                  value={faceValueSOL}
+                  onChange={(e) => setFaceValueSOL(parseFloat(e.target.value) || 0.1)}
                   className="w-full bg-[var(--surface)] border border-[var(--rule)] focus:border-[var(--lilac)] rounded-xl px-4 py-3 text-sm text-[var(--ink)] font-mono outline-none transition-colors"
                 />
               </div>
@@ -333,7 +333,7 @@ export default function IssueBondPage() {
               <div className="rounded-xl p-4 bg-[var(--surface)] border border-[var(--rule)]">
                 <p className="text-[11px] text-[var(--ink4)] mb-1">Face Value per Token</p>
                 <p className="text-base font-semibold text-[var(--ink)] font-mono">
-                  ${faceValueUSDC.toLocaleString()} USDC
+                  {faceValueSOL.toFixed(4)} SOL
                 </p>
               </div>
 
@@ -357,7 +357,7 @@ export default function IssueBondPage() {
               <div className="rounded-xl p-4 bg-[var(--lilac)]/5 border border-[var(--lilac)]/20">
                 <p className="text-[11px] text-[var(--ink4)] mb-1">Total Raise</p>
                 <p className="text-xl font-bold font-mono" style={{ color: 'var(--lilac)' }}>
-                  ${totalRaise.toLocaleString()} USDC
+                  {totalRaise.toFixed(4)} SOL
                 </p>
               </div>
 

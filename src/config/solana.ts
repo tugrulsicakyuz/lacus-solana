@@ -15,9 +15,3 @@ export const SOLANA_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api
 export const LACUS_PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_LACUS_PROGRAM_ID || 'Cw6bBLRd661pFrq5WiUjWQQXBikN6bXxCsUrwFGovSbN'
 );
-
-// USDC mint address (devnet by default, override for other networks)
-// Updated to use custom test USDC token with mint authority
-export const USDC_DEVNET_MINT = new PublicKey(
-  process.env.NEXT_PUBLIC_USDC_MINT || '4tKWXwLpNX5hxJeKceHBG3KJBv43RmGU3rQW3e35r4nR'
-);

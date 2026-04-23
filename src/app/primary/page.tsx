@@ -2,14 +2,12 @@
 
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { useWallet, useConnection, useAnchorWallet } from "@solana/wallet-adapter-react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { getAccount, getAssociatedTokenAddress } from "@solana/spl-token";
 import { ChevronDown, TrendingUp, Info, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useLacusProgram } from "@/hooks/useLacus";
-import { USDC_DEVNET_MINT } from "@/config/solana";
 
 interface OnChainBond {
   bondId: number;
@@ -47,7 +45,7 @@ function PrimaryPageContent() {
   const searchParams = useSearchParams();
   const { publicKey, connected } = useWallet();
   const { connection } = useConnection();
-  const { fetchAllBonds, fetchBond, buyBond, requestTestUSDC } = useLacusProgram();
+  const { fetchAllBonds, fetchBond, buyBond } = useLacusProgram();
 
   const [onChainBonds, setOnChainBonds] = useState<OnChainBond[]>([]);
   const [bondMetadata, setBondMetadata] = useState<BondMetadata[]>([]);
@@ -59,8 +57,7 @@ function PrimaryPageContent() {
   const [payAmount, setPayAmount] = useState("");
   const [computedReceive, setComputedReceive] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [usdcBalance, setUsdcBalance] = useState<number>(0);
-  const [isRequestingUSDC, setIsRequestingUSDC] = useState(false);
+  const [solBalance, setSolBalance] = useState<number>(0);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,39 +79,19 @@ function PrimaryPageContent() {
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const fetchUsdcBalance = useCallback(async () => {
+  const fetchSolBalance = useCallback(async () => {
     if (!publicKey || !connected) {
-      setUsdcBalance(0);
+      setSolBalance(0);
       return;
     }
 
     try {
-      const ata = await getAssociatedTokenAddress(
-        USDC_DEVNET_MINT,
-        publicKey
-      );
-      const accountInfo = await getAccount(connection, ata);
-      setUsdcBalance(Number(accountInfo.amount) / 1_000_000);
+      const balance = await connection.getBalance(publicKey);
+      setSolBalance(balance / 1_000_000_000);
     } catch (error) {
-      setUsdcBalance(0);
+      setSolBalance(0);
     }
   }, [publicKey, connected, connection]);
-
-  const handleRequestTestUSDC = async () => {
-    setIsRequestingUSDC(true);
-    try {
-      const result = await requestTestUSDC();
-      if (result?.success) {
-        toast.success('✅ 1,000 test USDC minted!');
-        await fetchUsdcBalance();
-      }
-    } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : 'Failed to request test USDC';
-      toast.error(errorMsg);
-    } finally {
-      setIsRequestingUSDC(false);
-    }
-  };
 
   useEffect(() => {
     async function fetchData() {
@@ -174,7 +151,7 @@ function PrimaryPageContent() {
       }
     }
     fetchData();
-    fetchUsdcBalance();
+    fetchSolBalance();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, refreshTrigger]);
 
@@ -220,8 +197,10 @@ function PrimaryPageContent() {
     }
 
     const payNum = parseFloat(payAmount);
-    if (payNum > usdcBalance) {
-      toast.error(`Insufficient USDC. You have ${usdcBalance.toFixed(2)} USDC but need ${payNum.toFixed(2)} USDC. Click "+ Get Test USDC" to get some.`);
+    const totalCostLamports = payNum * 1_000_000_000;
+    const solBalanceLamports = solBalance * 1_000_000_000;
+    if (totalCostLamports > solBalanceLamports) {
+      toast.error(`Insufficient SOL. You have ${solBalance.toFixed(4)} SOL but need ${payNum.toFixed(4)} SOL.`);
       return;
     }
 
@@ -247,7 +226,7 @@ function PrimaryPageContent() {
       setPayAmount("");
       setComputedReceive("");
       
-      await fetchUsdcBalance();
+      await fetchSolBalance();
       setRefreshTrigger(prev => prev + 1);
     } catch (error: any) {
       console.error("Buy failed:", error);
@@ -268,13 +247,13 @@ function PrimaryPageContent() {
     );
   }
 
-  const faceValueUSDC = selectedBond ? selectedBond.faceValue / 1_000_000 : 0;
+  const faceValueSOL = selectedBond ? selectedBond.faceValue / 1_000_000_000 : 0;
   const apy = selectedBond ? selectedBond.couponRateBps / 100 : 0;
   const tokensRemaining = selectedBond ? selectedBond.maxSupply - selectedBond.tokensSold : 0;
   const fillPercentage = selectedBond ? Math.min((selectedBond.tokensSold / selectedBond.maxSupply) * 100, 100) : 0;
 
   const marketStats = [
-    { label: "Face Value", value: selectedBond ? fmtCurrency(faceValueUSDC) : "—", isYield: false },
+    { label: "Face Value", value: selectedBond ? `${faceValueSOL.toFixed(4)} SOL` : "—", isYield: false },
     { label: "Remaining", value: selectedBond ? `${tokensRemaining.toLocaleString()} tokens` : "—", isYield: false },
     { label: "Maturity", value: selectedBond ? formatDate(selectedBond.maturityTimestamp) : "—", isYield: false },
     { label: "APY", value: selectedBond ? `${apy}%` : "—", isYield: true },
@@ -442,39 +421,14 @@ function PrimaryPageContent() {
                   <WalletMultiButton />
                 </div>
               ) : (
-                <>
-                  {/* Get Test USDC Button */}
-                  <button
-                    onClick={async () => {
-                      try {
-                        const result = await requestTestUSDC();
-                        if (result?.success) {
-                          toast.success('✅ 1,000 test USDC minted! Check your wallet.');
-                        }
-                      } catch (e) {
-                        const errorMsg = e instanceof Error ? e.message : 'Failed to request test USDC';
-                        toast.error(errorMsg);
-                      }
-                    }}
-                    className="w-full btn-ghost py-2 text-xs mb-3 text-[var(--aqua-bright)] border-[var(--aqua-bright)]/20"
-                  >
-                    🚰 Get 1,000 Test USDC (Devnet)
-                  </button>
-
-                  {/* You Pay */}
+                <>                  {/* You Pay */}
                   <div className="rounded-xl p-4 bg-[var(--surface)] border border-[var(--rule)] focus-within:border-[var(--lilac)] transition-colors mb-3">
                     <div className="flex items-center justify-between eyebrow-dim mb-2">
                       <span>You Pay</span>
-                      <span>USDC</span>
+                      <span>SOL</span>
                     </div>
                     <div className="flex justify-between text-xs text-[var(--ink3)] mb-1">
-                      <span>Balance: {usdcBalance.toLocaleString('en-US', {minimumFractionDigits: 2})} USDC</span>
-                      {usdcBalance === 0 && connected && (
-                        <button onClick={handleRequestTestUSDC} disabled={isRequestingUSDC}
-                          className="text-[var(--aqua-bright)] hover:underline disabled:opacity-50">
-                          {isRequestingUSDC ? 'Minting...' : '+ Get Test USDC'}
-                        </button>
-                      )}
+                      <span>Balance: {solBalance.toFixed(4)} SOL</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <input
@@ -488,8 +442,8 @@ function PrimaryPageContent() {
                         onChange={(e) => {
                           setPayAmount(e.target.value);
                           const num = parseFloat(e.target.value);
-                          if (!isNaN(num) && num > 0 && faceValueUSDC > 0) {
-                            setComputedReceive((num / faceValueUSDC).toFixed(4));
+                          if (!isNaN(num) && num > 0 && faceValueSOL > 0) {
+                            setComputedReceive((num / faceValueSOL).toFixed(4));
                           } else {
                             setComputedReceive("");
                           }
@@ -497,7 +451,7 @@ function PrimaryPageContent() {
                         className="w-full min-w-0 bg-transparent text-2xl font-semibold font-mono text-[var(--ink)] outline-none placeholder:text-[var(--ink4)] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                       />
                       <span className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold font-mono bg-[var(--shore)] border border-[var(--rule)] text-[var(--ink2)]">
-                        USDC
+                        SOL
                       </span>
                     </div>
                   </div>
@@ -527,11 +481,11 @@ function PrimaryPageContent() {
                     {([
                       {
                         label: "Face Value",
-                        value: selectedBond ? `${fmtCurrency(faceValueUSDC)} / token` : "—",
+                        value: selectedBond ? `${faceValueSOL.toFixed(4)} SOL / token` : "—",
                       },
                       {
                         label: "Total Cost",
-                        value: payAmount && parseFloat(payAmount) > 0 ? fmtCurrency(parseFloat(payAmount)) : "—",
+                        value: payAmount && parseFloat(payAmount) > 0 ? `${parseFloat(payAmount).toFixed(4)} SOL` : "—",
                       },
                       { label: "Network", value: "Solana Devnet", green: true },
                     ] as Array<{ label: string; value: string; green?: boolean }>).map((row) => (

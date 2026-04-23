@@ -110,12 +110,12 @@ export default function ManagePage() {
 
     setDepositingYield(bondId);
     try {
-      // Convert to USDC with 6 decimals
-      const amountInMicroUsdc = Math.floor(amount * 1_000_000);
-      const tx = await depositYield(bondId, amountInMicroUsdc);
+      // Convert SOL to lamports
+      const amountInLamports = Math.floor(amount * 1_000_000_000);
+      const tx = await depositYield(bondId, amountInLamports);
       
       toast.success('Yield deposited successfully!', {
-        description: `Deposited ${amount} USDC`,
+        description: `Deposited ${amount} SOL`,
       });
       
       // Clear the input
@@ -220,7 +220,7 @@ export default function ManagePage() {
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
-                            placeholder="USDC"
+                            placeholder="SOL"
                             value={yieldAmounts[bond.bondId!] || ''}
                             onChange={(e) => setYieldAmounts(prev => ({ ...prev, [bond.bondId!]: e.target.value }))}
                             className="w-24 bg-[var(--surface)] border border-[var(--rule)] rounded-lg px-2 py-1 text-xs text-[var(--ink)] outline-none focus:border-[var(--lilac)] transition-colors"

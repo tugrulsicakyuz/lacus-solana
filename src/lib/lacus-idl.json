@@ -138,7 +138,7 @@
           }
         },
         {
-          "name": "issuer_usdc_ata",
+          "name": "issuer",
           "writable": true
         },
         {
@@ -148,13 +148,6 @@
         {
           "name": "bond_mint",
           "writable": true
-        },
-        {
-          "name": "buyer_usdc_ata",
-          "writable": true
-        },
-        {
-          "name": "usdc_mint"
         },
         {
           "name": "token_program",
@@ -191,6 +184,7 @@
       "accounts": [
         {
           "name": "bond_state",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -248,17 +242,6 @@
           "name": "investor_bond_ata"
         },
         {
-          "name": "investor_usdc_ata",
-          "writable": true
-        },
-        {
-          "name": "bond_yield_vault",
-          "writable": true
-        },
-        {
-          "name": "usdc_mint"
-        },
-        {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
@@ -305,23 +288,9 @@
           }
         },
         {
-          "name": "bond_yield_vault",
-          "writable": true
-        },
-        {
           "name": "issuer",
+          "writable": true,
           "signer": true
-        },
-        {
-          "name": "issuer_usdc_ata",
-          "writable": true
-        },
-        {
-          "name": "usdc_mint"
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "system_program",
@@ -371,23 +340,9 @@
           }
         },
         {
-          "name": "bond_yield_vault",
-          "writable": true
-        },
-        {
           "name": "issuer",
+          "writable": true,
           "signer": true
-        },
-        {
-          "name": "issuer_usdc_ata",
-          "writable": true
-        },
-        {
-          "name": "usdc_mint"
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "system_program",
@@ -528,96 +483,6 @@
           }
         },
         {
-          "name": "bond_yield_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "bond_state"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "usdc_mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
           "name": "bond_token_vault",
           "writable": true,
           "pda": {
@@ -713,9 +578,6 @@
           "signer": true
         },
         {
-          "name": "usdc_mint"
-        },
-        {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
@@ -726,10 +588,6 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
@@ -788,19 +646,8 @@
           "writable": true
         },
         {
-          "name": "investor_usdc_ata",
-          "writable": true
-        },
-        {
-          "name": "bond_yield_vault",
-          "writable": true
-        },
-        {
           "name": "bond_mint",
           "writable": true
-        },
-        {
-          "name": "usdc_mint"
         },
         {
           "name": "token_program",
@@ -971,10 +818,6 @@
           },
           {
             "name": "bond_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "usdc_vault",
             "type": "pubkey"
           },
           {
