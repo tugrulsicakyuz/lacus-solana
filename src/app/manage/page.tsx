@@ -4,10 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Shield, TrendingUp, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useLacusProgram } from "@/hooks/useLacus";
+import { useWallet } from "@solana/wallet-adapter-react";
+import type { BondState } from "@/types/lacus";
 
 interface Bond {
   id: number; issuer_name: string; symbol: string; apy: number; price_per_token: number;
   maturity_months: number; contract_address?: string; total_issue_size: number;
+  bondId?: number; issuer?: string; source?: 'onchain' | 'supabase';
 }
 
 function fmtCurrency(n: number): string {
@@ -15,25 +19,85 @@ function fmtCurrency(n: number): string {
 }
 
 export default function ManagePage() {
+  const { connected } = useWallet();
+  const { fetchMyBonds } = useLacusProgram();
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchBonds() {
-      const { data, error } = await supabase
-        .from("bonds")
-        .select("*")
-        .order("id", { ascending: false });
+      try {
+        // Fetch from both on-chain and Supabase
+        const [onChainBonds, supabaseResult] = await Promise.all([
+          connected ? fetchMyBonds() : Promise.resolve([]),
+          supabase.from("bonds").select("*").order("id", { ascending: false })
+        ]);
 
-      if (error) {
-        console.error("Failed to fetch bonds:", error);
-      } else {
-        setBonds(data as Bond[]);
+        const { data: supabaseData, error } = supabaseResult;
+
+        if (error) {
+          console.error("Failed to fetch Supabase bonds:", error);
+        }
+
+        // Merge on-chain and Supabase bonds
+        const mergedBonds: Bond[] = [];
+        const seenBondIds = new Set<number>();
+
+        // Add on-chain bonds first
+        if (onChainBonds && onChainBonds.length > 0) {
+          onChainBonds.forEach((bond: BondState) => {
+            const bondId = Number(bond.bondId);
+            seenBondIds.add(bondId);
+            
+            // Try to find matching Supabase metadata
+            const supabaseMeta = supabaseData?.find((s: { id: number }) => s.id === bondId);
+            
+            const faceValueUSDC = Number(bond.faceValue) / 1_000_000;
+            const maxSupplyNum = Number(bond.maxSupply);
+            const totalRaise = faceValueUSDC * maxSupplyNum;
+            
+            // Calculate maturity in months
+            const now = Math.floor(Date.now() / 1000);
+            const maturitySeconds = Number(bond.maturityTimestamp) - now;
+            const maturityMonths = Math.max(0, Math.round(maturitySeconds / (30 * 24 * 60 * 60)));
+
+            mergedBonds.push({
+              id: bondId,
+              bondId,
+              issuer: bond.issuer.toString(),
+              issuer_name: supabaseMeta?.issuer_name || bond.issuer.toString().slice(0, 8) + '...',
+              symbol: bond.symbol || supabaseMeta?.symbol || `BOND-${bondId}`,
+              apy: bond.couponRateBps / 100,
+              price_per_token: faceValueUSDC,
+              maturity_months: maturityMonths,
+              total_issue_size: totalRaise,
+              contract_address: bond.issuer.toString(),
+              source: 'onchain',
+            });
+          });
+        }
+
+        // Add Supabase-only bonds (not found on-chain)
+        if (supabaseData) {
+          supabaseData.forEach((bond: any) => {
+            if (!seenBondIds.has(bond.id)) {
+              mergedBonds.push({
+                ...bond,
+                source: 'supabase',
+              });
+            }
+          });
+        }
+
+        setBonds(mergedBonds);
+      } catch (err) {
+        console.error("Failed to fetch bonds:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     fetchBonds();
-  }, []);
+  }, [connected, fetchMyBonds]);
 
   return (
     <section className="min-h-screen pt-28 pb-12">

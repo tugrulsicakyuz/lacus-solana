@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { useLacusProgram } from '@/hooks/useLacus';
 import { useScrollReveal } from "@/lib/useClientInteractions";
 import type { BondState } from '@/types/lacus';
+import { toast } from 'sonner';
 
 interface Bond {
   bondId: number;
@@ -72,6 +73,58 @@ export default function LaunchpadPage() {
       // 1. Fetch on-chain bonds (source of truth for financial data)
       const onChainBonds = await fetchAllBonds();
 
+      // If wallet not connected or empty result, fall back to Supabase directly without error
+      if (!onChainBonds || onChainBonds.length === 0) {
+        setIsFallbackMode(true);
+        
+        // Fallback to Supabase-only data
+        const { data, error: fetchError } = await supabase
+          .from("bonds")
+          .select("*")
+          .eq("documents_complete", true)
+          .order("id", { ascending: true });
+        
+        if (fetchError) {
+          console.error("Failed to fetch fallback bonds:", fetchError);
+          setError(fetchError.message);
+        } else {
+          // Map Supabase data to Bond interface
+          const fallbackBonds: Bond[] = (data || []).map((b: {
+            id: number;
+            issuer_name?: string;
+            symbol?: string;
+            apy?: number;
+            maturity_months?: number;
+            total_issue_size?: number;
+            price_per_token?: number;
+            filled_percentage?: number;
+            description?: string;
+            logo_url?: string;
+          }) => ({
+            bondId: b.id,
+            issuer: '',
+            issuer_name: b.issuer_name || 'Unknown',
+            symbol: b.symbol || '',
+            name: b.issuer_name || '',
+            apy: b.apy || 0,
+            maturity_months: b.maturity_months || 0,
+            maturity_date: '',
+            total_issue_size: b.total_issue_size || 0,
+            price_per_token: b.price_per_token || 0,
+            filled_percentage: b.filled_percentage || 0,
+            faceValue: 0,
+            couponRateBps: 0,
+            maxSupply: 0,
+            tokensSold: 0,
+            maturityTimestamp: 0,
+            description: b.description,
+            logo_url: b.logo_url,
+          }));
+          setBonds(fallbackBonds);
+        }
+        return;
+      }
+
       // 2. Fetch Supabase metadata for enrichment (issuer name, description, logo)
       const { data: supabaseBonds } = await supabase
         .from('bonds')
@@ -118,7 +171,7 @@ export default function LaunchpadPage() {
       console.error('Failed to fetch on-chain bonds:', err);
       setIsFallbackMode(true);
       
-      // Fallback to Supabase-only data
+      // Fallback to Supabase-only data without showing error toast
       const { data, error: fetchError } = await supabase
         .from("bonds")
         .select("*")
@@ -163,9 +216,9 @@ export default function LaunchpadPage() {
         }));
         setBonds(fallbackBonds);
       }
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }, [fetchAllBonds]);
 
   useEffect(() => { fetchBonds(); }, [fetchBonds]);

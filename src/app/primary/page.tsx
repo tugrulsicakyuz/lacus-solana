@@ -57,10 +57,34 @@ function PrimaryPageContent() {
   const [payAmount, setPayAmount] = useState("");
   const [computedReceive, setComputedReceive] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const BONDS_PER_PAGE = 12;
+
+  // Pagination calculations
+  const totalPages = Math.ceil(bonds.length / BONDS_PER_PAGE);
+  const startIndex = (currentPage - 1) * BONDS_PER_PAGE;
+  const endIndex = startIndex + BONDS_PER_PAGE;
+  const paginatedBonds = bonds.slice(startIndex, endIndex);
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setFetchError(null);
+
+    if (!connected) {
+      setLoading(false);
+      setFetchError("Please connect your wallet to view bonds.");
+      return;
+    }
 
     try {
       const onChainData = await fetchAllBonds();
@@ -87,6 +111,7 @@ function PrimaryPageContent() {
       });
 
       setBonds(combined);
+      setCurrentPage(1);
 
       const bondParam = searchParams.get("bond");
       if (bondParam) {
@@ -98,11 +123,15 @@ function PrimaryPageContent() {
       }
     } catch (error) {
       console.error("Failed to fetch bonds:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setFetchError("Failed to load bonds. Please try again.");
+      toast.error('Failed to load bonds', {
+        description: errorMessage,
+      });
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-  }, [fetchAllBonds, searchParams]);
+  }, [fetchAllBonds, searchParams, connected]);
 
   useEffect(() => {
     fetchData();
@@ -253,23 +282,54 @@ function PrimaryPageContent() {
                   </button>
                   {pairDropdownOpen && (
                     <div className="absolute left-0 z-20 mt-1 w-full overflow-hidden rounded-xl shadow-2xl bg-[var(--deep)] border border-[var(--rule)]">
-                      {bonds.map((bond) => (
-                        <button
-                          key={bond.bondId}
-                          onClick={() => {
-                            setSelectedBond(bond);
-                            setPairDropdownOpen(false);
-                          }}
-                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-[var(--surface)] ${
-                            bond.bondId === selectedBond?.bondId
-                              ? "bg-[var(--lilac)]/10 text-[var(--lilac)]"
-                              : "text-[var(--ink2)]"
-                          }`}
-                        >
-                          <span className="font-medium font-mono">{bond.symbol}</span>
-                          <span className="text-[var(--ink3)]"> — {bond.issuerName}</span>
-                        </button>
-                      ))}
+                      <div className="max-h-80 overflow-y-auto">
+                        {paginatedBonds.map((bond) => (
+                          <button
+                            key={bond.bondId}
+                            onClick={() => {
+                              setSelectedBond(bond);
+                              setPairDropdownOpen(false);
+                            }}
+                            className={`w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-[var(--surface)] ${
+                              bond.bondId === selectedBond?.bondId
+                                ? "bg-[var(--lilac)]/10 text-[var(--lilac)]"
+                                : "text-[var(--ink2)]"
+                            }`}
+                          >
+                            <span className="font-medium font-mono">{bond.symbol}</span>
+                            <span className="text-[var(--ink3)]"> — {bond.issuerName}</span>
+                          </button>
+                        ))}
+                      </div>
+                      
+                      {/* Pagination controls */}
+                      {bonds.length > 0 && totalPages > 1 && (
+                        <div className="flex items-center justify-between px-4 py-2.5 border-t border-[var(--rule)] bg-[var(--surface)]">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePreviousPage();
+                            }}
+                            disabled={currentPage === 1}
+                            className="text-xs font-medium text-[var(--ink3)] hover:text-[var(--lilac)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            ← Previous
+                          </button>
+                          <span className="text-xs text-[var(--ink3)] font-mono">
+                            Page {currentPage} of {totalPages} ({bonds.length} bonds)
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleNextPage();
+                            }}
+                            disabled={currentPage === totalPages}
+                            className="text-xs font-medium text-[var(--ink3)] hover:text-[var(--lilac)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Next →
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

@@ -51,6 +51,40 @@ export default function IssueBondPage() {
       return;
     }
 
+    // Validation: Supply limits
+    const MIN_SUPPLY = 100;
+    const MAX_SUPPLY = 1_000_000;
+    
+    if (maxSupply < MIN_SUPPLY) {
+      toast.error('Invalid supply', {
+        description: `Minimum supply is ${MIN_SUPPLY.toLocaleString()} tokens`,
+      });
+      return;
+    }
+    
+    if (maxSupply > MAX_SUPPLY) {
+      toast.error('Invalid supply', {
+        description: `Maximum supply is ${MAX_SUPPLY.toLocaleString()} tokens`,
+      });
+      return;
+    }
+
+    // Validation: Coupon rate
+    if (couponRateBps <= 0) {
+      toast.error('Invalid coupon rate', {
+        description: 'Coupon rate (APY) must be greater than 0',
+      });
+      return;
+    }
+
+    // Validation: Face value
+    if (faceValueUSDC <= 0) {
+      toast.error('Invalid face value', {
+        description: 'Face value must be greater than 0 USDC',
+      });
+      return;
+    }
+
     const maturityTimestamp = Math.floor(new Date(maturityDate).getTime() / 1000);
     if (maturityTimestamp <= Math.floor(Date.now() / 1000)) {
       toast.error('Maturity date must be in the future');
@@ -218,19 +252,23 @@ export default function IssueBondPage() {
                 </label>
                 <input
                   type="number"
-                  min="1"
+                  min="100"
+                  max="1000000"
                   step="1"
                   value={maxSupply}
                   onChange={(e) => setMaxSupply(parseInt(e.target.value) || 1000)}
                   className="w-full bg-[var(--surface)] border border-[var(--rule)] focus:border-[var(--lilac)] rounded-xl px-4 py-3 text-sm text-[var(--ink)] font-mono outline-none transition-colors"
                 />
+                <p className="mt-1.5 text-[11px] text-[var(--ink4)]">
+                  Minimum: 100 tokens • Maximum: 1,000,000 tokens
+                </p>
               </div>
 
               {/* Loan Agreement URL/Hash */}
               <div>
                 <label className="flex items-center gap-2 text-[13px] font-medium text-[var(--ink3)] mb-2">
                   <FileText className="w-3.5 h-3.5" />
-                  Loan Agreement URL (optional)
+                  Loan Agreement URL
                 </label>
                 <input
                   type="text"
