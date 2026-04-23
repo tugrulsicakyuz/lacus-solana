@@ -16,7 +16,7 @@ import {
   Wallet,
   ExternalLink,
 } from "lucide-react";
-import { useAccount } from "wagmi";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { supabase } from "@/lib/supabase";
 
 /* ── Types ── */
@@ -71,7 +71,8 @@ function maturityLabel(months: number): string {
 function BondDetailContent() {
   const params = useParams();
   const symbol = (params?.symbol as string ?? "").toUpperCase();
-  const { address } = useAccount();
+  const { publicKey } = useWallet();
+  const address = publicKey?.toBase58() ?? null;
 
   const [bond, setBond] = useState<Bond | null>(null);
   const [loading, setLoading] = useState(true);
@@ -241,7 +242,7 @@ function BondDetailContent() {
               </Link>
               {bond.contract_address && (
                 <a
-                  href={`https://sepolia.basescan.org/address/${bond.contract_address}`}
+                  href={`https://explorer.solana.com/address/${bond.contract_address}?cluster=devnet`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-ghost flex items-center gap-2 px-6 py-3.5 text-[13px]"
@@ -350,7 +351,7 @@ function BondDetailContent() {
               <div className="card-luminous rounded-2xl p-6">
                 <p className="eyebrow-dim mb-3">Contract Address</p>
                 <a
-                  href={`https://sepolia.basescan.org/address/${bond.contract_address}`}
+                  href={`https://explorer.solana.com/address/${bond.contract_address}?cluster=devnet`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-mono text-xs text-[var(--lilac)] hover:text-[var(--lilac-bright)] break-all transition-colors"
