@@ -13,5 +13,5 @@ export const SOLANA_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api
 
 // Lacus program ID (deployed on Solana devnet)
 export const LACUS_PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_LACUS_PROGRAM_ID || 'Cw6bBLRd661pFrq5WiUjWQQXBikN6bXxCsUrwFGovSbN'
+  process.env.NEXT_PUBLIC_LACUS_PROGRAM_ID || 'Fnw9tWvwyMXieH35WhFfDz7behbDo1teBrVJZ4pZq7rL'
 );

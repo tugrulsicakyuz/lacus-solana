@@ -16,7 +16,7 @@ async function main() {
   anchor.setProvider(provider);
 
   const idl = JSON.parse(fs.readFileSync('./src/lib/lacus-idl.json', 'utf-8'));
-  const programId = new PublicKey('Cw6bBLRd661pFrq5WiUjWQQXBikN6bXxCsUrwFGovSbN');
+  const programId = new PublicKey('Fnw9tWvwyMXieH35WhFfDz7behbDo1teBrVJZ4pZq7rL');
   const program = new Program(idl, provider);
 
   const [factoryStatePDA] = PublicKey.findProgramAddressSync(

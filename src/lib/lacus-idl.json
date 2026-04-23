@@ -1,5 +1,5 @@
 {
-  "address": "Cw6bBLRd661pFrq5WiUjWQQXBikN6bXxCsUrwFGovSbN",
+  "address": "Fnw9tWvwyMXieH35WhFfDz7behbDo1teBrVJZ4pZq7rL",
   "metadata": {
     "name": "lacus",
     "version": "0.1.0",
@@ -420,6 +420,11 @@
       ],
       "accounts": [
         {
+          "name": "issuer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "factory_state",
           "writable": true,
           "pda": {
@@ -571,11 +576,6 @@
               ]
             }
           }
-        },
-        {
-          "name": "issuer",
-          "writable": true,
-          "signer": true
         },
         {
           "name": "token_program",

@@ -4,7 +4,7 @@ use anchor_spl::{
     token::{self, Burn, Mint, MintTo, Token, TokenAccount, Transfer},
 };
 
-declare_id!("Cw6bBLRd661pFrq5WiUjWQQXBikN6bXxCsUrwFGovSbN");
+declare_id!("Fnw9tWvwyMXieH35WhFfDz7behbDo1teBrVJZ4pZq7rL");
 
 #[program]
 pub mod lacus {
@@ -19,6 +19,7 @@ pub mod lacus {
     }
 
     pub fn issue_bond(ctx: Context<IssueBond>, params: IssueBondParams) -> Result<()> {
+        msg!("LACUS_SOL_V2: issuer={}", ctx.accounts.issuer.key());
         let clock = Clock::get()?;
         
         require!(
@@ -278,38 +279,19 @@ pub struct InitializeFactory<'info> {
 
 #[derive(Accounts)]
 pub struct IssueBond<'info> {
-    #[account(
-        mut,
-        seeds = [b"factory"],
-        bump = factory_state.bump
-    )]
-    pub factory_state: Account<'info, FactoryState>,
-    #[account(
-        init,
-        payer = issuer,
-        space = 8 + BondState::INIT_SPACE,
-        seeds = [b"bond", factory_state.bond_count.to_le_bytes().as_ref()],
-        bump
-    )]
-    pub bond_state: Account<'info, BondState>,
-    #[account(
-        init,
-        payer = issuer,
-        mint::decimals = 0,
-        mint::authority = bond_state,
-        seeds = [b"mint", bond_state.key().as_ref()],
-        bump
-    )]
-    pub bond_mint: Account<'info, Mint>,
-    #[account(
-        init,
-        payer = issuer,
-        associated_token::mint = bond_mint,
-        associated_token::authority = bond_state
-    )]
-    pub bond_token_vault: Account<'info, TokenAccount>,
     #[account(mut)]
     pub issuer: Signer<'info>,
+    #[account(mut, seeds = [b"factory"], bump = factory_state.bump)]
+    pub factory_state: Account<'info, FactoryState>,
+    #[account(init, payer = issuer, space = 8 + BondState::INIT_SPACE,
+              seeds = [b"bond", factory_state.bond_count.to_le_bytes().as_ref()], bump)]
+    pub bond_state: Account<'info, BondState>,
+    #[account(init, payer = issuer, mint::decimals = 0, mint::authority = bond_state,
+              seeds = [b"mint", bond_state.key().as_ref()], bump)]
+    pub bond_mint: Account<'info, Mint>,
+    #[account(init, payer = issuer, associated_token::mint = bond_mint,
+              associated_token::authority = bond_state)]
+    pub bond_token_vault: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,

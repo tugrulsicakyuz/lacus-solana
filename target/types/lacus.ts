@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/lacus.json`.
  */
 export type Lacus = {
-  "address": "Cw6bBLRd661pFrq5WiUjWQQXBikN6bXxCsUrwFGovSbN",
+  "address": "Fnw9tWvwyMXieH35WhFfDz7behbDo1teBrVJZ4pZq7rL",
   "metadata": {
     "name": "lacus",
     "version": "0.1.0",
@@ -426,6 +426,11 @@ export type Lacus = {
       ],
       "accounts": [
         {
+          "name": "issuer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "factoryState",
           "writable": true,
           "pda": {
@@ -577,11 +582,6 @@ export type Lacus = {
               ]
             }
           }
-        },
-        {
-          "name": "issuer",
-          "writable": true,
-          "signer": true
         },
         {
           "name": "tokenProgram",
