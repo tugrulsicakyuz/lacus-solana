@@ -1,0 +1,41 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lgGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7dd3fc" />
+      <stop offset="48%" stop-color="#c4b5fd" />
+      <stop offset="100%" stop-color="#a78bfa" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="20" cy="20" r="20" fill="#0a0c1e" />
+  
+  <!-- Outer ring -->
+  <circle cx="20" cy="20" r="17.5" stroke="url(#lgGrad)" stroke-width="0.7" fill="none" opacity="0.28" />
+  
+  <!-- Orbital ellipse -->
+  <ellipse
+    cx="20"
+    cy="20"
+    rx="17.5"
+    ry="6.5"
+    transform="rotate(28 20 20)"
+    stroke="url(#lgGrad)"
+    stroke-width="1.15"
+    fill="none"
+    opacity="0.88"
+  />
+  
+  <!-- Middle ring -->
+  <circle cx="20" cy="20" r="8.5" stroke="url(#lgGrad)" stroke-width="0.9" fill="none" opacity="0.55" />
+  
+  <!-- Inner ring -->
+  <circle cx="20" cy="20" r="3.5" stroke="url(#lgGrad)" stroke-width="0.75" fill="none" opacity="0.8" />
+  
+  <!-- Center core -->
+  <circle cx="20" cy="20" r="2.2" fill="url(#lgGrad)" />
+  
+  <!-- Orbital particle -->
+  <circle cx="33.5" cy="15.5" r="1.9" fill="#a5f3fc" opacity="0.95" />
+  <circle cx="33.5" cy="15.5" r="3.2" stroke="#7dd3fc" stroke-width="0.5" fill="none" opacity="0.35" />
+</svg>
