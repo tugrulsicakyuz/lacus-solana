@@ -17,6 +17,7 @@ export const LACUS_PROGRAM_ID = new PublicKey(
 );
 
 // USDC mint address (devnet by default, override for other networks)
+// Updated to use custom test USDC token with mint authority
 export const USDC_DEVNET_MINT = new PublicKey(
-  process.env.NEXT_PUBLIC_USDC_MINT || '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'
+  process.env.NEXT_PUBLIC_USDC_MINT || '4tKWXwLpNX5hxJeKceHBG3KJBv43RmGU3rQW3e35r4nR'
 );
