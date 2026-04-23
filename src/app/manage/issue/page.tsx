@@ -1,6 +1,5 @@
 'use client';
 
-import '@solana/wallet-adapter-react-ui/styles.css';
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';

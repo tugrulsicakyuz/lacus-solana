@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import '@solana/wallet-adapter-react-ui/styles.css';
 export default function Dashboard() {
   const { connected, publicKey } = useWallet();
   return (

@@ -1,14 +1,15 @@
 "use client";
 
-import '@solana/wallet-adapter-react-ui/styles.css';
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet, useConnection, useAnchorWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { getAccount, getAssociatedTokenAddress } from "@solana/spl-token";
 import { ChevronDown, TrendingUp, Info, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useLacusProgram } from "@/hooks/useLacus";
+import { USDC_DEVNET_MINT } from "@/config/solana";
 
 interface OnChainBond {
   bondId: number;
@@ -45,6 +46,7 @@ function formatDate(timestamp: number): string {
 function PrimaryPageContent() {
   const searchParams = useSearchParams();
   const { publicKey, connected } = useWallet();
+  const { connection } = useConnection();
   const { fetchAllBonds, fetchBond, buyBond, requestTestUSDC } = useLacusProgram();
 
   const [onChainBonds, setOnChainBonds] = useState<OnChainBond[]>([]);
@@ -57,6 +59,8 @@ function PrimaryPageContent() {
   const [payAmount, setPayAmount] = useState("");
   const [computedReceive, setComputedReceive] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [usdcBalance, setUsdcBalance] = useState<number>(0);
+  const [isRequestingUSDC, setIsRequestingUSDC] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -77,6 +81,40 @@ function PrimaryPageContent() {
   };
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const fetchUsdcBalance = useCallback(async () => {
+    if (!publicKey || !connected) {
+      setUsdcBalance(0);
+      return;
+    }
+
+    try {
+      const ata = await getAssociatedTokenAddress(
+        USDC_DEVNET_MINT,
+        publicKey
+      );
+      const accountInfo = await getAccount(connection, ata);
+      setUsdcBalance(Number(accountInfo.amount) / 1_000_000);
+    } catch (error) {
+      setUsdcBalance(0);
+    }
+  }, [publicKey, connected, connection]);
+
+  const handleRequestTestUSDC = async () => {
+    setIsRequestingUSDC(true);
+    try {
+      const result = await requestTestUSDC();
+      if (result?.success) {
+        toast.success('✅ 1,000 test USDC minted!');
+        await fetchUsdcBalance();
+      }
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Failed to request test USDC';
+      toast.error(errorMsg);
+    } finally {
+      setIsRequestingUSDC(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -136,6 +174,7 @@ function PrimaryPageContent() {
       }
     }
     fetchData();
+    fetchUsdcBalance();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, refreshTrigger]);
 
@@ -180,6 +219,12 @@ function PrimaryPageContent() {
       return;
     }
 
+    const payNum = parseFloat(payAmount);
+    if (payNum > usdcBalance) {
+      toast.error(`Insufficient USDC. You have ${usdcBalance.toFixed(2)} USDC but need ${payNum.toFixed(2)} USDC. Click "+ Get Test USDC" to get some.`);
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -202,6 +247,7 @@ function PrimaryPageContent() {
       setPayAmount("");
       setComputedReceive("");
       
+      await fetchUsdcBalance();
       setRefreshTrigger(prev => prev + 1);
     } catch (error: any) {
       console.error("Buy failed:", error);
@@ -420,6 +466,15 @@ function PrimaryPageContent() {
                     <div className="flex items-center justify-between eyebrow-dim mb-2">
                       <span>You Pay</span>
                       <span>USDC</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-[var(--ink3)] mb-1">
+                      <span>Balance: {usdcBalance.toLocaleString('en-US', {minimumFractionDigits: 2})} USDC</span>
+                      {usdcBalance === 0 && connected && (
+                        <button onClick={handleRequestTestUSDC} disabled={isRequestingUSDC}
+                          className="text-[var(--aqua-bright)] hover:underline disabled:opacity-50">
+                          {isRequestingUSDC ? 'Minting...' : '+ Get Test USDC'}
+                        </button>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <input

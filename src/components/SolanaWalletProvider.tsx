@@ -7,7 +7,6 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { SOLANA_RPC } from '@/config/solana';
 
-require('@solana/wallet-adapter-react-ui/styles.css');
 
 interface SolanaWalletProviderProps {
   children: React.ReactNode;

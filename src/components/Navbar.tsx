@@ -1,6 +1,5 @@
 "use client";
 
-import '@solana/wallet-adapter-react-ui/styles.css';
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
