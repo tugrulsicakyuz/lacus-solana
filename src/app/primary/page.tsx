@@ -76,66 +76,68 @@ function PrimaryPageContent() {
     setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setFetchError(null);
-
-    if (!connected) {
-      setLoading(false);
-      setFetchError("Please connect your wallet to view bonds.");
-      return;
-    }
-
-    try {
-      const onChainData = await fetchAllBonds();
-      setOnChainBonds(onChainData);
-
-      const { data: metadata, error: metaError } = await supabase
-        .from("bonds")
-        .select("id, symbol, issuer_name, description");
-
-      if (metaError) {
-        console.error("Failed to fetch metadata:", metaError);
-      } else {
-        setBondMetadata(metadata as BondMetadata[]);
-      }
-
-      const combined: CombinedBond[] = onChainData.map((bond: any, index: number) => {
-        const meta = metadata?.find((m) => m.id === bond.bondId) || metadata?.[index];
-        return {
-          ...bond,
-          symbol: meta?.symbol || `BOND-${bond.bondId}`,
-          issuerName: meta?.issuer_name || "Unknown Issuer",
-          description: meta?.description,
-        };
-      });
-
-      setBonds(combined);
-      setCurrentPage(1);
-
-      const bondParam = searchParams.get("bond");
-      if (bondParam) {
-        const match = combined.find((b) => b.symbol === bondParam);
-        if (match) setSelectedBond(match);
-        else if (combined.length > 0) setSelectedBond(combined[0]);
-      } else if (combined.length > 0) {
-        setSelectedBond(combined[0]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch bonds:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setFetchError("Failed to load bonds. Please try again.");
-      toast.error('Failed to load bonds', {
-        description: errorMessage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchAllBonds, searchParams, connected]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      setFetchError(null);
+
+      if (!connected) {
+        setLoading(false);
+        setFetchError("Please connect your wallet to view bonds.");
+        return;
+      }
+
+      try {
+        const onChainData = await fetchAllBonds();
+        setOnChainBonds(onChainData);
+
+        const { data: metadata, error: metaError } = await supabase
+          .from("bonds")
+          .select("id, symbol, issuer_name, description");
+
+        if (metaError) {
+          console.error("Failed to fetch metadata:", metaError);
+        } else {
+          setBondMetadata(metadata as BondMetadata[]);
+        }
+
+        const combined: CombinedBond[] = onChainData.map((bond: any, index: number) => {
+          const meta = metadata?.find((m) => m.id === bond.bondId) || metadata?.[index];
+          return {
+            ...bond,
+            symbol: meta?.symbol || `BOND-${bond.bondId}`,
+            issuerName: meta?.issuer_name || "Unknown Issuer",
+            description: meta?.description,
+          };
+        });
+
+        setBonds(combined);
+        setCurrentPage(1);
+
+        const bondParam = searchParams.get("bond");
+        if (bondParam) {
+          const match = combined.find((b) => b.symbol === bondParam);
+          if (match) setSelectedBond(match);
+          else if (combined.length > 0) setSelectedBond(combined[0]);
+        } else if (combined.length > 0) {
+          setSelectedBond(combined[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch bonds:", error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setFetchError("Failed to load bonds. Please try again.");
+        toast.error('Failed to load bonds', {
+          description: errorMessage,
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
     fetchData();
-  }, [fetchData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected, refreshTrigger]);
 
   useEffect(() => {
     setPayAmount("");
@@ -200,7 +202,7 @@ function PrimaryPageContent() {
       setPayAmount("");
       setComputedReceive("");
       
-      await fetchData();
+      setRefreshTrigger(prev => prev + 1);
     } catch (error: any) {
       console.error("Buy failed:", error);
       toast.error(error?.message || "Purchase failed. Please try again.");
@@ -261,7 +263,7 @@ function PrimaryPageContent() {
             {fetchError ? (
               <div className="flex flex-col items-center justify-center py-16 text-center px-4 gap-3">
                 <p className="text-sm text-[var(--coral)]">{fetchError}</p>
-                <button onClick={() => fetchData()} className="btn-ghost px-5 py-2.5 text-sm">
+                <button onClick={() => setRefreshTrigger(prev => prev + 1)} className="btn-ghost px-5 py-2.5 text-sm">
                   Try again
                 </button>
               </div>

@@ -62,16 +62,18 @@ export default function LaunchpadPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"apy" | "size" | "filled" | "default">("default");
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const BONDS_PER_PAGE = 12;
 
-  const fetchBonds = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setIsFallbackMode(false);
+  useEffect(() => {
+    async function fetchBonds() {
+      setLoading(true);
+      setError(null);
+      setIsFallbackMode(false);
 
-    try {
-      // 1. Fetch on-chain bonds (source of truth for financial data)
-      const onChainBonds = await fetchAllBonds();
+      try {
+        // 1. Fetch on-chain bonds (source of truth for financial data)
+        const onChainBonds = await fetchAllBonds();
 
       // If wallet not connected or empty result, fall back to Supabase directly without error
       if (!onChainBonds || onChainBonds.length === 0) {
@@ -219,9 +221,10 @@ export default function LaunchpadPage() {
     } finally {
       setLoading(false);
     }
-  }, [fetchAllBonds]);
-
-  useEffect(() => { fetchBonds(); }, [fetchBonds]);
+  }
+  fetchBonds();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -380,7 +383,7 @@ export default function LaunchpadPage() {
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <p className="text-sm text-[var(--coral)]">Failed to load bonds: {error}</p>
             <button
-              onClick={() => fetchBonds()}
+              onClick={() => setRefreshTrigger(prev => prev + 1)}
               className="btn-primary px-6 py-3"
             >
               Try again

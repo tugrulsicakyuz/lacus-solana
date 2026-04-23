@@ -1,7 +1,7 @@
 'use client';
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createAssociatedTokenAccountIdempotentInstruction } from '@solana/spl-token';
 import { BN } from '@coral-xyz/anchor';
 import { useCallback, useState, useMemo } from 'react';
 import { getLacusProgram, getFactoryStatePDA, getBondStatePDA, getBondMintPDA } from '@/lib/lacus-program';
@@ -169,6 +169,15 @@ export function useLacusProgram() {
     const buyerUsdcAta = await getAssociatedTokenAddress(new PublicKey(USDC_DEVNET_MINT), wallet.publicKey);
     const issuerUsdcAta = await getAssociatedTokenAddress(new PublicKey(USDC_DEVNET_MINT), new PublicKey(bondState.issuer));
 
+    // Create instruction to initialize issuer's USDC ATA if it doesn't exist
+    // This is idempotent - if account already exists, it does nothing
+    const createIssuerAtaIx = createAssociatedTokenAccountIdempotentInstruction(
+      wallet.publicKey, // payer
+      issuerUsdcAta, // ata
+      new PublicKey(bondState.issuer), // owner
+      new PublicKey(USDC_DEVNET_MINT) // mint
+    );
+
     const tx = await program.methods
       .buyBond(new BN(amount))
       .accounts({
@@ -184,6 +193,7 @@ export function useLacusProgram() {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
+      .preInstructions([createIssuerAtaIx]) // Add pre-instruction to create ATA if needed
       .rpc();
 
     return tx;
