@@ -19,7 +19,17 @@ export function useLacusProgram() {
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
     tx.recentBlockhash = blockhash;
     tx.feePayer = wallet!.publicKey;
-    const sig = await sendTransaction(tx, connection);
+    console.log('sendAndConfirm: tx instructions count:', tx.instructions.length);
+    console.log('sendAndConfirm: fee payer:', wallet!.publicKey.toBase58());
+    let sig: string;
+    try {
+      sig = await sendTransaction(tx, connection);
+    } catch (e: any) {
+      console.error('sendTransaction threw:', e);
+      console.error('sendTransaction error logs:', e?.logs);
+      throw e;
+    }
+    console.log('sendAndConfirm: sig:', sig);
     await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
     return sig;
   }, [connection, sendTransaction, wallet]);
@@ -158,6 +168,22 @@ export function useLacusProgram() {
     const [bondMintPDA] = getBondMintPDA(bondStatePDA);
     const bondTokenVault = await getAssociatedTokenAddress(bondMintPDA, bondStatePDA, true);
     const hashArray = Array.from(params.loanAgreementHash);
+
+    console.log('issueBond accounts:', {
+      factoryState: factoryStatePDA.toBase58(),
+      bondState: bondStatePDA.toBase58(),
+      bondMint: bondMintPDA.toBase58(),
+      bondTokenVault: bondTokenVault.toBase58(),
+      issuer: wallet.publicKey.toBase58(),
+    });
+    console.log('issueBond params:', {
+      name: params.name,
+      symbol: params.symbol,
+      faceValue: params.faceValue,
+      couponRateBps: params.couponRateBps,
+      maturityTimestamp: params.maturityTimestamp,
+      maxSupply: params.maxSupply,
+    });
 
     const tx = await program.methods
       .issueBond({

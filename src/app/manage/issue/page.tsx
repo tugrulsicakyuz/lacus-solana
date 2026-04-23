@@ -122,7 +122,16 @@ export default function IssueBondPage() {
       setLoanAgreementUrl('');
       setMaturityDate('');
     } catch (err: any) {
-      toast.error('Failed to issue bond', { description: err.message });
+      console.error('issueBond full error:', err);
+      console.error('issueBond error type:', typeof err);
+      console.error('issueBond error keys:', err ? Object.keys(err) : 'null');
+      const description =
+        err?.message ||
+        err?.logs?.join(' | ') ||
+        err?.toString?.() ||
+        JSON.stringify(err) ||
+        'Unknown error';
+      toast.error('Failed to issue bond', { description });
     } finally {
       setIsLoading(false);
     }
