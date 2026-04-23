@@ -45,11 +45,6 @@ export default function IssueBondPage() {
       return;
     }
 
-    if (!loanAgreementUrl || loanAgreementUrl.trim() === '') {
-      toast.error('Loan agreement URL is required');
-      return;
-    }
-
     // Validation: Supply limits
     const MIN_SUPPLY = 100;
     const MAX_SUPPLY = 1_000_000;
@@ -92,10 +87,10 @@ export default function IssueBondPage() {
 
     setIsLoading(true);
     try {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(loanAgreementUrl);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data as BufferSource);
-      const hashArray = new Uint8Array(hashBuffer);
+      const hashSource = loanAgreementUrl.trim() || 'lacus-bond';
+      const msgBuffer = new TextEncoder().encode(hashSource);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer as BufferSource);
+      const loanAgreementHash = new Uint8Array(hashBuffer);
 
       const result = await issueBond({
         name: bondName,
@@ -104,7 +99,7 @@ export default function IssueBondPage() {
         couponRateBps: couponRateBps,
         maturityTimestamp: maturityTimestamp,
         maxSupply: maxSupply,
-        loanAgreementHash: hashArray,
+        loanAgreementHash: loanAgreementHash,
       });
 
       toast.success('Bond issued on Solana!', {
@@ -267,7 +262,7 @@ export default function IssueBondPage() {
               <div>
                 <label className="flex items-center gap-2 text-[13px] font-medium text-[var(--ink3)] mb-2">
                   <FileText className="w-3.5 h-3.5" />
-                  Loan Agreement URL
+                  Loan Agreement URL (optional)
                 </label>
                 <input
                   type="text"

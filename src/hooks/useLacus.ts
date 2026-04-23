@@ -1,6 +1,6 @@
 'use client';
-import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
+import { useAnchorWallet, useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 import { BN } from '@coral-xyz/anchor';
 import { useCallback, useState, useMemo } from 'react';
@@ -10,9 +10,19 @@ import type { BondState, FactoryState } from '@/types/lacus';
 export function useLacusProgram() {
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
+  const { sendTransaction } = useWallet();
   const [error, setError] = useState<string | null>(null);
 
   const program = useMemo(() => wallet ? getLacusProgram(wallet) : null, [wallet]);
+
+  const sendAndConfirm = useCallback(async (tx: Transaction) => {
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = wallet!.publicKey;
+    const sig = await sendTransaction(tx, connection);
+    await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
+    return sig;
+  }, [connection, sendTransaction, wallet]);
 
   const fetchAllBonds = useCallback(async () => {
     if (!program) {
@@ -160,10 +170,11 @@ export function useLacusProgram() {
       .accounts({
         issuer: wallet.publicKey,
       })
-      .rpc();
+      .transaction();
 
-    return { tx, bondId };
-  }, [program, wallet]);
+    const sig = await sendAndConfirm(tx);
+    return { tx: sig, bondId };
+  }, [program, wallet, sendAndConfirm]);
 
   const buyBond = useCallback(async (bondId: number, amount: number) => {
     if (!program || !wallet) throw new Error('Wallet not connected');
@@ -188,10 +199,11 @@ export function useLacusProgram() {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
-      .rpc();
+      .transaction();
 
-    return tx;
-  }, [program, wallet]);
+    const sig = await sendAndConfirm(tx);
+    return sig;
+  }, [program, wallet, sendAndConfirm]);
 
   const depositYield = useCallback(async (bondId: number, amountLamports: number) => {
     if (!program || !wallet) throw new Error('Wallet not connected');
@@ -205,10 +217,11 @@ export function useLacusProgram() {
         issuer: wallet.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .rpc();
+      .transaction();
 
-    return tx;
-  }, [program, wallet]);
+    const sig = await sendAndConfirm(tx);
+    return sig;
+  }, [program, wallet, sendAndConfirm]);
 
   return { program, fetchAllBonds, fetchMyBonds, fetchBond, issueBond, buyBond, depositYield, error };
 }

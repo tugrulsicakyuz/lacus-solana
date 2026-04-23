@@ -1,5 +1,5 @@
 'use client';
-import { Program, AnchorProvider, web3, BN } from '@coral-xyz/anchor';
+import { Program, AnchorProvider, web3, BN, setProvider } from '@coral-xyz/anchor';
 import { AnchorWallet } from '@solana/wallet-adapter-react';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { LACUS_PROGRAM_ID, SOLANA_RPC } from '@/config/solana';
@@ -10,6 +10,7 @@ export function getLacusProgram(wallet: AnchorWallet) {
   const provider = new AnchorProvider(connection, wallet, {
     commitment: 'confirmed',
   });
+  setProvider(provider);
   return new Program(IDL as any, provider);
 }
 
