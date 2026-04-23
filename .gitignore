@@ -42,3 +42,4 @@ out/
 target/
 programs/lacus/target/
 .anchor/
+.DS_Store
