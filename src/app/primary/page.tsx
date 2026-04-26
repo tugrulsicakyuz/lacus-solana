@@ -270,7 +270,7 @@ function PrimaryPageContent() {
             <span className="italic grad-ink-interactive cursor-pointer"> directly.</span>
           </h1>
           <p className="mt-4 text-[var(--ink3)] text-[0.95rem] leading-[1.65] max-w-[46ch] reveal reveal-d2">
-            Purchase tokenized bonds at issuance — USDC in, yield-bearing tokens out.
+            Purchase tokenized bonds at issuance — SOL in, yield-bearing tokens out.
           </p>
         </div>
       </section>
@@ -500,20 +500,26 @@ function PrimaryPageContent() {
                     ))}
                   </div>
 
-                  <button
-                    onClick={handleBuy}
-                    disabled={!payAmount || payAmount === "0" || isProcessing || !selectedBond}
-                    className="w-full btn-primary py-3.5 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {isProcessing ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Processing...
-                      </span>
-                    ) : (
-                      "Buy Bonds"
-                    )}
-                  </button>
+                  {selectedBond && selectedBond.tokensSold >= selectedBond.maxSupply ? (
+                    <div className="w-full text-center text-sm font-semibold text-slate-400 bg-slate-800 border border-slate-700 rounded-xl py-3.5 cursor-not-allowed">
+                      Sold Out
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleBuy}
+                      disabled={!payAmount || payAmount === "0" || isProcessing || !selectedBond}
+                      className="w-full btn-primary py-3.5 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {isProcessing ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Processing...
+                        </span>
+                      ) : (
+                        "Buy Bonds"
+                      )}
+                    </button>
+                  )}
                 </>
               )}
             </div>

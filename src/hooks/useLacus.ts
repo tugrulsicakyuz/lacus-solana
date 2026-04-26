@@ -124,23 +124,38 @@ export function useLacusProgram() {
           );
         });
 
-      // Check token balances in parallel
+      // Check token balances and investor positions in parallel
       const balanceChecks = validBonds.map(async ({ bond, bondStatePDA }: { bond: BondState; bondStatePDA: PublicKey }) => {
         try {
           const [bondMintPDA] = getBondMintPDA(bondStatePDA);
           const ata = await getAssociatedTokenAddress(bondMintPDA, wallet.publicKey);
           const balance = await connection.getTokenAccountBalance(ata);
           const amount = Number(balance.value.amount);
-          return { bond, balance: amount };
+
+          // Fetch investor position to get lastYieldSnapshot for claimable yield check
+          let lastYieldSnapshot = 0;
+          if (amount > 0) {
+            try {
+              const [investorPositionPDA] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const position = await (program!.account as any).investorPosition.fetch(investorPositionPDA);
+              lastYieldSnapshot = Number(position.lastYieldSnapshot);
+            } catch {
+              // Position account not created yet — snapshot is 0, yield may be claimable
+              lastYieldSnapshot = 0;
+            }
+          }
+
+          return { bond, balance: amount, lastYieldSnapshot };
         } catch {
           // ATA doesn't exist or other error - user doesn't hold this bond
-          return { bond, balance: 0 };
+          return { bond, balance: 0, lastYieldSnapshot: 0 };
         }
       });
 
       const results = await Promise.allSettled(balanceChecks);
       const holdings = results
-        .filter((r): r is PromiseFulfilledResult<{ bond: BondState; balance: number }> => 
+        .filter((r): r is PromiseFulfilledResult<{ bond: BondState; balance: number; lastYieldSnapshot: number }> =>
           r.status === 'fulfilled' && r.value.balance > 0
         )
         .map(r => r.value);

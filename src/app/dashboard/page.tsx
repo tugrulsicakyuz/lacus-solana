@@ -11,7 +11,7 @@ import { Loader2 } from 'lucide-react';
 export default function Dashboard() {
   const { connected, publicKey } = useWallet();
   const { program, fetchPortfolioBonds, fetchMyBonds, claimYield, redeemBond, depositYield } = useLacusProgram();
-  const [holdings, setHoldings] = useState<{ bond: BondState; balance: number }[]>([]);
+  const [holdings, setHoldings] = useState<{ bond: BondState; balance: number; lastYieldSnapshot: number }[]>([]);
   const [issuedBonds, setIssuedBonds] = useState<BondState[]>([]);
   const [loading, setLoading] = useState(false);
   const [processingClaim, setProcessingClaim] = useState<number | null>(null);
@@ -171,7 +171,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {holdings.map(({ bond, balance }, index) => {
+                  {holdings.map(({ bond, balance, lastYieldSnapshot }, index) => {
                     const faceValueSOL = Number(bond.faceValue) / 1e9;
                     const totalValueSOL = faceValueSOL * balance;
                     const couponRate = (bond.couponRateBps / 100).toFixed(2);
@@ -179,6 +179,9 @@ export default function Dashboard() {
                     const bondId = Number(bond.bondId);
                     const now = Math.floor(Date.now() / 1000);
                     const isMatured = bond.isMatured || Number(bond.maturityTimestamp) <= now;
+                    const totalYieldDeposited = Number(bond.totalYieldDeposited);
+                    const hasClaimableYield = totalYieldDeposited > lastYieldSnapshot;
+                    const hasPrincipal = bond.principalDeposited;
 
                     return (
                       <div 
@@ -220,26 +223,34 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        <div className="flex gap-2 pt-3 border-t border-slate-800">
+                        <div className="flex flex-col gap-2 pt-3 border-t border-slate-800">
+                          {/* Claim Yield */}
                           <button
                             onClick={() => handleClaimYield(bondId)}
-                            disabled={processingClaim === bondId}
-                            className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                            disabled={processingClaim === bondId || !hasClaimableYield}
+                            title={!hasClaimableYield ? (totalYieldDeposited === 0 ? 'No yield has been deposited yet' : 'No new yield since your last claim') : undefined}
+                            className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-2"
                           >
                             {processingClaim === bondId ? (
                               <>
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 <span>Claiming...</span>
                               </>
-                            ) : (
+                            ) : hasClaimableYield ? (
                               'Claim Yield'
+                            ) : totalYieldDeposited === 0 ? (
+                              'No Yield Yet'
+                            ) : (
+                              'Yield Up to Date'
                             )}
                           </button>
-                          {isMatured && (
+
+                          {/* Redeem Bond — matured states */}
+                          {isMatured && hasPrincipal && (
                             <button
                               onClick={() => handleRedeemBond(bondId)}
                               disabled={processingRedeem === bondId}
-                              className="flex-1 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                              className="w-full bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-2"
                             >
                               {processingRedeem === bondId ? (
                                 <>
@@ -250,6 +261,11 @@ export default function Dashboard() {
                                 'Redeem Bond'
                               )}
                             </button>
+                          )}
+                          {isMatured && !hasPrincipal && (
+                            <div className="w-full text-center text-xs text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-lg py-2 px-3">
+                              ⏳ Awaiting principal deposit from issuer
+                            </div>
                           )}
                         </div>
                       </div>
