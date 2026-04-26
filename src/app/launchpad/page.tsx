@@ -32,10 +32,6 @@ interface Bond {
   logo_url?: string;
 }
 
-function fmtCurrency(n: number): string {
-  return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
-}
-
 function timestampToMonths(timestamp: number): number {
   const now = Math.floor(Date.now() / 1000);
   const diffSeconds = timestamp - now;
@@ -323,7 +319,7 @@ export default function LaunchpadPage() {
                   color: "var(--lilac)",
                 }}
               >
-                {fmtCurrency(totalVolume)} vol.
+                {totalVolume.toFixed(2)} SOL vol.
               </div>
             </div>
           </div>
@@ -464,7 +460,7 @@ export default function LaunchpadPage() {
                     </div>
                     <div className="flex-1">
                       <div className="text-[11px] text-[var(--ink3)] mb-1">Price</div>
-                      <div className="text-sm text-[var(--ink2)] font-medium font-mono">{fmtCurrency(bond.price_per_token)}</div>
+                      <div className="text-sm text-[var(--ink2)] font-medium font-mono">{bond.price_per_token.toFixed(4)} SOL</div>
                     </div>
                   </div>
                 </div>

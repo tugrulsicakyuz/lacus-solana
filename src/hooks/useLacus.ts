@@ -4,7 +4,7 @@ import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 import { BN } from '@coral-xyz/anchor';
 import { useCallback, useState, useMemo } from 'react';
-import { getLacusProgram, getFactoryStatePDA, getBondStatePDA, getBondMintPDA } from '@/lib/lacus-program';
+import { getLacusProgram, getFactoryStatePDA, getBondStatePDA, getBondMintPDA, getInvestorPositionPDA } from '@/lib/lacus-program';
 import type { BondState, FactoryState } from '@/types/lacus';
 
 export function useLacusProgram() {
@@ -314,5 +314,52 @@ export function useLacusProgram() {
     return sig;
   }, [program, wallet, sendAndConfirm]);
 
-  return { program, fetchAllBonds, fetchMyBonds, fetchPortfolioBonds, fetchBond, issueBond, buyBond, depositYield, error };
+  const claimYield = useCallback(async (bondId: number) => {
+    if (!program || !wallet) throw new Error('Wallet not connected');
+
+    const [bondStatePDA] = getBondStatePDA(bondId);
+    const [investorPositionPDA] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
+    const [bondMintPDA] = getBondMintPDA(bondStatePDA);
+    const investorBondAta = await getAssociatedTokenAddress(bondMintPDA, wallet.publicKey);
+
+    const tx = await program.methods
+      .claimYield()
+      .accounts({
+        bondState: bondStatePDA,
+        investorPosition: investorPositionPDA,
+        investor: wallet.publicKey,
+        investorBondAta,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .transaction();
+
+    const sig = await sendAndConfirm(tx);
+    return sig;
+  }, [program, wallet, sendAndConfirm]);
+
+  const redeemBond = useCallback(async (bondId: number) => {
+    if (!program || !wallet) throw new Error('Wallet not connected');
+
+    const [bondStatePDA] = getBondStatePDA(bondId);
+    const [bondMintPDA] = getBondMintPDA(bondStatePDA);
+    const investorBondAta = await getAssociatedTokenAddress(bondMintPDA, wallet.publicKey);
+
+    const tx = await program.methods
+      .redeemBond()
+      .accounts({
+        bondState: bondStatePDA,
+        investor: wallet.publicKey,
+        investorBondAta,
+        bondMint: bondMintPDA,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .transaction();
+
+    const sig = await sendAndConfirm(tx);
+    return sig;
+  }, [program, wallet, sendAndConfirm]);
+
+  return { program, fetchAllBonds, fetchMyBonds, fetchPortfolioBonds, fetchBond, issueBond, buyBond, depositYield, claimYield, redeemBond, error };
 }

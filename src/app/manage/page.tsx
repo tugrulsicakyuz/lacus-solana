@@ -15,10 +15,6 @@ interface Bond {
   bondId?: number; issuer?: string; source?: 'onchain' | 'supabase';
 }
 
-function fmtCurrency(n: number): string {
-  return n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
-}
-
 export default function ManagePage() {
   const { connected } = useWallet();
   const { fetchMyBonds, depositYield } = useLacusProgram();
@@ -55,9 +51,9 @@ export default function ManagePage() {
             // Try to find matching Supabase metadata
             const supabaseMeta = supabaseData?.find((s: { id: number }) => s.id === bondId);
             
-            const faceValueUSDC = Number(bond.faceValue) / 1_000_000;
+            const faceValueSOL = Number(bond.faceValue) / 1_000_000_000;
             const maxSupplyNum = Number(bond.maxSupply);
-            const totalRaise = faceValueUSDC * maxSupplyNum;
+            const totalRaise = faceValueSOL * maxSupplyNum;
             
             // Calculate maturity in months
             const now = Math.floor(Date.now() / 1000);
@@ -71,7 +67,7 @@ export default function ManagePage() {
               issuer_name: supabaseMeta?.issuer_name || bond.issuer.toString().slice(0, 8) + '...',
               symbol: bond.symbol || supabaseMeta?.symbol || `BOND-${bondId}`,
               apy: bond.couponRateBps / 100,
-              price_per_token: faceValueUSDC,
+              price_per_token: faceValueSOL,
               maturity_months: maturityMonths,
               total_issue_size: totalRaise,
               contract_address: bond.issuer.toString(),
@@ -207,13 +203,13 @@ export default function ManagePage() {
                       <p className="font-semibold text-sm text-[var(--aqua)]">{bond.apy}%</p>
                     </td>
                     <td className="px-6 py-5">
-                      <p className="font-semibold text-sm text-[var(--ink)]">{fmtCurrency(bond.price_per_token)}</p>
+                      <p className="font-semibold text-sm text-[var(--ink)]">{bond.price_per_token.toFixed(4)} SOL</p>
                     </td>
                     <td className="px-6 py-5">
                       <p className="text-sm text-[var(--ink3)]">{bond.maturity_months} months</p>
                     </td>
                     <td className="px-6 py-5">
-                      <p className="text-sm text-[var(--ink)]">{fmtCurrency(bond.total_issue_size)}</p>
+                      <p className="text-sm text-[var(--ink)]">{bond.total_issue_size.toFixed(4)} SOL</p>
                     </td>
                     <td className="px-6 py-5">
                       {bond.source === 'onchain' ? (

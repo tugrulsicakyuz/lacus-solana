@@ -12,6 +12,7 @@ import { useLacusProgram } from "@/hooks/useLacus";
 interface OnChainBond {
   bondId: number;
   issuer: string;
+  name: string;
   faceValue: number;
   couponRateBps: number;
   maturityTimestamp: number;
@@ -122,6 +123,7 @@ function PrimaryPageContent() {
           const meta = metadata?.find((m) => m.id === bond.bondId) || metadata?.[index];
           return {
             ...bond,
+            name: bond.name || meta?.issuer_name || 'Unknown Bond',
             symbol: meta?.symbol || `BOND-${bond.bondId}`,
             issuerName: meta?.issuer_name || `${bond.issuer.toString().slice(0, 6)}...${bond.issuer.toString().slice(-4)}`,
             description: meta?.description,
@@ -293,7 +295,7 @@ function PrimaryPageContent() {
                     onClick={() => setPairDropdownOpen(!pairDropdownOpen)}
                     className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium bg-[var(--surface)] border border-[var(--rule)] text-[var(--ink)] hover:border-[var(--lilac)] transition-colors"
                   >
-                    {selectedBond ? `${selectedBond.issuerName} (${selectedBond.symbol}) / SOL` : "Select a bond"}
+                    {selectedBond ? `${selectedBond.name || selectedBond.issuerName} (${selectedBond.symbol}) / SOL` : "Select a bond"}
                     <ChevronDown
                       className={`ml-2 h-4 w-4 text-[var(--ink3)] transition-transform duration-200 ${
                         pairDropdownOpen ? "rotate-180" : ""
@@ -317,7 +319,7 @@ function PrimaryPageContent() {
                             }`}
                           >
                             <span className="font-medium font-mono">{bond.symbol}</span>
-                            <span className="text-[var(--ink3)]"> — {bond.issuerName}</span>
+                            <span className="text-[var(--ink3)]"> — {bond.name || bond.issuerName}</span>
                           </button>
                         ))}
                       </div>
@@ -357,8 +359,9 @@ function PrimaryPageContent() {
                 {/* Bond info card */}
                 {selectedBond && (
                   <div className="card-luminous rounded-xl p-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-sm font-semibold text-[var(--ink)]">{selectedBond.issuerName}</h2>
+                    <div className="space-y-1">
+                      <h2 className="text-lg font-semibold text-[var(--ink)]">{selectedBond.name}</h2>
+                      <p className="text-xs text-[var(--ink3)]">{selectedBond.issuerName}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                       {marketStats.map((stat) => (

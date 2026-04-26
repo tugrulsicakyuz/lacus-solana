@@ -3,33 +3,53 @@ import Link from 'next/link';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useLacusProgram } from '@/hooks/useLacus';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import type { BondState } from '@/types/lacus';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
   const { connected, publicKey } = useWallet();
-  const { fetchPortfolioBonds, fetchMyBonds } = useLacusProgram();
+  const { program, fetchPortfolioBonds, fetchMyBonds, claimYield, redeemBond, depositYield } = useLacusProgram();
   const [holdings, setHoldings] = useState<{ bond: BondState; balance: number }[]>([]);
   const [issuedBonds, setIssuedBonds] = useState<BondState[]>([]);
   const [loading, setLoading] = useState(false);
+  const [processingClaim, setProcessingClaim] = useState<number | null>(null);
+  const [processingRedeem, setProcessingRedeem] = useState<number | null>(null);
+  const [processingDeposit, setProcessingDeposit] = useState<number | null>(null);
+  const [yieldAmounts, setYieldAmounts] = useState<Record<number, string>>({});
 
-  useEffect(() => {
-    if (connected && publicKey) {
-      setLoading(true);
-      Promise.all([
+  const fetchData = async () => {
+    if (!program || !connected || !publicKey) {
+      setHoldings([]);
+      setIssuedBonds([]);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const [portfolioData, issuedData] = await Promise.all([
         fetchPortfolioBonds(),
         fetchMyBonds(),
-      ]).then(([portfolioData, issuedData]) => {
-        setHoldings(portfolioData);
-        setIssuedBonds(issuedData);
-      }).finally(() => {
-        setLoading(false);
-      });
+      ]);
+      setHoldings(portfolioData);
+      setIssuedBonds(issuedData);
+    } catch (error) {
+      console.error('Failed to fetch portfolio data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (program && connected && publicKey) {
+      fetchData();
     } else {
       setHoldings([]);
       setIssuedBonds([]);
     }
-  }, [connected, publicKey, fetchPortfolioBonds, fetchMyBonds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [program, connected, publicKey]);
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString('en-US', {
@@ -41,6 +61,64 @@ export default function Dashboard() {
 
   const formatSOL = (lamports: number) => {
     return (lamports / 1e9).toFixed(4);
+  };
+
+  const handleClaimYield = async (bondId: number) => {
+    setProcessingClaim(bondId);
+    try {
+      await claimYield(bondId);
+      toast.success('Yield claimed!');
+      await fetchData();
+    } catch (error: any) {
+      console.error('Claim yield failed:', error);
+      toast.error('Failed to claim yield', {
+        description: error?.message || 'Unknown error',
+      });
+    } finally {
+      setProcessingClaim(null);
+    }
+  };
+
+  const handleRedeemBond = async (bondId: number) => {
+    setProcessingRedeem(bondId);
+    try {
+      await redeemBond(bondId);
+      toast.success('Bond redeemed! Principal returned.');
+      await fetchData();
+    } catch (error: any) {
+      console.error('Redeem bond failed:', error);
+      toast.error('Failed to redeem bond', {
+        description: error?.message || 'Unknown error',
+      });
+    } finally {
+      setProcessingRedeem(null);
+    }
+  };
+
+  const handleDepositYield = async (bondId: number) => {
+    const amount = parseFloat(yieldAmounts[bondId] || '0');
+    if (!amount || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    setProcessingDeposit(bondId);
+    try {
+      const amountInLamports = Math.floor(amount * 1_000_000_000);
+      await depositYield(bondId, amountInLamports);
+      toast.success('Yield deposited successfully!', {
+        description: `Deposited ${amount} SOL`,
+      });
+      setYieldAmounts(prev => ({ ...prev, [bondId]: '' }));
+      await fetchData();
+    } catch (error: any) {
+      console.error('Deposit yield failed:', error);
+      toast.error('Failed to deposit yield', {
+        description: error?.message || 'Unknown error',
+      });
+    } finally {
+      setProcessingDeposit(null);
+    }
   };
 
   if (!connected) {
@@ -98,6 +176,9 @@ export default function Dashboard() {
                     const totalValueSOL = faceValueSOL * balance;
                     const couponRate = (bond.couponRateBps / 100).toFixed(2);
                     const isIssuer = bond.issuer.toString() === publicKey?.toString();
+                    const bondId = Number(bond.bondId);
+                    const now = Math.floor(Date.now() / 1000);
+                    const isMatured = bond.isMatured || Number(bond.maturityTimestamp) <= now;
 
                     return (
                       <div 
@@ -138,6 +219,39 @@ export default function Dashboard() {
                             <span className="text-sm font-medium">{formatDate(Number(bond.maturityTimestamp))}</span>
                           </div>
                         </div>
+
+                        <div className="flex gap-2 pt-3 border-t border-slate-800">
+                          <button
+                            onClick={() => handleClaimYield(bondId)}
+                            disabled={processingClaim === bondId}
+                            className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            {processingClaim === bondId ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>Claiming...</span>
+                              </>
+                            ) : (
+                              'Claim Yield'
+                            )}
+                          </button>
+                          {isMatured && (
+                            <button
+                              onClick={() => handleRedeemBond(bondId)}
+                              disabled={processingRedeem === bondId}
+                              className="flex-1 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                            >
+                              {processingRedeem === bondId ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <span>Redeeming...</span>
+                                </>
+                              ) : (
+                                'Redeem Bond'
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -154,6 +268,7 @@ export default function Dashboard() {
                     const soldPercentage = Number(bond.maxSupply) > 0 
                       ? (Number(bond.tokensSold) / Number(bond.maxSupply)) * 100 
                       : 0;
+                    const bondId = Number(bond.bondId);
 
                     return (
                       <div 
@@ -165,7 +280,7 @@ export default function Dashboard() {
                           <p className="text-sm text-slate-400">{bond.symbol}</p>
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-3 mb-4">
                           <div>
                             <div className="flex justify-between items-center mb-2">
                               <span className="text-sm text-slate-400">Sales Progress</span>
@@ -189,6 +304,33 @@ export default function Dashboard() {
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-slate-400">Coupon Rate</span>
                             <span className="text-sm font-medium">{(bond.couponRateBps / 100).toFixed(2)}%</span>
+                          </div>
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-800">
+                          <p className="text-xs text-slate-400 mb-2">Deposit Yield Payment</p>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              placeholder="SOL amount"
+                              value={yieldAmounts[bondId] || ''}
+                              onChange={(e) => setYieldAmounts(prev => ({ ...prev, [bondId]: e.target.value }))}
+                              className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-blue-500 transition-colors"
+                            />
+                            <button
+                              onClick={() => handleDepositYield(bondId)}
+                              disabled={processingDeposit === bondId}
+                              className="bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                            >
+                              {processingDeposit === bondId ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <span>Paying...</span>
+                                </>
+                              ) : (
+                                'Pay Yield'
+                              )}
+                            </button>
                           </div>
                         </div>
                       </div>
