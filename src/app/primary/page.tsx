@@ -123,7 +123,7 @@ function PrimaryPageContent() {
           return {
             ...bond,
             symbol: meta?.symbol || `BOND-${bond.bondId}`,
-            issuerName: meta?.issuer_name || "Unknown Issuer",
+            issuerName: meta?.issuer_name || `${bond.issuer.toString().slice(0, 6)}...${bond.issuer.toString().slice(-4)}`,
             description: meta?.description,
           };
         });
@@ -171,8 +171,8 @@ function PrimaryPageContent() {
       return;
     }
 
-    const usdcAmount = parseFloat(payAmount);
-    if (!payAmount || isNaN(usdcAmount) || usdcAmount <= 0) {
+    const solAmount = parseFloat(payAmount);
+    if (!payAmount || isNaN(solAmount) || solAmount <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
@@ -182,25 +182,18 @@ function PrimaryPageContent() {
       return;
     }
 
-    const faceValueUSDC = selectedBond.faceValue / 1_000_000;
-    const bondTokenAmount = Math.floor((usdcAmount / faceValueUSDC) * 1_000_000) / 1_000_000;
+    const faceValueSol = selectedBond.faceValue / 1_000_000_000;
+    const bondTokensToMint = Math.floor(solAmount / faceValueSol);
 
-    if (bondTokenAmount === 0) {
-      toast.error("Amount too small");
-      return;
-    }
-
-    const bondTokensToMint = Math.floor(bondTokenAmount);
     if (bondTokensToMint === 0) {
-      toast.error("Amount too small to purchase even 1 token");
+      toast.error(`Amount too small. Minimum: ${faceValueSol} SOL per token`);
       return;
     }
 
-    const payNum = parseFloat(payAmount);
-    const totalCostLamports = payNum * 1_000_000_000;
+    const totalCostLamports = bondTokensToMint * selectedBond.faceValue;
     const solBalanceLamports = solBalance * 1_000_000_000;
     if (totalCostLamports > solBalanceLamports) {
-      toast.error(`Insufficient SOL. You have ${solBalance.toFixed(4)} SOL but need ${payNum.toFixed(4)} SOL.`);
+      toast.error(`Insufficient SOL. You have ${solBalance.toFixed(4)} SOL but need ${(totalCostLamports / 1_000_000_000).toFixed(4)} SOL.`);
       return;
     }
 
@@ -300,7 +293,7 @@ function PrimaryPageContent() {
                     onClick={() => setPairDropdownOpen(!pairDropdownOpen)}
                     className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium bg-[var(--surface)] border border-[var(--rule)] text-[var(--ink)] hover:border-[var(--lilac)] transition-colors"
                   >
-                    {selectedBond ? `${selectedBond.issuerName} (${selectedBond.symbol}) / USDC` : "Select a bond"}
+                    {selectedBond ? `${selectedBond.issuerName} (${selectedBond.symbol}) / SOL` : "Select a bond"}
                     <ChevronDown
                       className={`ml-2 h-4 w-4 text-[var(--ink3)] transition-transform duration-200 ${
                         pairDropdownOpen ? "rotate-180" : ""
