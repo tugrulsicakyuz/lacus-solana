@@ -98,6 +98,62 @@ export function useLacusProgram() {
     }
   }, [program, wallet]);
 
+  const fetchPortfolioBonds = useCallback(async () => {
+    if (!program || !wallet) {
+      setError('Wallet not connected');
+      return [];
+    }
+    
+    try {
+      setError(null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const allBonds = await (program.account as any).bondState.all();
+      const validBonds = allBonds
+        .map((b: { account: BondState; publicKey: PublicKey }) => ({
+          bond: b.account,
+          bondStatePDA: b.publicKey,
+        }))
+        .filter(({ bond }: { bond: BondState }) => {
+          // Filter out bonds with garbage deserialized data from old struct
+          return (
+            bond.name && bond.name.trim().length > 0 &&
+            bond.symbol && bond.symbol.trim().length > 0 &&
+            Number(bond.faceValue) > 0 &&
+            Number(bond.maxSupply) > 0 &&
+            Number(bond.maturityTimestamp) > 1700000000 // after Nov 2023
+          );
+        });
+
+      // Check token balances in parallel
+      const balanceChecks = validBonds.map(async ({ bond, bondStatePDA }: { bond: BondState; bondStatePDA: PublicKey }) => {
+        try {
+          const [bondMintPDA] = getBondMintPDA(bondStatePDA);
+          const ata = await getAssociatedTokenAddress(bondMintPDA, wallet.publicKey);
+          const balance = await connection.getTokenAccountBalance(ata);
+          const amount = Number(balance.value.amount);
+          return { bond, balance: amount };
+        } catch {
+          // ATA doesn't exist or other error - user doesn't hold this bond
+          return { bond, balance: 0 };
+        }
+      });
+
+      const results = await Promise.allSettled(balanceChecks);
+      const holdings = results
+        .filter((r): r is PromiseFulfilledResult<{ bond: BondState; balance: number }> => 
+          r.status === 'fulfilled' && r.value.balance > 0
+        )
+        .map(r => r.value);
+
+      return holdings;
+    } catch (e) {
+      console.error('fetchPortfolioBonds error:', e);
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+      setError(`Failed to fetch portfolio bonds: ${errorMessage}`);
+      return [];
+    }
+  }, [program, wallet, connection]);
+
   const fetchBond = useCallback(async (bondId: number) => {
     if (!program) {
       throw new Error('Wallet not connected');
@@ -258,5 +314,5 @@ export function useLacusProgram() {
     return sig;
   }, [program, wallet, sendAndConfirm]);
 
-  return { program, fetchAllBonds, fetchMyBonds, fetchBond, issueBond, buyBond, depositYield, error };
+  return { program, fetchAllBonds, fetchMyBonds, fetchPortfolioBonds, fetchBond, issueBond, buyBond, depositYield, error };
 }
