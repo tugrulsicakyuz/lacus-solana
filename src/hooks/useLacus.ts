@@ -4,7 +4,7 @@ import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 import { BN } from '@coral-xyz/anchor';
 import { useCallback, useState, useMemo } from 'react';
-import { getLacusProgram, getFactoryStatePDA, getBondStatePDA, getBondMintPDA, getInvestorPositionPDA } from '@/lib/lacus-program';
+import { getLacusProgram, getLacusProgramReadOnly, getFactoryStatePDA, getBondStatePDA, getBondMintPDA, getInvestorPositionPDA } from '@/lib/lacus-program';
 import type { BondState, FactoryState } from '@/types/lacus';
 
 export function useLacusProgram() {
@@ -35,15 +35,12 @@ export function useLacusProgram() {
   }, [connection, sendTransaction, wallet]);
 
   const fetchAllBonds = useCallback(async () => {
-    if (!program) {
-      setError('Wallet not connected');
-      return [];
-    }
-    
+    const readProgram = program ?? getLacusProgramReadOnly();
+
     try {
       setError(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const bonds = await (program.account as any).bondState.all();
+      const bonds = await (readProgram.account as any).bondState.all();
       const validBonds = bonds
         .map((b: { account: BondState }) => b.account)
         .filter((bond: BondState) => {

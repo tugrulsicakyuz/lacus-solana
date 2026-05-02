@@ -178,12 +178,6 @@ function PrimaryContent() {
       setLoading(true);
       setFetchError(null);
 
-      if (!connected) {
-        setLoading(false);
-        setFetchError("Please connect your wallet to view bonds.");
-        return;
-      }
-
       try {
         const onChainData = await fetchAllBonds();
 

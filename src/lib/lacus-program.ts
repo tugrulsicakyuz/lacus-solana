@@ -14,6 +14,17 @@ export function getLacusProgram(wallet: AnchorWallet) {
   return new Program(IDL as any, provider);
 }
 
+export function getLacusProgramReadOnly() {
+  const connection = new Connection(SOLANA_RPC, 'confirmed');
+  const dummyWallet = {
+    publicKey: web3.Keypair.generate().publicKey,
+    signTransaction: async (tx: any) => tx,
+    signAllTransactions: async (txs: any[]) => txs,
+  };
+  const provider = new AnchorProvider(connection, dummyWallet as AnchorWallet, { commitment: 'confirmed' });
+  return new Program(IDL as any, provider);
+}
+
 export function getFactoryStatePDA() {
   return PublicKey.findProgramAddressSync(
     [Buffer.from('factory')],
