@@ -160,26 +160,43 @@ function BondDetailContent() {
     return data.publicUrl;
   };
 
-  /* ── Loading ── */
   if (loading) {
     return (
-      <section className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[var(--lilac)] animate-spin" />
-      </section>
+      <div className="bd-root" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <style>{`
+          .bd-root {
+            --bd-aqua: #22d3ee;
+            min-height: 100vh;
+            background: #030d10;
+            font-family: 'DM Mono', monospace;
+          }
+        `}</style>
+        <Loader2 style={{ width: 32, height: 32, color: "#22d3ee", animation: "spin 1s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
     );
   }
 
-  /* ── Not found ── */
   if (notFound || !bond) {
     return (
-      <section className="min-h-screen flex flex-col items-center justify-center gap-4 pt-24">
-        <p className="font-display text-[var(--ink)] text-2xl">Bond Not Found</p>
-        <p className="text-sm text-[var(--ink3)]">No bond found with symbol &ldquo;{symbol}&rdquo;.</p>
-        <Link href="/launchpad" className="btn-primary flex items-center gap-2 mt-4 px-6 py-3">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Launchpad
-        </Link>
-      </section>
+      <>
+        <style>{`
+          .bd-root {
+            --bd-aqua: #22d3ee;
+            min-height: 100vh;
+            background: #030d10;
+            font-family: 'DM Mono', monospace;
+          }
+        `}</style>
+        <div className="bd-root" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, paddingTop: 96 }}>
+          <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 32, letterSpacing: "0.12em", color: "#f0e8d8" }}>Bond Not Found</p>
+          <p style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(240,232,216,0.4)" }}>No bond found with symbol &ldquo;{symbol}&rdquo;</p>
+          <Link href="/launchpad" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 16, padding: "10px 24px", border: "1px solid rgba(34,211,238,0.6)", color: "#22d3ee", textDecoration: "none", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase" }}>
+            <ArrowLeft style={{ width: 14, height: 14 }} />
+            Back to Markets
+          </Link>
+        </div>
+      </>
     );
   }
 
@@ -190,284 +207,495 @@ function BondDetailContent() {
 
   return (
     <>
-      {/* ── Hero Header ── */}
-      <section className="pt-24 pb-12">
-        <div className="max-w-[1280px] mx-auto px-8">
-          <Link
-            href="/launchpad"
-            className="inline-flex items-center gap-1.5 mb-6 text-[13px] text-[var(--ink3)] hover:text-[var(--ink)] transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Launchpad
+      <style>{`
+        .bd-root {
+          --bd-aqua: #22d3ee;
+          min-height: 100vh;
+          background: #030d10;
+          background-image: radial-gradient(ellipse 70% 50% at 50% 0%, oklch(0.14 0.09 200) 0%, #030d10 60%);
+          font-family: 'DM Mono', monospace;
+          color: #f0e8d8;
+          padding-top: 100px;
+          padding-bottom: 80px;
+        }
+        .bd-container {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 0 48px;
+        }
+        .bd-back {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 10px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: rgba(240,232,216,0.4);
+          text-decoration: none;
+          margin-bottom: 40px;
+          transition: color 0.2s;
+        }
+        .bd-back:hover { color: rgba(240,232,216,0.8); }
+        .bd-eyebrow {
+          font-size: 10px;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: var(--bd-aqua);
+          margin-bottom: 8px;
+        }
+        .bd-symbol {
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: clamp(56px, 8vw, 80px);
+          letter-spacing: 0.06em;
+          color: #f0e8d8;
+          line-height: 1;
+          margin: 0;
+        }
+        .bd-issuer {
+          font-size: 12px;
+          letter-spacing: 0.14em;
+          color: rgba(240,232,216,0.4);
+          margin-top: 8px;
+          text-transform: uppercase;
+        }
+        .bd-apy-val {
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: clamp(48px, 7vw, 68px);
+          letter-spacing: 0.06em;
+          color: var(--bd-aqua);
+          line-height: 1;
+        }
+        .bd-apy-label {
+          font-size: 10px;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: rgba(240,232,216,0.35);
+          margin-top: 4px;
+        }
+        .bd-header-row {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 32px;
+          flex-wrap: wrap;
+          margin-bottom: 56px;
+          padding-bottom: 40px;
+          border-bottom: 1px solid rgba(240,232,216,0.06);
+        }
+        .bd-actions {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .bd-btn-primary {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 24px;
+          border: 1px solid rgba(34,211,238,0.7);
+          color: #f0e8d8;
+          text-decoration: none;
+          font-size: 10px;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          position: relative;
+          overflow: hidden;
+          cursor: pointer;
+          transition: color 0.3s;
+          font-family: 'DM Mono', monospace;
+        }
+        .bd-btn-primary::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: #22d3ee;
+          transform: translateY(100%);
+          transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+        }
+        .bd-btn-primary:hover { color: #030d10; }
+        .bd-btn-primary:hover::before { transform: translateY(0); }
+        .bd-btn-primary span { position: relative; z-index: 1; }
+        .bd-btn-ghost {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 22px;
+          border: 1px solid rgba(240,232,216,0.15);
+          color: rgba(240,232,216,0.5);
+          text-decoration: none;
+          font-size: 10px;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: color 0.2s, border-color 0.2s;
+          font-family: 'DM Mono', monospace;
+          background: none;
+        }
+        .bd-btn-ghost:hover { color: #f0e8d8; border-color: rgba(240,232,216,0.35); }
+        .bd-metrics-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+        @media (max-width: 640px) { .bd-metrics-grid { grid-template-columns: 1fr; } }
+        .bd-card {
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(240,232,216,0.06);
+          padding: 24px;
+        }
+        .bd-card-label {
+          font-size: 9px;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: rgba(240,232,216,0.35);
+          margin-bottom: 10px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .bd-card-value {
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 28px;
+          letter-spacing: 0.06em;
+          color: #f0e8d8;
+        }
+        .bd-section-title {
+          font-size: 9px;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: rgba(240,232,216,0.35);
+          margin-bottom: 20px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid rgba(240,232,216,0.06);
+        }
+        .bd-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 0;
+          border-bottom: 1px solid rgba(240,232,216,0.05);
+          font-size: 12px;
+        }
+        .bd-row:last-child { border-bottom: none; }
+        .bd-row-label { color: rgba(240,232,216,0.4); letter-spacing: 0.12em; text-transform: uppercase; font-size: 10px; }
+        .bd-row-value { color: #f0e8d8; }
+        .bd-fill-bar-track {
+          width: 100%;
+          height: 3px;
+          background: rgba(240,232,216,0.06);
+          margin-top: 16px;
+          overflow: hidden;
+        }
+        .bd-fill-bar-fill {
+          height: 100%;
+          background: var(--bd-aqua);
+          transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
+        }
+        .bd-two-col {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+        @media (max-width: 768px) { .bd-two-col { grid-template-columns: 1fr; } }
+        .bd-holding-card {
+          background: rgba(34,211,238,0.04);
+          border: 1px solid rgba(34,211,238,0.12);
+          padding: 28px;
+          margin-bottom: 24px;
+        }
+        .bd-holding-title {
+          font-size: 9px;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: var(--bd-aqua);
+          margin-bottom: 20px;
+        }
+        .bd-holding-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+        }
+        @media (max-width: 640px) { .bd-holding-grid { grid-template-columns: 1fr; } }
+        .bd-holding-val {
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 26px;
+          letter-spacing: 0.05em;
+          color: var(--bd-aqua);
+        }
+        .bd-sold-out {
+          display: inline-block;
+          padding: 3px 10px;
+          border: 1px solid rgba(240,232,216,0.2);
+          font-size: 9px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: rgba(240,232,216,0.4);
+          margin-left: 16px;
+          vertical-align: middle;
+        }
+        .bd-contract-link {
+          font-size: 11px;
+          color: var(--bd-aqua);
+          text-decoration: none;
+          word-break: break-all;
+          transition: opacity 0.2s;
+        }
+        .bd-contract-link:hover { opacity: 0.7; }
+        .bd-doc-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 0;
+          border-bottom: 1px solid rgba(240,232,216,0.05);
+          text-decoration: none;
+          transition: background 0.2s;
+        }
+        .bd-doc-row:last-child { border-bottom: none; }
+        .bd-doc-name { font-size: 12px; color: #f0e8d8; margin-bottom: 2px; }
+        .bd-doc-sub { font-size: 10px; color: rgba(240,232,216,0.35); }
+        .bd-disclaimer {
+          font-size: 10px;
+          color: rgba(240,232,216,0.25);
+          margin-top: 16px;
+          line-height: 1.7;
+          letter-spacing: 0.08em;
+        }
+        .bd-no-wallet {
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(240,232,216,0.06);
+          padding: 18px 24px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 11px;
+          color: rgba(240,232,216,0.35);
+          margin-bottom: 24px;
+          letter-spacing: 0.1em;
+        }
+        .bd-rule { width: 32px; height: 1px; background: linear-gradient(90deg, rgba(34,211,238,0.5), transparent); margin-bottom: 16px; }
+      `}</style>
+
+      <div className="bd-root">
+        <div className="bd-container">
+
+          {/* Back */}
+          <Link href="/launchpad" className="bd-back">
+            <ArrowLeft style={{ width: 12, height: 12 }} />
+            Back to Markets
           </Link>
 
-          <div className="flex flex-wrap items-start justify-between gap-8">
+          {/* Header */}
+          <div className="bd-header-row">
             <div>
-              <div className="flex items-center gap-4 flex-wrap mb-3">
-                <h1 className="font-display text-[var(--ink)] text-[3rem] leading-none tracking-tight">
-                  {bond.symbol}
-                </h1>
-                {bond.filled_percentage >= 100 && (
-                  <span className="px-4 py-1.5 rounded-full bg-[var(--surface)] border border-[var(--rule)] text-[var(--ink3)] text-[11px] font-mono uppercase tracking-widest">
-                    Sold Out
-                  </span>
-                )}
-              </div>
-              <p className="text-base text-[var(--ink3)] mt-1">{bond.issuer_name}</p>
-              
-              {/* APY Hero Metric */}
-              <div className="mt-6 inline-flex items-baseline gap-2">
-                <div className="font-display text-[var(--aqua-bright)] text-[3.5rem] leading-none">
-                  {bond.apy}%
-                </div>
-                <div className="text-sm text-[var(--ink3)] uppercase tracking-widest">APY</div>
-              </div>
+              <p className="bd-eyebrow">Bond Detail</p>
+              <div className="bd-rule" />
+              <h1 className="bd-symbol">
+                {bond.symbol}
+                {bond.filled_percentage >= 100 && <span className="bd-sold-out">Sold Out</span>}
+              </h1>
+              <p className="bd-issuer">{bond.issuer_name}</p>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 flex-wrap">
-              <Link
-                href={`/primary?bond=${bond.symbol}`}
-                className="btn-primary flex items-center gap-2 px-8 py-3.5"
-              >
-                <DollarSign className="w-4 h-4" />
-                Buy Bonds
-              </Link>
-              <Link
-                href={`/secondary?bond=${bond.symbol}`}
-                className="btn-ghost flex items-center gap-2 px-8 py-3.5"
-              >
-                <BarChart3 className="w-4 h-4" />
-                Secondary
-              </Link>
-              {bond.contract_address && (
-                <a
-                  href={`https://explorer.solana.com/address/${bond.contract_address}?cluster=devnet`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-ghost flex items-center gap-2 px-6 py-3.5 text-[13px]"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Contract
-                </a>
-              )}
+            <div style={{ textAlign: "right" }}>
+              <div className="bd-apy-val">{bond.apy}%</div>
+              <div className="bd-apy-label">Annual Percentage Yield</div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ── Main content ── */}
-      <section className="pb-20">
-        <div className="max-w-[1280px] mx-auto px-8">
+          {/* Action buttons */}
+          <div className="bd-actions" style={{ marginBottom: 40 }}>
+            <Link href={`/primary?bond=${bond.symbol}`} className="bd-btn-primary">
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <DollarSign style={{ width: 14, height: 14 }} />
+                Buy Bonds
+              </span>
+            </Link>
+            <Link href={`/secondary?bond=${bond.symbol}`} className="bd-btn-ghost">
+              <BarChart3 style={{ width: 14, height: 14 }} />
+              Secondary Market
+            </Link>
+            {bond.contract_address && (
+              <a
+                href={`https://explorer.solana.com/address/${bond.contract_address}?cluster=devnet`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bd-btn-ghost"
+              >
+                <ExternalLink style={{ width: 12, height: 12 }} />
+                View Contract
+              </a>
+            )}
+          </div>
 
-          {/* ── Key Metrics Grid ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+          {/* Key Metrics */}
+          <div className="bd-metrics-grid">
             {[
               { icon: DollarSign, label: "Price per Token", value: fmtCurrency(bond.price_per_token) },
               { icon: Calendar, label: "Maturity", value: maturityLabel(bond.maturity_months) },
               { icon: TrendingUp, label: "Total Issue", value: fmtCurrencyCompact(bond.total_issue_size) },
             ].map((s) => (
-              <div
-                key={s.label}
-                className="card-luminous rounded-xl p-6"
-              >
-                <div className="flex items-center gap-1.5 mb-3 eyebrow-dim">
-                  <s.icon className="w-3.5 h-3.5" />
+              <div key={s.label} className="bd-card">
+                <div className="bd-card-label">
+                  <s.icon style={{ width: 12, height: 12 }} />
                   {s.label}
                 </div>
-                <p className="text-2xl font-semibold text-[var(--ink)] font-mono">{s.value}</p>
+                <div className="bd-card-value">{s.value}</div>
               </div>
             ))}
           </div>
 
-          {/* ── Bond Details Section ── */}
-          <div className="card-luminous rounded-2xl p-8 mb-6">
-            <h2 className="text-base font-semibold text-[var(--ink)] mb-8 eyebrow">Bond Details</h2>
+          {/* Bond Details */}
+          <div className="bd-card" style={{ marginBottom: 16, padding: 28 }}>
+            <p className="bd-section-title">Bond Details</p>
+            {[
+              { label: "Issuer", value: bond.issuer_name },
+              { label: "Symbol", value: bond.symbol },
+              { label: "Total Supply", value: `${totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} tokens` },
+              { label: "Total Value", value: fmtCurrencyCompact(bond.total_issue_size) },
+              { label: "Remaining Supply", value: `${remainingTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} tokens` },
+              { label: "Network", value: "Solana Devnet" },
+            ].map((row) => (
+              <div key={row.label} className="bd-row">
+                <span className="bd-row-label">{row.label}</span>
+                <span className="bd-row-value">{row.value}</span>
+              </div>
+            ))}
 
-            <div>
+            {/* Fill progress */}
+            <div style={{ marginTop: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(240,232,216,0.35)" }}>Fill Rate</span>
+                <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.06em", color: "#22d3ee" }}>{bond.filled_percentage}%</span>
+              </div>
+              <div className="bd-fill-bar-track">
+                <div className="bd-fill-bar-fill" style={{ width: `${fillPct}%` }} />
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                <span style={{ fontSize: 10, color: "rgba(240,232,216,0.3)" }}>{soldTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} sold</span>
+                <span style={{ fontSize: 10, color: "rgba(240,232,216,0.3)" }}>{totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} total</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Market Data + Contract */}
+          <div className="bd-two-col">
+            <div className="bd-card" style={{ padding: 28 }}>
+              <p className="bd-section-title">Market Data</p>
               {[
-                { label: "Issuer", value: bond.issuer_name },
-                { label: "Symbol", value: bond.symbol },
-                { label: "Total Supply", value: `${totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} tokens` },
-                { label: "Total Value", value: fmtCurrencyCompact(bond.total_issue_size) },
-                { label: "Remaining Supply", value: `${remainingTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} tokens` },
-                { label: "Network", value: "Solana Devnet" },
-              ].map((row, idx, arr) => (
-                <div
-                  key={row.label}
-                  className="flex items-center justify-between py-5 border-b border-[var(--rule)] last:border-b-0 hover:bg-[var(--rule-soft)] transition-colors rounded px-2 -mx-2"
-                >
-                  <span className="text-[13px] text-[var(--ink3)]">{row.label}</span>
-                  <span className="text-sm font-medium text-[var(--ink)] font-mono">{row.value}</span>
+                { icon: BarChart3, label: "24h Volume", value: marketData.volume24h > 0 ? fmtCurrencyCompact(marketData.volume24h) : "—" },
+                { icon: Droplets, label: "Total Liquidity", value: marketData.totalLiquidity > 0 ? fmtCurrencyCompact(marketData.totalLiquidity) : "—" },
+                { icon: Wallet, label: "Investors", value: marketData.holderCount > 0 ? `${marketData.holderCount} addresses` : "—" },
+              ].map((row) => (
+                <div key={row.label} className="bd-row">
+                  <span className="bd-row-label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <row.icon style={{ width: 11, height: 11 }} />
+                    {row.label}
+                  </span>
+                  <span className="bd-row-value">{row.value}</span>
                 </div>
               ))}
             </div>
 
-            {/* Fill progress */}
-            <div className="mt-8">
-              <div className="flex items-center justify-between mb-3">
-                <span className="eyebrow-dim">Fill Rate</span>
-                <span className="font-mono text-base font-semibold text-[var(--ink)]">{bond.filled_percentage}%</span>
-              </div>
-              <div className="w-full h-2 bg-[var(--shore)] rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${fillPct >= 80 ? 'bg-[var(--aqua)]' : 'bg-gradient-to-r from-[var(--aqua-soft)] to-[var(--lilac)]'}`}
-                  style={{ width: `${fillPct}%` }}
-                />
-              </div>
-              <div className="flex justify-between mt-2">
-                <span className="text-[11px] text-[var(--ink4)] font-mono">{soldTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} sold</span>
-                <span className="text-[11px] text-[var(--ink4)] font-mono">{totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} total</span>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Market Data Section ── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="card-luminous rounded-2xl p-6">
-              <h3 className="eyebrow-dim mb-4">Market Data</h3>
-              <div>
-                {[
-                  { icon: BarChart3, label: "24h Volume", value: marketData.volume24h > 0 ? fmtCurrencyCompact(marketData.volume24h) : "—" },
-                  { icon: Droplets, label: "Total Liquidity", value: marketData.totalLiquidity > 0 ? fmtCurrencyCompact(marketData.totalLiquidity) : "—" },
-                  { icon: Wallet, label: "Investors", value: marketData.holderCount > 0 ? `${marketData.holderCount} addresses` : "—" },
-                ].map((row, idx) => (
-                  <div
-                    key={row.label}
-                    className="flex items-center justify-between py-3 border-b border-[var(--rule)] last:border-b-0"
-                  >
-                    <span className="flex items-center gap-1.5 text-[13px] text-[var(--ink3)]">
-                      <row.icon className="w-3.5 h-3.5" />
-                      {row.label}
-                    </span>
-                    <span className="text-sm font-semibold text-[var(--ink)] font-mono">{row.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Contract address */}
-            {bond.contract_address ? (
-              <div className="card-luminous rounded-2xl p-6">
-                <p className="eyebrow-dim mb-3">Contract Address</p>
+            <div className="bd-card" style={{ padding: 28 }}>
+              <p className="bd-section-title">Contract Address</p>
+              {bond.contract_address ? (
                 <a
                   href={`https://explorer.solana.com/address/${bond.contract_address}?cluster=devnet`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-mono text-xs text-[var(--lilac)] hover:text-[var(--lilac-bright)] break-all transition-colors"
+                  className="bd-contract-link"
                 >
                   {bond.contract_address}
                 </a>
-              </div>
-            ) : (
-              <div className="card-luminous rounded-2xl p-6 border border-[var(--coral)]/20 bg-[var(--coral)]/5">
-                <p className="flex items-center gap-2 text-[12px] text-[var(--coral)]">
-                  <Info className="w-4 h-4 flex-shrink-0" />
+              ) : (
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 11, color: "rgba(251,113,133,0.8)", letterSpacing: "0.1em" }}>
+                  <Info style={{ width: 14, height: 14, flexShrink: 0, marginTop: 2 }} />
                   Contract address not yet assigned. This bond is pending deployment.
-                </p>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* ── User Holdings ── */}
+          {/* User Holdings */}
           {address && userHolding && userHolding.balance > 0 && (
-            <div className="card-luminous rounded-2xl p-8 mb-6 border border-[var(--lilac)]/15">
-              <h2 className="flex items-center gap-2 text-base font-semibold text-[var(--ink)] mb-6">
-                <Wallet className="w-5 h-5 text-[var(--lilac)]" />
-                Your Position
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="bd-holding-card">
+              <p className="bd-holding-title">Your Position</p>
+              <div className="bd-holding-grid">
                 <div>
-                  <p className="eyebrow-dim mb-2">Balance</p>
-                  <p className="text-2xl font-semibold text-[var(--lilac)] font-mono">
-                    {userHolding.balance.toLocaleString("en-US", { maximumFractionDigits: 4 })} {bond.symbol}
-                  </p>
+                  <div className="bd-card-label">Balance</div>
+                  <div className="bd-holding-val">{userHolding.balance.toLocaleString("en-US", { maximumFractionDigits: 4 })}</div>
+                  <div style={{ fontSize: 10, color: "rgba(240,232,216,0.35)", letterSpacing: "0.14em", textTransform: "uppercase", marginTop: 4 }}>{bond.symbol}</div>
                 </div>
                 <div>
-                  <p className="eyebrow-dim mb-2">Value</p>
-                  <p className="text-2xl font-semibold text-[var(--ink)] font-mono">
-                    {fmtCurrency(userHolding.balance * bond.price_per_token)}
-                  </p>
+                  <div className="bd-card-label">Value</div>
+                  <div className="bd-holding-val" style={{ color: "#f0e8d8" }}>{fmtCurrency(userHolding.balance * bond.price_per_token)}</div>
                 </div>
                 <div>
-                  <p className="eyebrow-dim mb-2">Accrued Yield</p>
-                  <p className="text-2xl font-semibold text-[var(--aqua-bright)] font-mono">
-                    {fmtCurrency(userHolding.unclaimed_yield ?? 0)}
-                  </p>
+                  <div className="bd-card-label">Accrued Yield</div>
+                  <div className="bd-holding-val">{fmtCurrency(userHolding.unclaimed_yield ?? 0)}</div>
                 </div>
               </div>
-              <div className="mt-6">
-                <Link
-                  href="/dashboard"
-                  className="text-sm text-[var(--lilac)] hover:text-[var(--lilac-bright)] transition-colors link-grad"
-                >
+              <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid rgba(34,211,238,0.1)" }}>
+                <Link href="/dashboard" style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "#22d3ee", textDecoration: "none" }}>
                   View in Portfolio →
                 </Link>
               </div>
             </div>
           )}
 
-          {/* ── No wallet notice ── */}
+          {/* No wallet */}
           {!address && (
-            <div className="card-luminous rounded-xl p-6 flex items-center gap-4 mb-6">
-              <Wallet className="w-5 h-5 text-[var(--ink4)] flex-shrink-0" />
-              <p className="text-sm text-[var(--ink3)]">
-                Connect your wallet to view your position in this bond.
+            <div className="bd-no-wallet">
+              <Wallet style={{ width: 14, height: 14, flexShrink: 0 }} />
+              Connect your wallet to view your position in this bond.
+            </div>
+          )}
+
+          {/* Documents */}
+          {documents.length > 0 && (
+            <div style={{ marginTop: 40 }}>
+              <p className="bd-section-title" style={{ marginBottom: 0 }}>Issuer Documents</p>
+              <div className="bd-card" style={{ padding: "0 24px" }}>
+                {documents.map((doc) => (
+                  <a
+                    key={doc.id}
+                    href={getDocumentUrl(doc.file_path)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bd-doc-row"
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                      <div style={{ width: 36, height: 36, border: "1px solid rgba(34,211,238,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <svg style={{ width: 16, height: 16, color: "#22d3ee" }} viewBox="0 0 16 16" fill="none">
+                          <path d="M4 2h6l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2"/>
+                          <path d="M9 2v4h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="bd-doc-name">{DOC_LABELS[doc.document_type] ?? doc.document_type}</div>
+                        <div className="bd-doc-sub">{doc.file_name}</div>
+                      </div>
+                    </div>
+                    <ExternalLink style={{ width: 12, height: 12, color: "rgba(240,232,216,0.3)", flexShrink: 0 }} />
+                  </a>
+                ))}
+              </div>
+              <p className="bd-disclaimer">
+                These documents were submitted by the issuer. Lacus does not verify the accuracy or authenticity of any uploaded document. Investors are solely responsible for conducting their own due diligence.
               </p>
             </div>
           )}
 
         </div>
-      </section>
-
-      {documents.length > 0 && (
-        <section className="pb-20">
-          <div className="max-w-[1280px] mx-auto px-8">
-            <h2 className="eyebrow mb-6">
-              Issuer Documents
-            </h2>
-            <div className="card-luminous rounded-2xl overflow-hidden">
-              {documents.map((doc, i) => (
-                <a
-                  key={doc.id}
-                  href={getDocumentUrl(doc.file_path)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between px-6 py-5 border-b border-[var(--rule)] last:border-b-0 hover:bg-[var(--surface)] transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex w-10 h-10 items-center justify-center rounded-xl bg-[var(--lilac)]/10">
-                      <svg className="w-5 h-5 text-[var(--lilac)]" viewBox="0 0 16 16" fill="none">
-                        <path d="M4 2h6l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2"/>
-                        <path d="M9 2v4h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-[var(--ink)] mb-1">
-                        {DOC_LABELS[doc.document_type] ?? doc.document_type}
-                      </p>
-                      <p className="text-xs text-[var(--ink3)]">{doc.file_name}</p>
-                    </div>
-                  </div>
-                  <svg className="w-4 h-4 flex-shrink-0 text-[var(--ink4)]" viewBox="0 0 16 16" fill="none">
-                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </a>
-              ))}
-            </div>
-            <p className="mt-4 text-[11px] text-[var(--ink4)] leading-relaxed">
-              These documents were submitted by the issuer. Lacus does not verify the accuracy or authenticity of any uploaded document. Investors are solely responsible for conducting their own due diligence.
-            </p>
-          </div>
-        </section>
-      )}
+      </div>
     </>
   );
 }
 
 export default function BondDetailPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen" />}>
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#030d10" }} />}>
       <BondDetailContent />
     </Suspense>
   );

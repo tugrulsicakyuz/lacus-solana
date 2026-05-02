@@ -1,70 +1,154 @@
 "use client";
 
 import Link from "next/link";
-import Logo from "./Logo";
-
 
 export default function Footer() {
   return (
-    <footer className="relative border-t border-[var(--rule)]">
-      <div className="max-w-[1280px] mx-auto px-8 py-14 grid grid-cols-12 gap-8 items-start">
-        <div className="col-span-12 md:col-span-5 flex flex-col gap-4">
-          <Link href="/" className="flex items-center gap-3 group" aria-label="Lacus home">
-            <Logo size="footer" />
-            <span className="wordmark" style={{ fontSize: '1.35rem' }}>Lacus</span>
-          </Link>
-          <p className="eyebrow-dim mt-1">Credit markets with luminous depth.</p>
-          <p className="text-[var(--ink3)] text-[0.88rem] leading-[1.6] mt-2 max-w-[36ch]">
-            A Solana-native protocol for tokenized fixed-income. Open, continuous, and observable by default.
-          </p>
+    <>
+      <style>{`
+        .lc-footer {
+          background: #0d0b08;
+          border-top: 1px solid rgba(240,232,216,0.07);
+          font-family: 'DM Mono', monospace;
+        }
+        .lc-footer-inner {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 72px 48px 48px;
+          display: grid;
+          grid-template-columns: 2fr 1fr 1fr 1fr;
+          gap: 48px;
+        }
+        @media (max-width: 900px) {
+          .lc-footer-inner {
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+          }
+        }
+        @media (max-width: 540px) {
+          .lc-footer-inner {
+            grid-template-columns: 1fr;
+            padding: 48px 24px 32px;
+          }
+          .lc-footer-bottom { padding: 20px 24px !important; }
+        }
+        .lc-footer-logo {
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 26px;
+          letter-spacing: 0.18em;
+          color: #f0e8d8;
+          text-decoration: none;
+          display: inline-block;
+          margin-bottom: 16px;
+        }
+        .lc-footer-tagline {
+          font-size: 9px;
+          letter-spacing: 0.28em;
+          text-transform: uppercase;
+          color: rgba(201,149,42,0.7);
+          margin-bottom: 14px;
+        }
+        .lc-footer-desc {
+          font-size: 11px;
+          line-height: 1.8;
+          color: rgba(240,232,216,0.28);
+          max-width: 28ch;
+          letter-spacing: 0.06em;
+        }
+        .lc-footer-col-title {
+          font-size: 9px;
+          letter-spacing: 0.28em;
+          text-transform: uppercase;
+          color: rgba(201,149,42,0.55);
+          margin-bottom: 20px;
+        }
+        .lc-footer-link {
+          display: block;
+          font-size: 11px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: rgba(240,232,216,0.35);
+          text-decoration: none;
+          margin-bottom: 12px;
+          transition: color 0.2s;
+        }
+        .lc-footer-link:hover { color: #f0e8d8; }
+        .lc-footer-bottom {
+          border-top: 1px solid rgba(240,232,216,0.06);
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 24px 48px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+        .lc-footer-copy {
+          font-size: 9px;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: rgba(240,232,216,0.2);
+        }
+        .lc-footer-sign {
+          font-family: 'Cormorant Garamond', serif;
+          font-style: italic;
+          font-size: 14px;
+          font-weight: 300;
+          color: rgba(240,232,216,0.2);
+          letter-spacing: 0.04em;
+        }
+        .lc-footer-rule {
+          width: 24px;
+          height: 1px;
+          background: linear-gradient(90deg, rgba(201,149,42,0.5), transparent);
+          margin-bottom: 20px;
+        }
+      `}</style>
+
+      <footer className="lc-footer">
+        <div className="lc-footer-inner">
+          {/* Brand */}
+          <div>
+            <Link href="/" className="lc-footer-logo">LACUS</Link>
+            <div className="lc-footer-rule" />
+            <p className="lc-footer-tagline">Credit markets with luminous depth</p>
+            <p className="lc-footer-desc">
+              A Solana-native protocol for tokenized fixed-income. Open, continuous, and observable by default.
+            </p>
+          </div>
+
+          {/* Protocol */}
+          <div>
+            <p className="lc-footer-col-title">Protocol</p>
+            <Link href="/launchpad" className="lc-footer-link">Markets</Link>
+            <Link href="/dashboard" className="lc-footer-link">Portfolio</Link>
+            <Link href="/manage" className="lc-footer-link">Manage</Link>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <p className="lc-footer-col-title">Resources</p>
+            <Link href="/whitepaper" className="lc-footer-link">Whitepaper</Link>
+            <Link href="/about" className="lc-footer-link">About</Link>
+            <Link href="#" className="lc-footer-link">Audits</Link>
+          </div>
+
+          {/* Elsewhere */}
+          <div>
+            <p className="lc-footer-col-title">Elsewhere</p>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="lc-footer-link">GitHub</a>
+            <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="lc-footer-link">X (Twitter)</a>
+            <a href="https://mirror.xyz" target="_blank" rel="noopener noreferrer" className="lc-footer-link">Mirror</a>
+          </div>
         </div>
 
-        <div className="col-span-6 md:col-span-2 flex flex-col gap-3">
-          <div className="eyebrow-dim mb-1">Protocol</div>
-          <Link href="#markets" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
-            Markets
-          </Link>
-          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
-            Portfolio
-          </Link>
-          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
-            Governance
-          </Link>
+        {/* Bottom bar */}
+        <div className="lc-footer-bottom">
+          <span className="lc-footer-copy">© 2026 · Lacus Protocol · Built on Solana</span>
+          <span className="lc-footer-sign">Deep water stays clear.</span>
         </div>
-
-        <div className="col-span-6 md:col-span-2 flex flex-col gap-3">
-          <div className="eyebrow-dim mb-1">Resources</div>
-          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
-            Whitepaper
-          </Link>
-          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
-            Docs
-          </Link>
-          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
-            Audits
-          </Link>
-        </div>
-
-        <div className="col-span-12 md:col-span-3 flex flex-col gap-3">
-          <div className="eyebrow-dim mb-1">Elsewhere</div>
-          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
-            GitHub
-          </Link>
-          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
-            X (Twitter)
-          </Link>
-          <Link href="#" className="text-[var(--ink2)] hover:text-[var(--ink)] transition-colors text-[0.92rem]">
-            Mirror
-          </Link>
-        </div>
-      </div>
-
-      <div className="border-t border-[var(--rule)]">
-        <div className="max-w-[1280px] mx-auto px-8 py-5 flex flex-wrap items-center justify-between gap-3">
-          <p className="eyebrow-dim">© 2026 · Lacus Protocol · Built on Solana</p>
-          <p className="font-display italic text-[var(--ink3)] text-[0.9rem]">Deep water stays clear.</p>
-        </div>
-      </div>
-    </footer>
+      </footer>
+    </>
   );
 }

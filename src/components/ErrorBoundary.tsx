@@ -31,24 +31,34 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
       return (
-        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-16 text-center">
-          <p className="text-4xl font-extrabold text-red-500/30">!</p>
-          <h3 className="mt-4 text-lg font-semibold text-slate-200">
-            This section failed to load
-          </h3>
-          <p className="mt-2 max-w-sm text-sm text-slate-500">
-            An unexpected error occurred. You can refresh the page or return to the home page.
+        <div style={{
+          minHeight: 400,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "64px 24px",
+          textAlign: "center",
+          border: "1px solid rgba(251,113,133,0.15)",
+          background: "rgba(251,113,133,0.03)",
+        }}>
+          <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 48, letterSpacing: "0.06em", color: "rgba(251,113,133,0.25)" }}>!</p>
+          <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.1em", color: "#f0e8d8", margin: "8px 0" }}>
+            Section Failed to Load
           </p>
-          <div className="mt-6 flex gap-3">
+          <p style={{ fontSize: 11, letterSpacing: "0.12em", color: "rgba(240,232,216,0.35)", maxWidth: 320, lineHeight: 1.7, marginBottom: 24 }}>
+            An unexpected error occurred. Refresh the page or return home.
+          </p>
+          <div style={{ display: "flex", gap: 10 }}>
             <button
               onClick={() => this.setState({ hasError: false })}
-              className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-slate-300 transition-all hover:bg-slate-700"
+              style={{ padding: "8px 20px", border: "1px solid rgba(251,113,133,0.5)", color: "#fb7185", background: "none", cursor: "pointer", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "'DM Mono', monospace" }}
             >
               Try Again
             </button>
             <Link
               href="/"
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-400 transition-all hover:border-blue-500/40 hover:text-blue-400"
+              style={{ display: "inline-flex", alignItems: "center", padding: "8px 20px", border: "1px solid rgba(240,232,216,0.14)", color: "rgba(240,232,216,0.5)", textDecoration: "none", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "'DM Mono', monospace" }}
             >
               Home
             </Link>

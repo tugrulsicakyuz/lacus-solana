@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import SolanaWalletProvider from "@/components/SolanaWalletProvider";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { Toaster } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ChainGuard from "@/components/ChainGuard";
 import GlobalInteractions from "@/components/GlobalInteractions";
+import ConditionalShell from "@/components/ConditionalShell";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -63,7 +62,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen antialiased tracking-tight`}>
         {/* Global ambient layer — visible on every page */}
         <div id="cursor-orb" />
@@ -78,11 +77,11 @@ export default function RootLayout({
         <SolanaWalletProvider>
           <GlobalInteractions />
           <ChainGuard />
-          <Navbar />
-          <main className="flex-1">
-            <ErrorBoundary>{children}</ErrorBoundary>
-          </main>
-          <Footer />
+          <ConditionalShell>
+            <main className="flex-1">
+              <ErrorBoundary>{children}</ErrorBoundary>
+            </main>
+          </ConditionalShell>
           <Toaster theme="dark" richColors position="top-right" />
         </SolanaWalletProvider>
       </body>
