@@ -112,9 +112,9 @@ export default function Footer() {
           <div>
             <Link href="/" className="lc-footer-logo">LACUS</Link>
             <div className="lc-footer-rule" />
-            <p className="lc-footer-tagline">Credit markets with luminous depth</p>
+            <p className="lc-footer-tagline">Open credit infrastructure</p>
             <p className="lc-footer-desc">
-              A Solana-native protocol for tokenized fixed-income. Open, continuous, and observable by default.
+              Any company can issue debt. Any investor can buy it. Every term is on-chain — always.
             </p>
           </div>
 
@@ -145,8 +145,8 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="lc-footer-bottom">
-          <span className="lc-footer-copy">© 2026 · Lacus Protocol · Built on Solana</span>
-          <span className="lc-footer-sign">Deep water stays clear.</span>
+          <span className="lc-footer-copy">© 2026 · Lacus · Built on Solana</span>
+          <span className="lc-footer-sign">Two parties. One agreement. On-chain.</span>
         </div>
       </footer>
     </>

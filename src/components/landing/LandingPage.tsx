@@ -599,7 +599,7 @@ export default function LandingPage() {
 
   return (
     <>
-      <style jsx global>{`
+      <style>{`
         body {
           cursor: none;
         }
@@ -1458,25 +1458,6 @@ export default function LandingPage() {
         </Link>
       </section>
 
-      {/* FOOTER */}
-      <footer>
-        <div className="footer-logo">LACUS</div>
-        <div className="footer-copy">© 2026 Lacus — Open credit infrastructure</div>
-        <ul className="footer-links">
-          <li>
-            <a href="#">Docs</a>
-          </li>
-          <li>
-            <a href="#">Github</a>
-          </li>
-          <li>
-            <a href="#">Discord</a>
-          </li>
-          <li>
-            <a href="#">Manifesto</a>
-          </li>
-        </ul>
-      </footer>
     </>
   );
 }

@@ -340,7 +340,7 @@ export default function LaunchpadPage() {
 
   return (
     <>
-      <style jsx global>{`
+      <style>{`
         .launchpad-root { cursor: none; }
         #grain { position: fixed; inset: 0; pointer-events: none; z-index: 9000; opacity: 0.035; }
         #cursor-dot { position: fixed; top: 0; left: 0; width: 8px; height: 8px; background: var(--gold); border-radius: 50%; pointer-events: none; z-index: 9999; will-change: transform; mix-blend-mode: difference; }
@@ -1061,22 +1061,6 @@ export default function LaunchpadPage() {
           </div>
         </section>
 
-        {/* FOOTER */}
-        <footer>
-          <div className="footer-logo">LACUS</div>
-          <div className="footer-copy">© 2026 Lacus Foundation — Launchpad</div>
-          <ul className="footer-links">
-            <li>
-              <Link href="/">Home</Link>
-            </li>
-            <li>
-              <Link href="/about">About</Link>
-            </li>
-            <li>
-              <a href="#">Docs</a>
-            </li>
-          </ul>
-        </footer>
       </div>
     </>
   );

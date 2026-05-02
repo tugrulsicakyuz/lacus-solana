@@ -567,15 +567,6 @@ function PrimaryContent() {
         </section>
 
         {/* Footer */}
-        <footer className="pri-footer">
-          <div className="pri-footer-logo">LACUS</div>
-          <div className="pri-footer-copy">© 2026 Lacus Foundation — Primary Market</div>
-          <ul className="pri-footer-links">
-            <li><a href="/">Home</a></li>
-            <li><a href="/manage/issue">Issue</a></li>
-            <li><a href="/secondary">Secondary</a></li>
-          </ul>
-        </footer>
       </div>
     </>
   );

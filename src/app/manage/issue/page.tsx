@@ -696,16 +696,6 @@ export default function IssueBondPage() {
         </section>
 
         {/* Footer */}
-        <footer className="iss-footer">
-          <div className="iss-footer-logo">LACUS</div>
-          <div className="iss-footer-copy">© 2026 Lacus Foundation — Issuance</div>
-          <ul className="iss-footer-links">
-            <li><a href="/primary">Primary</a></li>
-            <li><a href="/launchpad">Launchpad</a></li>
-            <li><a href="/manage">Manage</a></li>
-          </ul>
-        </footer>
-
       </div>
     </>
   );

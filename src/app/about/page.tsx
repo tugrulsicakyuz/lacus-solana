@@ -614,7 +614,7 @@ export default function AboutPage() {
               MAR<span>KETS.</span>
             </h1>
             <p className="ab-desc">
-              Lacus is transparent credit infrastructure for on-chain capital markets. Companies can issue debt, investors can build fixed-income portfolios, and every agreement can be audited end to end.
+              Lacus is transparent credit infrastructure for on-chain capital markets. Companies can issue debt, investors can build fixed-income portfolios, and every agreement is a bilateral loan — auditable, transferable, on-chain.
             </p>
             <div className="ab-cta-row">
               <Link href="/launchpad" className="ab-btn-fill">
@@ -684,7 +684,7 @@ export default function AboutPage() {
             </div>
             <h3 className="ab-prob-h">Companies can't access debt</h3>
             <p className="ab-prob-p">
-              Traditional debt markets are built for incumbents. Startups, SMEs, and newer operators still struggle to access straightforward financing even when the business itself is healthy. For many of them, the options collapse to dilution, delay, or rejection.
+              Traditional debt markets are built for incumbents. Startups and SMEs struggle to access straightforward financing even when the business is healthy. The bank laughs. The VC wants equity. Lacus offers a third option.
             </p>
           </div>
           <div className="ab-prob-card">
@@ -699,7 +699,7 @@ export default function AboutPage() {
             </div>
             <h3 className="ab-prob-h">Retail investors can't access bonds</h3>
             <p className="ab-prob-p">
-              Most fixed-income products are still gated behind institutions or wrapped into opaque vehicles. Retail investors rarely get direct access, and when credit is packaged, they often cannot inspect what is actually inside the structure.
+              Most fixed-income products are still gated behind institutions or wrapped into opaque vehicles. Retail investors rarely get direct access. When credit gets packaged, they can't see what's inside — 2008 proved what that costs.
             </p>
           </div>
         </div>
@@ -767,16 +767,16 @@ export default function AboutPage() {
         <div className="ab-roadmap">
           {[
             {
-              name: "Phase 1 — Prototype",
-              tag: "CURRENT",
-              active: true,
-              desc: "Core issuance, buying, yield, and secondary flows are proven in prototype form while the next architecture moves to Solana Devnet.",
-            },
-            {
-              name: "Phase 2 — Solana Devnet Launch",
+              name: "Phase 1 — Devnet Launch",
               tag: null,
               active: false,
-              desc: "Ship the Solana-native program architecture, wallet layer, and indexing model for the next version of Lacus.",
+              desc: "Core issuance, buying, yield, and portfolio flows live on Solana Devnet. Primary market open.",
+            },
+            {
+              name: "Phase 2 — Secondary Market",
+              tag: "CURRENT",
+              active: true,
+              desc: "P2P trading layer — list, match, and settle bond positions without a central exchange.",
             },
             {
               name: "Phase 3 — Portfolio Layer",

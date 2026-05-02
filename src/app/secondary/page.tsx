@@ -5,8 +5,8 @@ import Link from "next/link";
 
 const features = [
   { n: "001", title: "PEER-TO-PEER", sub: "Direct Trading", desc: "List your bond tokens at your price. No intermediary, no custody, no counterparty risk." },
-  { n: "002", title: "ATOMIC SWAP", sub: "Instant Settlement", desc: "Sub-second finality on Solana. Trade settles directly between wallets in a single transaction." },
-  { n: "003", title: "ORDER BOOK", sub: "On-Chain Depth", desc: "Transparent bids and asks, fully auditable. Every order visible, non-custodial by design." },
+  { n: "002", title: "INSTANT SETTLEMENT", sub: "T+0", desc: "Settlement between two wallets, one transaction. No clearing house, no T+2 delay." },
+  { n: "003", title: "TRANSPARENT", sub: "Fully On-Chain", desc: "Every bid, every ask, every fill — on-chain and auditable. Unlike a CDO, nothing is hidden." },
   { n: "004", title: "VERIFIED", sub: "Lacus Instruments Only", desc: "Terms, maturity, coupon and issuer verified on-chain. No unvetted instruments enter the book." },
   { n: "005", title: "NON-CUSTODIAL", sub: "Your Keys, Your Tokens", desc: "No bridge, no wrapped asset. SPL tokens trade directly from your wallet throughout." },
   { n: "006", title: "CONTINUOUS", sub: "Always Open", desc: "No trading hours. No gates. A permanent, always-on market for structured on-chain credit." },
@@ -16,7 +16,7 @@ const phases = [
   { n: "01", label: "PRIMARY MARKET", status: "live", desc: "Bond issuance and direct purchase from issuers. SOL in, yield-bearing tokens out." },
   { n: "02", label: "PORTFOLIO & YIELD", status: "live", desc: "Holdings dashboard, coupon claims, maturity redemption, principal deposits." },
   { n: "03", label: "SECONDARY MARKET", status: "building", desc: "P2P listings, order matching, atomic settlement between holders." },
-  { n: "04", label: "STRUCTURED PRODUCTS", status: "planned", desc: "Tranched credit, yield aggregation, index instruments and pool vaults." },
+  { n: "04", label: "STRUCTURED PRODUCTS", status: "planned", desc: "Transparent portfolio construction — mix high-yield and safe instruments. The CDO, rebuilt with full visibility." },
 ];
 
 export default function SecondaryMarket() {
@@ -132,7 +132,7 @@ export default function SecondaryMarket() {
 
   return (
     <>
-      <style jsx global>{`
+      <style>{`
         .sec-root {
           --bg: #0d0b08;
           --ink: #f0e8d8;
@@ -250,15 +250,15 @@ export default function SecondaryMarket() {
         {/* HEADER */}
         <section className="sec-header">
           <canvas ref={headerCanvasRef} className="sec-header-canvas" />
-          <div className="sec-eyebrow reveal">§ Protocol — Secondary Layer</div>
+          <div className="sec-eyebrow reveal">§ Secondary Market — P2P Trading</div>
           <h1 className="sec-title reveal">
             SECOND<span className="blue">ARY</span>
           </h1>
           <div className="sec-header-right reveal">
             <p>
-              A deep, continuous market<br />
-              for on-chain credit instruments.<br />
-              Peer-to-peer. Non-custodial. Always open.
+              Your position is yours to hold or trade.<br />
+              Loan agreements transfer peer-to-peer —<br />
+              no central exchange, no intermediary, no lockup.
             </p>
           </div>
           <div className="sec-status-pill reveal">
@@ -294,7 +294,7 @@ export default function SecondaryMarket() {
           <div className="sec-timeline-header">
             <div className="sec-timeline-title reveal">PROTOCOL<br />ROADMAP</div>
             <p className="sec-timeline-desc reveal">
-              Four phases from origination to full liquidity. The secondary market is the third layer of the Lacus credit stack.
+              Issue, buy, trade, and build portfolios. Four phases — one open credit infrastructure.
             </p>
           </div>
           <div className="sec-timeline-track">
@@ -323,7 +323,7 @@ export default function SecondaryMarket() {
             EARN YIELD<br />NOW.
           </div>
           <p className="sec-cta-body reveal">
-            While the secondary market is being built, the primary market is live. Buy bonds directly from issuers — SOL in, yield-bearing tokens out.
+            While secondary trading is being built, the primary market is live. Browse verified issuers, pick your yield, and buy directly — no intermediary.
           </p>
           <Link href="/primary" className="sec-btn reveal">
             <span>Go to Primary Market</span>
@@ -331,16 +331,6 @@ export default function SecondaryMarket() {
           </Link>
         </section>
 
-        {/* FOOTER */}
-        <footer className="sec-footer">
-          <div className="sec-footer-logo">LACUS</div>
-          <div className="sec-footer-copy">© 2026 Lacus Foundation — Secondary Market</div>
-          <ul className="sec-footer-links">
-            <li><Link href="/">Home</Link></li>
-            <li><Link href="/launchpad">Launchpad</Link></li>
-            <li><Link href="/primary">Primary</Link></li>
-          </ul>
-        </footer>
       </div>
     </>
   );
