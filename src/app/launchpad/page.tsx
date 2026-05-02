@@ -109,18 +109,6 @@ export default function LaunchpadPage() {
     fetchBonds();
   }, []);
 
-  // Load fonts
-  useEffect(() => {
-    const id = 'lacus-design-fonts';
-    if (!document.getElementById(id)) {
-      const link = document.createElement('link');
-      link.id = id;
-      link.rel = 'stylesheet';
-      link.href = 'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&display=swap';
-      document.head.appendChild(link);
-    }
-  }, []);
-
   // Grain Canvas Effect
   useEffect(() => {
     const canvas = grainCanvasRef.current;
@@ -353,15 +341,6 @@ export default function LaunchpadPage() {
   return (
     <>
       <style jsx global>{`
-        :root {
-          --bg: #0d0b08;
-          --ink: #f0e8d8;
-          --ink-dim: #7a6f60;
-          --gold: oklch(0.72 0.14 72);
-          --copper: oklch(0.52 0.13 38);
-          --moss: oklch(0.48 0.09 145);
-          --rule: rgba(240,232,216,0.12);
-        }
         .launchpad-root { cursor: none; }
         #grain { position: fixed; inset: 0; pointer-events: none; z-index: 9000; opacity: 0.035; }
         #cursor-dot { position: fixed; top: 0; left: 0; width: 8px; height: 8px; background: var(--gold); border-radius: 50%; pointer-events: none; z-index: 9999; will-change: transform; mix-blend-mode: difference; }

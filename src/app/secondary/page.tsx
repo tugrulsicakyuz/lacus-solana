@@ -26,18 +26,6 @@ export default function SecondaryMarket() {
   const cursorRingRef = useRef<HTMLDivElement>(null);
   const [revealed, setRevealed] = useState(false);
 
-  // Load fonts
-  useEffect(() => {
-    const id = "lacus-design-fonts";
-    if (!document.getElementById(id)) {
-      const link = document.createElement("link");
-      link.id = id;
-      link.rel = "stylesheet";
-      link.href = "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&display=swap";
-      document.head.appendChild(link);
-    }
-  }, []);
-
   // Grain canvas
   useEffect(() => {
     const canvas = grainRef.current;

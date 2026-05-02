@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import SolanaWalletProvider from "@/components/SolanaWalletProvider";
 import { Toaster } from "sonner";
@@ -7,8 +6,6 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ChainGuard from "@/components/ChainGuard";
 import GlobalInteractions from "@/components/GlobalInteractions";
 import ConditionalShell from "@/components/ConditionalShell";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
@@ -63,17 +60,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen antialiased tracking-tight`}>
-        {/* Global ambient layer — visible on every page */}
-        <div id="cursor-orb" />
-        <div className="fixed inset-0 z-[-3] grain" />
-        <div className="fixed top-[-25vh] left-[-10vw] w-[90vw] h-[90vh] z-[-2] pointer-events-none">
-          <div className="drift w-full h-full aura-top" />
-        </div>
-        <div className="fixed top-[55vh] right-[-20vw] w-[80vw] h-[80vh] z-[-2] pointer-events-none">
-          <div className="drift w-full h-full aura-mid" style={{ animationDelay: "-14s" }} />
-        </div>
-
+      <body>
         <SolanaWalletProvider>
           <GlobalInteractions />
           <ChainGuard />

@@ -61,20 +61,6 @@ function PrimaryContent() {
   const dotRef    = useRef<HTMLDivElement>(null);
   const ringRef   = useRef<HTMLDivElement>(null);
 
-  // ── Fonts
-  useEffect(() => {
-    const urls = [
-      "https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap",
-      "https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&display=swap",
-      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&display=swap",
-    ];
-    const links = urls.map(href => {
-      const l = document.createElement("link"); l.rel = "stylesheet"; l.href = href;
-      document.head.appendChild(l); return l;
-    });
-    return () => links.forEach(l => document.head.removeChild(l));
-  }, []);
-
   // ── Grain canvas
   useEffect(() => {
     const c = grainRef.current; if (!c) return;

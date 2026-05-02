@@ -600,36 +600,8 @@ export default function LandingPage() {
   return (
     <>
       <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&display=swap");
-
-        *,
-        *::before,
-        *::after {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
-        :root {
-          --bg: #0d0b08;
-          --ink: #f0e8d8;
-          --ink-dim: #7a6f60;
-          --gold: oklch(0.72 0.14 72);
-          --copper: oklch(0.52 0.13 38);
-          --moss: oklch(0.48 0.09 145);
-          --rule: rgba(240, 232, 216, 0.12);
-        }
-
-        html {
-          scroll-behavior: smooth;
-        }
-
         body {
-          background: var(--bg);
-          color: var(--ink);
-          font-family: "DM Mono", monospace;
           cursor: none;
-          overflow-x: hidden;
         }
 
         /* ── CURSOR ─────────────────────────────────────── */

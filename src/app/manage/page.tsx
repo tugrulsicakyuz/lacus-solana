@@ -29,15 +29,6 @@ export default function ManagePage() {
   const ringPos = useRef({ x: 0, y: 0 });
   const mousePos = useRef({ x: 0, y: 0 });
 
-  // Font load
-  useEffect(() => {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href =
-      "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap";
-    document.head.appendChild(link);
-    return () => { document.head.removeChild(link); };
-  }, []);
 
   // Grain canvas
   useEffect(() => {
