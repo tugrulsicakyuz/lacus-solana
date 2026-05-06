@@ -286,6 +286,7 @@ export function useLacusProgram() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bondState = (await (program.account as any).bondState.fetch(bondStatePDA)) as BondState;
     const [bondMintPDA] = getBondMintPDA(bondStatePDA);
+    const [investorPositionPDA] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
 
     const buyerBondAta = await getAssociatedTokenAddress(bondMintPDA, wallet.publicKey);
 
@@ -298,6 +299,7 @@ export function useLacusProgram() {
         issuer: new PublicKey(bondState.issuer),
         bondTokenVault: bondState.bondTokenVault,
         bondMint: bondMintPDA,
+        investorPosition: investorPositionPDA,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,

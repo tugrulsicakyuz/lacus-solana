@@ -33,6 +33,9 @@ export default function SecondaryMarket() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     let frame = 0;
+    let rafId: number;
+    let tid: ReturnType<typeof setTimeout>;
+    let destroyed = false;
     function resize() {
       if (!canvas) return;
       canvas.width = window.innerWidth;
@@ -41,7 +44,7 @@ export default function SecondaryMarket() {
     resize();
     window.addEventListener("resize", resize);
     function render() {
-      if (!canvas || !ctx) return;
+      if (destroyed || !canvas || !ctx) return;
       const w = canvas.width, h = canvas.height;
       const img = ctx.createImageData(w, h);
       const d = img.data;
@@ -52,11 +55,16 @@ export default function SecondaryMarket() {
       }
       ctx.putImageData(img, 0, 0);
       frame++;
-      if (frame % 3 === 0) requestAnimationFrame(render);
-      else setTimeout(() => requestAnimationFrame(render), 60);
+      if (frame % 3 === 0) rafId = requestAnimationFrame(render);
+      else tid = setTimeout(() => { rafId = requestAnimationFrame(render); }, 60);
     }
     render();
-    return () => window.removeEventListener("resize", resize);
+    return () => {
+      destroyed = true;
+      cancelAnimationFrame(rafId);
+      clearTimeout(tid);
+      window.removeEventListener("resize", resize);
+    };
   }, []);
 
   // Header canvas: drifting blue lines
@@ -109,12 +117,13 @@ export default function SecondaryMarket() {
     let mx = 0, my = 0, rx = 0, ry = 0;
     const onMove = (e: MouseEvent) => { mx = e.clientX; my = e.clientY; dot.style.transform = `translate3d(${mx - 4}px,${my - 4}px,0)`; };
     document.addEventListener("mousemove", onMove);
-    function lerp() { if (!ring) return; rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.transform = `translate3d(${rx - 20}px,${ry - 20}px,0)`; requestAnimationFrame(lerp); }
-    requestAnimationFrame(lerp);
+    let lerpRafId: number;
+    function lerp() { if (!ring) return; rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.transform = `translate3d(${rx - 20}px,${ry - 20}px,0)`; lerpRafId = requestAnimationFrame(lerp); }
+    lerpRafId = requestAnimationFrame(lerp);
     const onHover = () => document.body.classList.add("cursor-hover");
     const onLeave = () => document.body.classList.remove("cursor-hover");
     document.querySelectorAll("a, button").forEach(el => { el.addEventListener("mouseenter", onHover); el.addEventListener("mouseleave", onLeave); });
-    return () => document.removeEventListener("mousemove", onMove);
+    return () => { cancelAnimationFrame(lerpRafId); document.removeEventListener("mousemove", onMove); };
   }, []);
 
   // Scroll reveal

@@ -132,6 +132,15 @@ pub mod lacus {
 
         ctx.accounts.bond_state.tokens_sold += amount;
 
+        // Set snapshot to current yield so buyer can't claim yield from before their purchase
+        let investor_position = &mut ctx.accounts.investor_position;
+        if investor_position.investor == Pubkey::default() {
+            investor_position.investor = ctx.accounts.buyer.key();
+            investor_position.bond_state = ctx.accounts.bond_state.key();
+            investor_position.last_yield_snapshot = ctx.accounts.bond_state.total_yield_deposited;
+            investor_position.bump = ctx.bumps.investor_position;
+        }
+
         Ok(())
     }
 
@@ -196,7 +205,7 @@ pub mod lacus {
         let claimable = deposited_since
             .checked_mul(investor_balance)
             .ok_or(LacusError::InvalidAmount)?
-            .checked_div(bond_state.max_supply)
+            .checked_div(bond_state.tokens_sold)
             .ok_or(LacusError::InvalidAmount)?;
 
         require!(claimable > 0, LacusError::NothingToClaim);
@@ -229,7 +238,7 @@ pub mod lacus {
         let principal_amount = bond_state.total_principal_deposited
             .checked_mul(investor_balance)
             .ok_or(LacusError::InvalidAmount)?
-            .checked_div(bond_state.max_supply)
+            .checked_div(bond_state.tokens_sold)
             .ok_or(LacusError::InvalidAmount)?;
 
         token::burn(
@@ -327,6 +336,14 @@ pub struct BuyBond<'info> {
         constraint = bond_mint.key() == bond_state.bond_mint
     )]
     pub bond_mint: Account<'info, Mint>,
+    #[account(
+        init_if_needed,
+        payer = buyer,
+        space = 8 + InvestorPosition::INIT_SPACE,
+        seeds = [b"position", bond_state.key().as_ref(), buyer.key().as_ref()],
+        bump
+    )]
+    pub investor_position: Account<'info, InvestorPosition>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
@@ -378,6 +395,10 @@ pub struct ClaimYield<'info> {
     pub investor_position: Account<'info, InvestorPosition>,
     #[account(mut)]
     pub investor: Signer<'info>,
+    #[account(
+        associated_token::mint = bond_state.bond_mint,
+        associated_token::authority = investor
+    )]
     pub investor_bond_ata: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -393,7 +414,11 @@ pub struct RedeemBond<'info> {
     pub bond_state: Account<'info, BondState>,
     #[account(mut)]
     pub investor: Signer<'info>,
-    #[account(mut)]
+    #[account(
+        mut,
+        associated_token::mint = bond_state.bond_mint,
+        associated_token::authority = investor
+    )]
     pub investor_bond_ata: Account<'info, TokenAccount>,
     #[account(
         mut,

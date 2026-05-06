@@ -19,6 +19,9 @@ export default function LandingPage() {
     if (!ctx) return;
 
     let frame = 0;
+    let grainRafId: number;
+    let grainTid: ReturnType<typeof setTimeout>;
+    let grainDestroyed = false;
 
     function resize() {
       if (!canvas) return;
@@ -29,7 +32,7 @@ export default function LandingPage() {
     window.addEventListener("resize", resize);
 
     function renderGrain() {
-      if (!canvas || !ctx) return;
+      if (grainDestroyed || !canvas || !ctx) return;
       const w = canvas.width,
         h = canvas.height;
       const imageData = ctx.createImageData(w, h);
@@ -41,12 +44,15 @@ export default function LandingPage() {
       }
       ctx.putImageData(imageData, 0, 0);
       frame++;
-      if (frame % 3 === 0) requestAnimationFrame(renderGrain);
-      else setTimeout(() => requestAnimationFrame(renderGrain), 60);
+      if (frame % 3 === 0) grainRafId = requestAnimationFrame(renderGrain);
+      else grainTid = setTimeout(() => { grainRafId = requestAnimationFrame(renderGrain); }, 60);
     }
     renderGrain();
 
     return () => {
+      grainDestroyed = true;
+      cancelAnimationFrame(grainRafId);
+      clearTimeout(grainTid);
       window.removeEventListener("resize", resize);
     };
   }, []);
@@ -193,11 +199,12 @@ export default function LandingPage() {
         p.update(t);
         p.draw();
       });
-      requestAnimationFrame(draw);
+      heroRafId = requestAnimationFrame(draw);
     }
-    requestAnimationFrame(draw);
+    let heroRafId = requestAnimationFrame(draw);
 
     return () => {
+      cancelAnimationFrame(heroRafId);
       window.removeEventListener("resize", resize);
     };
   }, []);
@@ -285,7 +292,7 @@ export default function LandingPage() {
       ctx.fillStyle = `rgba(201,149,42,0.4)`;
       ctx.fill();
 
-      requestAnimationFrame(draw);
+      depthRafId = requestAnimationFrame(draw);
     }
 
     if (parentElement) {
@@ -296,9 +303,10 @@ export default function LandingPage() {
       parentElement.addEventListener("click", handleClick);
     }
 
-    requestAnimationFrame(draw);
+    let depthRafId = requestAnimationFrame(draw);
 
     return () => {
+      cancelAnimationFrame(depthRafId);
       window.removeEventListener("resize", resize);
     };
   }, []);
@@ -322,15 +330,16 @@ export default function LandingPage() {
     };
     document.addEventListener("mousemove", handleMouseMove);
 
+    let lerpRafId: number;
     function lerp() {
       if (!ring) return;
       rx += (mx - rx) * 0.12;
       ry += (my - ry) * 0.12;
       ring.style.left = rx + "px";
       ring.style.top = ry + "px";
-      requestAnimationFrame(lerp);
+      lerpRafId = requestAnimationFrame(lerp);
     }
-    requestAnimationFrame(lerp);
+    lerpRafId = requestAnimationFrame(lerp);
 
     // ripple on click
     const handleClick = (e: MouseEvent) => {
@@ -355,6 +364,7 @@ export default function LandingPage() {
       });
 
     return () => {
+      cancelAnimationFrame(lerpRafId);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("click", handleClick);
     };
