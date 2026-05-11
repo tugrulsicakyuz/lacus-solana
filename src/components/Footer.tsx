@@ -7,7 +7,7 @@ export default function Footer() {
     <>
       <style>{`
         .lc-footer {
-          background: #0d0b08;
+          background: var(--bg);
           border-top: 1px solid rgba(240,232,216,0.07);
           font-family: 'DM Mono', monospace;
         }
