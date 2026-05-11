@@ -1,13 +1,28 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const PAGE_BACKGROUNDS: Record<string, string> = {
+  "/dashboard": "#080610",
+  "/manage":    "#0e0508",
+  "/about":     "#060d08",
+};
+
+function getFooterBg(pathname: string): string {
+  if (pathname.startsWith("/manage")) return "#0e0508";
+  if (pathname.startsWith("/bond"))   return "#030d10";
+  return PAGE_BACKGROUNDS[pathname] ?? "#0d0b08";
+}
 
 export default function Footer() {
+  const pathname = usePathname();
+  const bg = getFooterBg(pathname);
+
   return (
     <>
       <style>{`
         .lc-footer {
-          background: var(--bg);
           border-top: 1px solid rgba(240,232,216,0.07);
           font-family: 'DM Mono', monospace;
         }
@@ -106,7 +121,7 @@ export default function Footer() {
         }
       `}</style>
 
-      <footer className="lc-footer">
+      <footer className="lc-footer" style={{ background: bg }}>
         <div className="lc-footer-inner">
           {/* Brand */}
           <div>

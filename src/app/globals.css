@@ -41,15 +41,3 @@ body {
   color: var(--ink);
 }
 
-/* Page-specific background: body + footer match the page color scheme */
-body:has(.iss-root)  { background: #0b0307; }
-body:has(.mgmt-root) { background: #0e0508; }
-body:has(.dash-root) { background: #080610; }
-body:has(.about-root){ background: #060d08; }
-body:has(.bd-root)   { background: #030d10; }
-
-body:has(.iss-root)       .lc-footer { background: #0b0307; }
-body:has(.mgmt-root)      .lc-footer { background: #0e0508; }
-body:has(.dash-root)      .lc-footer { background: #080610; }
-body:has(.about-root)     .lc-footer { background: #060d08; }
-body:has(.bd-root)        .lc-footer { background: #030d10; }
