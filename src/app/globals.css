@@ -42,6 +42,8 @@ body {
 }
 
 /* Footer background matches each page's color scheme */
-.dash-root  + .lc-footer { background: #080610; }
-.mgmt-root  + .lc-footer { background: #0e0508; }
-.about-root + .lc-footer { background: #060d08; }
+body:has(.iss-root)       .lc-footer { background: #0b0307; }
+body:has(.mgmt-root)      .lc-footer { background: #0e0508; }
+body:has(.dash-root)      .lc-footer { background: #080610; }
+body:has(.about-root)     .lc-footer { background: #060d08; }
+body:has(.bd-root)        .lc-footer { background: #030d10; }
