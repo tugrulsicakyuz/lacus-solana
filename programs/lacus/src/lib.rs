@@ -4,7 +4,7 @@ use anchor_spl::{
     token::{self, Burn, Mint, MintTo, Token, TokenAccount, Transfer},
 };
 
-declare_id!("Fnw9tWvwyMXieH35WhFfDz7behbDo1teBrVJZ4pZq7rL");
+declare_id!("87fieWCffnauPhnHHM5TFqtRPNTcvup3VGUiW6Vae3PQ");
 
 #[program]
 pub mod lacus {
@@ -86,7 +86,7 @@ pub mod lacus {
         if clock.unix_timestamp >= ctx.accounts.bond_state.maturity_timestamp {
             ctx.accounts.bond_state.is_matured = true;
         }
-        
+
         require!(!ctx.accounts.bond_state.is_matured, LacusError::BondAlreadyMatured);
         require!(
             ctx.accounts.bond_state.tokens_sold + amount <= ctx.accounts.bond_state.max_supply,
@@ -97,6 +97,16 @@ pub mod lacus {
             .checked_mul(amount)
             .ok_or(LacusError::InvalidAmount)?;
 
+        let platform_fee = total_cost
+            .checked_mul(50)
+            .ok_or(LacusError::InvalidAmount)?
+            .checked_div(10_000)
+            .ok_or(LacusError::InvalidAmount)?;
+
+        let issuer_amount = total_cost
+            .checked_sub(platform_fee)
+            .ok_or(LacusError::InvalidAmount)?;
+
         anchor_lang::system_program::transfer(
             CpiContext::new(
                 ctx.accounts.system_program.to_account_info(),
@@ -105,7 +115,18 @@ pub mod lacus {
                     to: ctx.accounts.issuer.to_account_info(),
                 },
             ),
-            total_cost,
+            issuer_amount,
+        )?;
+
+        anchor_lang::system_program::transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                anchor_lang::system_program::Transfer {
+                    from: ctx.accounts.buyer.to_account_info(),
+                    to: ctx.accounts.fee_recipient.to_account_info(),
+                },
+            ),
+            platform_fee,
         )?;
 
         let bond_id_bytes = ctx.accounts.bond_state.bond_id.to_le_bytes();
@@ -314,6 +335,8 @@ pub struct BuyBond<'info> {
         bump = bond_state.bump
     )]
     pub bond_state: Account<'info, BondState>,
+    #[account(seeds = [b"factory"], bump = factory_state.bump)]
+    pub factory_state: Account<'info, FactoryState>,
     #[account(mut)]
     pub buyer: Signer<'info>,
     #[account(
@@ -326,6 +349,9 @@ pub struct BuyBond<'info> {
     /// CHECK: issuer receives SOL payment
     #[account(mut, constraint = issuer.key() == bond_state.issuer @ LacusError::NotAuthorized)]
     pub issuer: AccountInfo<'info>,
+    /// CHECK: platform fee recipient, verified against factory authority
+    #[account(mut, constraint = fee_recipient.key() == factory_state.authority @ LacusError::NotAuthorized)]
+    pub fee_recipient: AccountInfo<'info>,
     #[account(
         mut,
         constraint = bond_token_vault.key() == bond_state.bond_token_vault

@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/lacus.json`.
  */
 export type Lacus = {
-  "address": "Fnw9tWvwyMXieH35WhFfDz7behbDo1teBrVJZ4pZq7rL",
+  "address": "87fieWCffnauPhnHHM5TFqtRPNTcvup3VGUiW6Vae3PQ",
   "metadata": {
     "name": "lacus",
     "version": "0.1.0",
@@ -44,6 +44,25 @@ export type Lacus = {
                 "kind": "account",
                 "path": "bond_state.bond_id",
                 "account": "bondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "factoryState",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  99,
+                  116,
+                  111,
+                  114,
+                  121
+                ]
               }
             ]
           }
@@ -145,6 +164,10 @@ export type Lacus = {
         },
         {
           "name": "issuer",
+          "writable": true
+        },
+        {
+          "name": "feeRecipient",
           "writable": true
         },
         {

@@ -44,13 +44,12 @@ export function useLacusProgram() {
       const validBonds = bonds
         .map((b: { account: BondState }) => b.account)
         .filter((bond: BondState) => {
-          // Filter out bonds with garbage deserialized data from old struct
           return (
             bond.name && bond.name.trim().length > 0 &&
             bond.symbol && bond.symbol.trim().length > 0 &&
             Number(bond.faceValue) > 0 &&
             Number(bond.maxSupply) > 0 &&
-            Number(bond.maturityTimestamp) > 1700000000 // after Nov 2023
+            Number(bond.maturityTimestamp) > 1700000000
           );
         });
       return validBonds;
@@ -283,8 +282,11 @@ export function useLacusProgram() {
     if (!program || !wallet) throw new Error('Wallet not connected');
 
     const [bondStatePDA] = getBondStatePDA(bondId);
+    const [factoryStatePDA] = getFactoryStatePDA();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bondState = (await (program.account as any).bondState.fetch(bondStatePDA)) as BondState;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const factoryState = (await (program.account as any).factoryState.fetch(factoryStatePDA)) as FactoryState;
     const [bondMintPDA] = getBondMintPDA(bondStatePDA);
     const [investorPositionPDA] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
 
@@ -294,9 +296,11 @@ export function useLacusProgram() {
       .buyBond(new BN(amount))
       .accounts({
         bondState: bondStatePDA,
+        factoryState: factoryStatePDA,
         buyer: wallet.publicKey,
         buyerBondAta,
         issuer: new PublicKey(bondState.issuer),
+        feeRecipient: new PublicKey(factoryState.authority),
         bondTokenVault: bondState.bondTokenVault,
         bondMint: bondMintPDA,
         investorPosition: investorPositionPDA,
