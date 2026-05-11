@@ -178,8 +178,8 @@ function PrimaryContent() {
           return {
             ...bond,
             name: bond.name || meta?.issuer_name || "Unknown Bond",
-            symbol: meta?.symbol || `BOND-${bond.bondId}`,
-            issuerName: meta?.issuer_name || `${bond.issuer.toString().slice(0, 6)}...${bond.issuer.toString().slice(-4)}`,
+            symbol: meta?.symbol || bond.symbol || `BOND-${bond.bondId}`,
+            issuerName: meta?.issuer_name || bond.name || `${bond.issuer.toString().slice(0, 6)}...${bond.issuer.toString().slice(-4)}`,
             description: (meta as any)?.description ?? undefined,
           };
         });
