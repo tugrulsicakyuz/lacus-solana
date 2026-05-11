@@ -370,27 +370,6 @@ export default function IssueBondPage() {
                 </div>
                 <div className="iss-type-arrow" />
               </div>
-              <div className="iss-type disabled" title="Coming Soon">
-                <div>
-                  <div className="iss-type-name">EQUITY</div>
-                  <div className="iss-type-sub">Preferred · Common · Warrant</div>
-                </div>
-                <div className="iss-type-badge">Coming Soon</div>
-              </div>
-              <div className="iss-type disabled" title="Coming Soon">
-                <div>
-                  <div className="iss-type-name">STRUCTURED</div>
-                  <div className="iss-type-sub">Notes · Certificates · Pools</div>
-                </div>
-                <div className="iss-type-badge">Coming Soon</div>
-              </div>
-              <div className="iss-type disabled" title="Coming Soon">
-                <div>
-                  <div className="iss-type-name">GOVERNANCE</div>
-                  <div className="iss-type-sub">Utility · DAO · veToken</div>
-                </div>
-                <div className="iss-type-badge">Coming Soon</div>
-              </div>
             </div>
           </div>
         </section>

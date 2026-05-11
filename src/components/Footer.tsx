@@ -137,9 +137,9 @@ export default function Footer() {
           {/* Elsewhere */}
           <div>
             <p className="lc-footer-col-title">Elsewhere</p>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="lc-footer-link">GitHub</a>
-            <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="lc-footer-link">X (Twitter)</a>
-            <a href="https://mirror.xyz" target="_blank" rel="noopener noreferrer" className="lc-footer-link">Mirror</a>
+            <a href="https://github.com/lacus-fi" target="_blank" rel="noopener noreferrer" className="lc-footer-link">GitHub</a>
+            <a href="https://x.com/lacusfi" target="_blank" rel="noopener noreferrer" className="lc-footer-link">X (Twitter)</a>
+            <a href="https://mirror.xyz/lacus.eth" target="_blank" rel="noopener noreferrer" className="lc-footer-link">Mirror</a>
           </div>
         </div>
 

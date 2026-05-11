@@ -210,6 +210,8 @@ pub mod lacus {
         let bond_state = &ctx.accounts.bond_state;
         let investor_position = &mut ctx.accounts.investor_position;
 
+        require!(bond_state.tokens_sold > 0, LacusError::InvalidAmount);
+
         if investor_position.investor == Pubkey::default() {
             investor_position.investor = ctx.accounts.investor.key();
             investor_position.bond_state = bond_state.key();
@@ -222,6 +224,7 @@ pub mod lacus {
             .ok_or(LacusError::InvalidAmount)?;
 
         let investor_balance = ctx.accounts.investor_bond_ata.amount;
+        require!(investor_balance > 0, LacusError::InvalidAmount);
 
         let claimable = deposited_since
             .checked_mul(investor_balance)
@@ -230,6 +233,9 @@ pub mod lacus {
             .ok_or(LacusError::InvalidAmount)?;
 
         require!(claimable > 0, LacusError::NothingToClaim);
+
+        let bond_lamports = ctx.accounts.bond_state.to_account_info().lamports();
+        require!(bond_lamports >= claimable, LacusError::InvalidAmount);
 
         **ctx.accounts.bond_state.to_account_info().try_borrow_mut_lamports()? -= claimable;
         **ctx.accounts.investor.to_account_info().try_borrow_mut_lamports()? += claimable;
@@ -256,11 +262,16 @@ pub mod lacus {
         let investor_balance = ctx.accounts.investor_bond_ata.amount;
         require!(investor_balance > 0, LacusError::InvalidAmount);
 
+        require!(bond_state.tokens_sold > 0, LacusError::InvalidAmount);
+
         let principal_amount = bond_state.total_principal_deposited
             .checked_mul(investor_balance)
             .ok_or(LacusError::InvalidAmount)?
             .checked_div(bond_state.tokens_sold)
             .ok_or(LacusError::InvalidAmount)?;
+
+        let bond_lamports = ctx.accounts.bond_state.to_account_info().lamports();
+        require!(bond_lamports >= principal_amount, LacusError::InvalidAmount);
 
         token::burn(
             CpiContext::new(
