@@ -40,3 +40,8 @@ body {
   background: oklch(0.72 0.14 72 / 0.25);
   color: var(--ink);
 }
+
+/* Footer background matches each page's color scheme */
+.dash-root  + .lc-footer { background: #080610; }
+.mgmt-root  + .lc-footer { background: #0e0508; }
+.about-root + .lc-footer { background: #060d08; }
