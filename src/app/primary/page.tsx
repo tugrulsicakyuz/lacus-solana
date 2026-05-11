@@ -254,6 +254,8 @@ function PrimaryContent() {
 
         .pri-reveal { opacity:0;transform:translateY(40px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1); }
         .pri-visible { opacity:1 !important;transform:translateY(0) !important; }
+        @keyframes priFadeRow { from { opacity:0;transform:translateY(16px); } to { opacity:1;transform:translateY(0); } }
+        .pri-row:not(.hdr) { animation: priFadeRow 0.5s cubic-bezier(.16,1,.3,1) both; }
 
         .pri-hero { height:100vh;display:grid;grid-template-columns:1fr 1fr;position:relative;overflow:hidden;border-bottom:1px solid var(--pri-rule); }
         .pri-hero-left { display:flex;flex-direction:column;justify-content:flex-end;padding:0 48px 80px;border-right:1px solid var(--pri-rule);position:relative;z-index:2; }
@@ -442,7 +444,7 @@ function PrimaryContent() {
                   return (
                     <div
                       key={bond.bondId}
-                      className={`pri-row pri-reveal${isSel ? " selected" : ""}`}
+                      className={`pri-row${isSel ? " selected" : ""}`}
                       onClick={() => setSelected(bond)}
                       onMouseEnter={() => document.body.classList.add("pri-cursor-hover")}
                       onMouseLeave={() => document.body.classList.remove("pri-cursor-hover")}
