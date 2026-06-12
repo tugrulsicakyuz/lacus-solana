@@ -25,7 +25,7 @@ export default function Error({
           justify-content: center;
           position: relative;
           overflow: hidden;
-          font-family: 'DM Mono', monospace;
+          font-family: var(--font-dm-mono);
         }
         .err-glow {
           pointer-events: none;
@@ -40,7 +40,7 @@ export default function Error({
           filter: blur(60px);
         }
         .err-code {
-          font-family: 'Bebas Neue', sans-serif;
+          font-family: var(--font-bebas);
           font-size: clamp(100px, 18vw, 160px);
           letter-spacing: 0.06em;
           color: rgba(251,113,133,0.15);
@@ -48,7 +48,7 @@ export default function Error({
           margin: 0;
         }
         .err-title {
-          font-family: 'Bebas Neue', sans-serif;
+          font-family: var(--font-bebas);
           font-size: clamp(28px, 5vw, 42px);
           letter-spacing: 0.12em;
           color: #f0e8d8;
@@ -83,7 +83,7 @@ export default function Error({
           overflow: hidden;
           cursor: pointer;
           transition: color 0.3s;
-          font-family: 'DM Mono', monospace;
+          font-family: var(--font-dm-mono);
           background: none;
         }
         .err-btn-primary::before {
@@ -111,7 +111,7 @@ export default function Error({
           text-transform: uppercase;
           cursor: pointer;
           transition: color 0.3s, border-color 0.3s;
-          font-family: 'DM Mono', monospace;
+          font-family: var(--font-dm-mono);
           background: none;
         }
         .err-btn-ghost:hover {

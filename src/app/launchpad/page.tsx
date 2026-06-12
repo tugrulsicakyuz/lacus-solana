@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { formatDate, timestampToMonths } from "@/lib/format";
 import { useLacusProgram } from '@/hooks/useLacus';
 import type { BondState } from '@/types/lacus';
 
@@ -28,15 +29,6 @@ interface Bond {
   status: "live" | "ended";
 }
 
-function timestampToMonths(timestamp: number): number {
-  const now = Math.floor(Date.now() / 1000);
-  return Math.max(0, Math.round((timestamp - now) / (30 * 24 * 60 * 60)));
-}
-
-function formatMaturityDate(timestamp: number): string {
-  return new Date(timestamp * 1000).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-}
-
 function getBondStatus(bond: { filled_percentage: number; maturityTimestamp: number }): "live" | "ended" {
   const now = Math.floor(Date.now() / 1000);
   if (bond.filled_percentage >= 100 || bond.maturityTimestamp < now) return "ended";
@@ -46,9 +38,6 @@ function getBondStatus(bond: { filled_percentage: number; maturityTimestamp: num
 export default function LaunchpadPage() {
   const headerCanvasRef = useRef<HTMLCanvasElement>(null);
   const featuredCanvasRef = useRef<HTMLCanvasElement>(null);
-  const grainCanvasRef = useRef<HTMLCanvasElement>(null);
-  const cursorDotRef = useRef<HTMLDivElement>(null);
-  const cursorRingRef = useRef<HTMLDivElement>(null);
 
   const [activeFilter, setActiveFilter] = useState<"all" | "live" | "ended">("all");
   const [bonds, setBonds] = useState<Bond[]>([]);
@@ -91,7 +80,7 @@ export default function LaunchpadPage() {
             symbol: bond.symbol || `BOND-${Number(bond.bondId)}`,
             name: bond.name || m?.issuer_name || bond.symbol || 'Unnamed Bond', apy: bond.couponRateBps / 100,
             maturity_months: timestampToMonths(maturityTimestamp),
-            maturity_date: formatMaturityDate(maturityTimestamp),
+            maturity_date: formatDate(maturityTimestamp),
             total_issue_size: faceValueSOL * maxSupply, price_per_token: faceValueSOL,
             filled_percentage: filled, faceValue: Number(bond.faceValue),
             couponRateBps: bond.couponRateBps, maxSupply, tokensSold, maturityTimestamp,
@@ -109,110 +98,6 @@ export default function LaunchpadPage() {
     fetchBonds();
   }, []);
 
-  // Grain Canvas Effect
-  useEffect(() => {
-    const canvas = grainCanvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let frame = 0;
-    let grainRafId: number;
-    let grainTid: ReturnType<typeof setTimeout>;
-    let grainDestroyed = false;
-
-    function resize() {
-      if (!canvas) return;
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener("resize", resize);
-
-    function renderGrain() {
-      if (grainDestroyed || !canvas || !ctx) return;
-      const w = canvas.width,
-        h = canvas.height;
-      const imageData = ctx.createImageData(w, h);
-      const data = imageData.data;
-      for (let i = 0; i < data.length; i += 4) {
-        const v = (Math.random() * 255) | 0;
-        data[i] = data[i + 1] = data[i + 2] = v;
-        data[i + 3] = 255;
-      }
-      ctx.putImageData(imageData, 0, 0);
-      frame++;
-      if (frame % 3 === 0) grainRafId = requestAnimationFrame(renderGrain);
-      else grainTid = setTimeout(() => { grainRafId = requestAnimationFrame(renderGrain); }, 60);
-    }
-    renderGrain();
-
-    return () => {
-      grainDestroyed = true;
-      cancelAnimationFrame(grainRafId);
-      clearTimeout(grainTid);
-      window.removeEventListener("resize", resize);
-    };
-  }, []);
-
-  // Cursor
-  useEffect(() => {
-    const dot = cursorDotRef.current;
-    const ring = cursorRingRef.current;
-    if (!dot || !ring) return;
-
-    let mx = 0,
-      my = 0,
-      rx = 0,
-      ry = 0;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mx = e.clientX;
-      my = e.clientY;
-      dot.style.transform = `translate3d(${mx - 4}px,${my - 4}px,0)`;
-    };
-    document.addEventListener("mousemove", handleMouseMove);
-
-    let lerpRafId: number;
-    function lerp() {
-      if (!ring) return;
-      rx += (mx - rx) * 0.12;
-      ry += (my - ry) * 0.12;
-      ring.style.transform = `translate3d(${rx - 20}px,${ry - 20}px,0)`;
-      lerpRafId = requestAnimationFrame(lerp);
-    }
-    lerpRafId = requestAnimationFrame(lerp);
-
-    // ripple on click
-    const handleClick = (e: MouseEvent) => {
-      const el = document.createElement("div");
-      el.className = "ripple";
-      el.style.cssText = `left:${e.clientX}px;top:${e.clientY}px;width:80px;height:80px;`;
-      document.body.appendChild(el);
-      el.addEventListener("animationend", () => el.remove());
-    };
-    document.addEventListener("click", handleClick);
-
-    const handleCursorHover = () => document.body.classList.add("cursor-hover");
-    const handleCursorLeave = () => document.body.classList.remove("cursor-hover");
-
-    document
-      .querySelectorAll(
-        "a, button, .protocol-item, .btn-magnetic, .btn-primary, .btn-ghost, .nav-cta"
-      )
-      .forEach((el) => {
-        el.addEventListener("mouseenter", handleCursorHover);
-        el.addEventListener("mouseleave", handleCursorLeave);
-      });
-
-    return () => {
-      cancelAnimationFrame(lerpRafId);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("click", handleClick);
-    };
-  }, []);
-
   // Header canvas: drifting gold lines
   useEffect(() => {
     const canvas = headerCanvasRef.current;
@@ -220,6 +105,7 @@ export default function LaunchpadPage() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let W: number, H: number;
     let animationId: number;
@@ -279,6 +165,7 @@ export default function LaunchpadPage() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let W: number, H: number;
     let animationId: number;
@@ -325,575 +212,13 @@ export default function LaunchpadPage() {
     };
   }, []);
 
-  // Scroll reveal
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const reveals = document.querySelectorAll('.launchpad-root .reveal');
-      const obs = new IntersectionObserver((entries) => {
-        entries.forEach(e => {
-          if (e.isIntersecting) {
-            e.target.classList.add('visible');
-            const bar = e.target.querySelector('.launch-bar-fill');
-            if (bar) setTimeout(() => bar.classList.add('animate'), 300);
-          }
-        });
-      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-      reveals.forEach(el => obs.observe(el));
-      return () => obs.disconnect();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
+  // Scroll reveal: GlobalInteractions yönetir; bar dolumu CSS ile
+  // (.reveal.visible .launch-bar-fill) tetiklenir
 
   const featuredBond = bonds.find(b => b.status === "live") || bonds[0];
 
   return (
-    <>
-      <style>{`
-        .launchpad-root { cursor: none; }
-        #grain { position: fixed; inset: 0; pointer-events: none; z-index: 9000; opacity: 0.035; }
-        #cursor-dot { position: fixed; top: 0; left: 0; width: 8px; height: 8px; background: var(--gold); border-radius: 50%; pointer-events: none; z-index: 9999; will-change: transform; mix-blend-mode: difference; }
-        #cursor-ring { position: fixed; top: 0; left: 0; width: 40px; height: 40px; border: 1px solid var(--gold); border-radius: 50%; pointer-events: none; z-index: 9998; will-change: transform; transition: width 0.3s, height 0.3s, border-color 0.3s, opacity 0.3s; opacity: 0.5; }
-        body.cursor-hover #cursor-ring { width: 70px; height: 70px; border-color: var(--copper); opacity: 0.9; }
-        .ripple { position: fixed; border-radius: 50%; border: 1px solid var(--gold); pointer-events: none; z-index: 9990; transform: translate(-50%,-50%) scale(0); opacity: 0.6; animation: rippleOut 1.4s cubic-bezier(0.2,0.8,0.4,1) forwards; }
-        @keyframes rippleOut { to { transform: translate(-50%,-50%) scale(1); opacity: 0; } }
-        .launchpad-root { background: var(--bg) !important; color: var(--ink); }
-        .launchpad-root * { box-sizing: border-box; }
-
-        .reveal {
-          opacity: 0;
-          transform: translateY(40px);
-          transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1);
-        }
-        .reveal.visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        /* HEADER */
-        #header {
-          padding: 80px 48px 100px;
-          border-bottom: 1px solid var(--rule);
-          position: relative;
-          overflow: hidden;
-        }
-        .header-canvas {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-        }
-        .header-eyebrow {
-          font-size: 10px;
-          letter-spacing: 0.4em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-          margin-bottom: 32px;
-          position: relative;
-          z-index: 2;
-        }
-        .header-title {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: clamp(80px, 14vw, 200px);
-          letter-spacing: -0.02em;
-          line-height: 0.9;
-          position: relative;
-          z-index: 2;
-        }
-        .header-title .gold {
-          color: var(--gold);
-        }
-        .header-right {
-          position: absolute;
-          right: 48px;
-          bottom: 100px;
-          z-index: 2;
-          text-align: right;
-        }
-        .header-right p {
-          font-family: "Cormorant Garamond", serif;
-          font-style: italic;
-          font-size: 18px;
-          font-weight: 300;
-          color: var(--ink-dim);
-          line-height: 1.6;
-          max-width: 340px;
-        }
-
-        /* FILTER BAR */
-        .filter-bar {
-          padding: 28px 48px;
-          border-bottom: 1px solid var(--rule);
-          display: flex;
-          gap: 4px;
-          align-items: center;
-          position: sticky;
-          top: 78px;
-          background: var(--bg);
-          z-index: 50;
-        }
-        .filter-label {
-          font-size: 10px;
-          letter-spacing: 0.3em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-          margin-right: 20px;
-        }
-        .filter-btn {
-          padding: 8px 20px;
-          border: 1px solid var(--rule);
-          background: none;
-          color: var(--ink-dim);
-          font-family: "DM Mono", monospace;
-          font-size: 10px;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          cursor: none;
-          transition: all 0.3s;
-        }
-        .filter-btn:hover {
-          border-color: var(--gold);
-          color: var(--ink);
-        }
-        .filter-btn.active {
-          border-color: var(--gold);
-          color: var(--gold);
-          background: oklch(0.72 0.14 72 / 0.06);
-        }
-        .filter-spacer {
-          flex: 1;
-        }
-        .filter-count {
-          font-size: 10px;
-          letter-spacing: 0.2em;
-          color: var(--ink-dim);
-        }
-        .filter-count span {
-          color: var(--gold);
-        }
-
-        /* LAUNCH GRID */
-        .launches-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 2px;
-          background: var(--rule);
-          border-bottom: 1px solid var(--rule);
-        }
-
-        .launch-card {
-          background: var(--bg);
-          padding: 52px 44px;
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-          cursor: none;
-          position: relative;
-          overflow: hidden;
-          transition: background 0.4s;
-          text-decoration: none;
-          color: inherit;
-        }
-        .launch-card::after {
-          content: "";
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, var(--gold), transparent);
-          transform: scaleX(0);
-          transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .launch-card:hover::after {
-          transform: scaleX(1);
-        }
-        .launch-card:hover {
-          background: oklch(0.14 0.01 72 / 1);
-        }
-
-        .launch-status {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 9px;
-          letter-spacing: 0.3em;
-          text-transform: uppercase;
-          margin-bottom: 40px;
-        }
-        .status-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          flex-shrink: 0;
-        }
-        .status-live .status-dot {
-          background: var(--moss);
-          box-shadow: 0 0 8px oklch(0.48 0.09 145 / 0.6);
-          animation: pulse 2s ease-in-out infinite;
-        }
-        .status-upcoming .status-dot {
-          background: var(--gold);
-        }
-        .status-ended .status-dot {
-          background: var(--ink-dim);
-        }
-        @keyframes pulse {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.4;
-          }
-        }
-
-        .launch-num {
-          font-family: "Cormorant Garamond", serif;
-          font-style: italic;
-          font-size: 13px;
-          color: var(--ink-dim);
-          margin-bottom: 16px;
-        }
-        .launch-name {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: clamp(40px, 4vw, 60px);
-          letter-spacing: 0.02em;
-          line-height: 1;
-          color: var(--ink);
-          margin-bottom: 8px;
-          transition: color 0.3s;
-        }
-        .launch-card:hover .launch-name {
-          color: var(--gold);
-        }
-        .launch-sub {
-          font-size: 11px;
-          color: var(--ink-dim);
-          margin-bottom: 40px;
-          line-height: 1.6;
-        }
-
-        .launch-bar-wrap {
-          margin-bottom: 8px;
-        }
-        .launch-bar-label {
-          display: flex;
-          justify-content: space-between;
-          font-size: 9px;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-          margin-bottom: 10px;
-        }
-        .launch-bar-label span {
-          color: var(--gold);
-        }
-        .launch-bar-track {
-          width: 100%;
-          height: 1px;
-          background: var(--rule);
-          position: relative;
-        }
-        .launch-bar-fill {
-          height: 100%;
-          background: var(--gold);
-          transition: width 1.6s cubic-bezier(0.16, 1, 0.3, 1);
-          width: 0;
-        }
-        .launch-bar-fill.animate {
-          width: var(--fill);
-        }
-
-        .launch-meta {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 20px;
-          margin-top: 36px;
-          padding-top: 28px;
-          border-top: 1px solid var(--rule);
-        }
-        .launch-meta-key {
-          font-size: 9px;
-          letter-spacing: 0.25em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-          margin-bottom: 6px;
-        }
-        .launch-meta-val {
-          font-size: 14px;
-          color: var(--ink);
-        }
-
-        .launch-arrow {
-          position: absolute;
-          right: 44px;
-          bottom: 44px;
-          width: 28px;
-          height: 28px;
-          border: 1px solid var(--rule);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.3s;
-        }
-        .launch-arrow svg {
-          width: 10px;
-          height: 10px;
-          fill: none;
-          stroke: var(--ink-dim);
-          stroke-width: 1.5;
-          transition: stroke 0.3s;
-        }
-        .launch-card:hover .launch-arrow {
-          border-color: var(--gold);
-          transform: rotate(45deg);
-        }
-        .launch-card:hover .launch-arrow svg {
-          stroke: var(--gold);
-        }
-
-        /* FEATURED */
-        #featured {
-          padding: 140px 48px;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 120px;
-          align-items: center;
-          border-bottom: 1px solid var(--rule);
-        }
-        .featured-label {
-          font-size: 10px;
-          letter-spacing: 0.4em;
-          text-transform: uppercase;
-          color: var(--gold);
-          margin-bottom: 28px;
-        }
-        .featured-title {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: clamp(60px, 7vw, 100px);
-          letter-spacing: -0.01em;
-          line-height: 0.9;
-          margin-bottom: 36px;
-        }
-        .featured-body {
-          font-family: "Cormorant Garamond", serif;
-          font-style: italic;
-          font-size: 22px;
-          font-weight: 300;
-          color: var(--ink-dim);
-          line-height: 1.65;
-          margin-bottom: 48px;
-        }
-        .featured-stats {
-          display: flex;
-          gap: 48px;
-          padding-top: 36px;
-          border-top: 1px solid var(--rule);
-        }
-        .featured-stat-num {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: 48px;
-          color: var(--ink);
-          letter-spacing: -0.02em;
-          line-height: 1;
-        }
-        .featured-stat-num .suf {
-          font-size: 0.4em;
-          color: var(--gold);
-        }
-        .featured-stat-lbl {
-          font-size: 9px;
-          letter-spacing: 0.25em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-          margin-top: 4px;
-        }
-
-        .featured-visual {
-          position: relative;
-          height: 440px;
-        }
-        .featured-canvas {
-          width: 100%;
-          height: 100%;
-        }
-
-        /* TIMELINE */
-        #timeline {
-          padding: 120px 48px;
-          border-bottom: 1px solid var(--rule);
-        }
-        .timeline-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-          margin-bottom: 80px;
-        }
-        .timeline-title {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: clamp(48px, 6vw, 80px);
-          letter-spacing: -0.01em;
-          line-height: 1;
-        }
-        .timeline-desc {
-          max-width: 280px;
-          font-size: 13px;
-          color: var(--ink-dim);
-          line-height: 1.8;
-        }
-        .timeline-track {
-          position: relative;
-          padding-left: 48px;
-          border-left: 1px solid var(--rule);
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-        }
-        .timeline-item {
-          padding: 40px 0 40px 48px;
-          border-bottom: 1px solid var(--rule);
-          display: grid;
-          grid-template-columns: 200px 1fr 1fr;
-          gap: 48px;
-          align-items: center;
-          position: relative;
-          cursor: none;
-          transition: background 0.3s;
-        }
-        .timeline-item:hover {
-          background: oklch(0.14 0.01 72 / 0.6);
-        }
-        .timeline-dot {
-          position: absolute;
-          left: -25px;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          border: 1px solid var(--gold);
-          background: var(--bg);
-        }
-        .timeline-dot.active {
-          background: var(--gold);
-          box-shadow: 0 0 12px oklch(0.72 0.14 72 / 0.5);
-        }
-        .timeline-date {
-          font-size: 10px;
-          letter-spacing: 0.25em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-        }
-        .timeline-name {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: 36px;
-          color: var(--ink);
-        }
-        .timeline-detail {
-          font-size: 12px;
-          color: var(--ink-dim);
-          line-height: 1.7;
-        }
-
-        /* FOOTER */
-        footer {
-          padding: 48px;
-          border-top: 1px solid var(--rule);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .footer-logo {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: 18px;
-          letter-spacing: 0.2em;
-        }
-        .footer-copy {
-          font-size: 10px;
-          letter-spacing: 0.15em;
-          color: var(--ink-dim);
-        }
-        .footer-links {
-          display: flex;
-          gap: 28px;
-          list-style: none;
-        }
-        .footer-links a {
-          font-size: 10px;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-          text-decoration: none;
-          transition: color 0.2s;
-        }
-        .footer-links a:hover {
-          color: var(--ink);
-        }
-
-        .btn-magnetic {
-          display: inline-flex;
-          align-items: center;
-          gap: 16px;
-          padding: 20px 48px;
-          border: 1px solid var(--gold);
-          color: var(--ink);
-          text-decoration: none;
-          font-size: 11px;
-          letter-spacing: 0.3em;
-          text-transform: uppercase;
-          transition: background 0.3s, color 0.3s;
-          position: relative;
-          overflow: hidden;
-          cursor: none;
-          will-change: transform;
-        }
-        .btn-magnetic::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: var(--gold);
-          transform: translateY(100%);
-          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .btn-magnetic:hover {
-          color: var(--bg);
-        }
-        .btn-magnetic:hover::before {
-          transform: translateY(0);
-        }
-        .btn-magnetic span {
-          position: relative;
-          z-index: 1;
-        }
-        .btn-arrow {
-          position: relative;
-          z-index: 1;
-          width: 16px;
-          height: 1px;
-          background: currentColor;
-          transition: width 0.3s;
-          flex-shrink: 0;
-        }
-        .btn-arrow::after {
-          content: "";
-          position: absolute;
-          right: 0;
-          top: -3px;
-          width: 6px;
-          height: 6px;
-          border-right: 1px solid currentColor;
-          border-top: 1px solid currentColor;
-          transform: rotate(45deg);
-        }
-        .btn-magnetic:hover .btn-arrow {
-          width: 28px;
-        }
-      `}</style>
-
       <div className="launchpad-root" style={{ background: "var(--bg)", color: "var(--ink)", minHeight: "100vh" }}>
-        <canvas ref={grainCanvasRef} id="grain" />
-        <div ref={cursorDotRef} id="cursor-dot"></div>
-        <div ref={cursorRingRef} id="cursor-ring"></div>
         {/* HEADER */}
         <section id="header">
           <canvas ref={headerCanvasRef} className="header-canvas" />
@@ -939,7 +264,7 @@ export default function LaunchpadPage() {
 
         {/* BOND GRID */}
         {loading ? (
-          <div style={{ textAlign: "center", padding: "120px 0", fontFamily: "'DM Mono', monospace", fontSize: "14px", color: "var(--ink-dim)" }}>
+          <div style={{ textAlign: "center", padding: "120px 0", fontFamily: "var(--font-dm-mono)", fontSize: "14px", color: "var(--ink-dim)" }}>
             Loading...
           </div>
         ) : (
@@ -1070,6 +395,5 @@ export default function LaunchpadPage() {
         </section>
 
       </div>
-    </>
   );
 }

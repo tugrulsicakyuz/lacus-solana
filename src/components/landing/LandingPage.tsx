@@ -4,58 +4,8 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 
 export default function LandingPage() {
-  const grainCanvasRef = useRef<HTMLCanvasElement>(null);
   const heroCanvasRef = useRef<HTMLCanvasElement>(null);
   const depthCanvasRef = useRef<HTMLCanvasElement>(null);
-  const cursorDotRef = useRef<HTMLDivElement>(null);
-  const cursorRingRef = useRef<HTMLDivElement>(null);
-
-  // Grain Canvas Effect
-  useEffect(() => {
-    const canvas = grainCanvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let frame = 0;
-    let grainRafId: number;
-    let grainTid: ReturnType<typeof setTimeout>;
-    let grainDestroyed = false;
-
-    function resize() {
-      if (!canvas) return;
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener("resize", resize);
-
-    function renderGrain() {
-      if (grainDestroyed || !canvas || !ctx) return;
-      const w = canvas.width,
-        h = canvas.height;
-      const imageData = ctx.createImageData(w, h);
-      const data = imageData.data;
-      for (let i = 0; i < data.length; i += 4) {
-        const v = (Math.random() * 255) | 0;
-        data[i] = data[i + 1] = data[i + 2] = v;
-        data[i + 3] = 255;
-      }
-      ctx.putImageData(imageData, 0, 0);
-      frame++;
-      if (frame % 3 === 0) grainRafId = requestAnimationFrame(renderGrain);
-      else grainTid = setTimeout(() => { grainRafId = requestAnimationFrame(renderGrain); }, 60);
-    }
-    renderGrain();
-
-    return () => {
-      grainDestroyed = true;
-      cancelAnimationFrame(grainRafId);
-      clearTimeout(grainTid);
-      window.removeEventListener("resize", resize);
-    };
-  }, []);
 
   // Hero Background — Fluid Particles
   useEffect(() => {
@@ -64,6 +14,7 @@ export default function LandingPage() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let W: number, H: number;
     const particles: any[] = [];
@@ -150,7 +101,7 @@ export default function LandingPage() {
       }
     }
 
-    for (let i = 0; i < 160; i++) particles.push(new Particle());
+    for (let i = 0; i < 80; i++) particles.push(new Particle());
 
     const heroElement = document.getElementById("hero");
     if (heroElement) {
@@ -183,12 +134,13 @@ export default function LandingPage() {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < 90) {
+          const d2 = dx * dx + dy * dy;
+          if (d2 < 8100) { // 90²
+            const d = Math.sqrt(d2);
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(201,149,42,${((1 - d / 90) * 0.06)})`;
+            ctx.strokeStyle = `rgba(201,149,42,${(1 - d / 90) * 0.06})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -216,6 +168,7 @@ export default function LandingPage() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let W: number, H: number;
     const rings: any[] = [];
@@ -311,65 +264,6 @@ export default function LandingPage() {
     };
   }, []);
 
-  // Cursor
-  useEffect(() => {
-    const dot = cursorDotRef.current;
-    const ring = cursorRingRef.current;
-    if (!dot || !ring) return;
-
-    let mx = 0,
-      my = 0,
-      rx = 0,
-      ry = 0;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mx = e.clientX;
-      my = e.clientY;
-      dot.style.left = mx + "px";
-      dot.style.top = my + "px";
-    };
-    document.addEventListener("mousemove", handleMouseMove);
-
-    let lerpRafId: number;
-    function lerp() {
-      if (!ring) return;
-      rx += (mx - rx) * 0.12;
-      ry += (my - ry) * 0.12;
-      ring.style.left = rx + "px";
-      ring.style.top = ry + "px";
-      lerpRafId = requestAnimationFrame(lerp);
-    }
-    lerpRafId = requestAnimationFrame(lerp);
-
-    // ripple on click
-    const handleClick = (e: MouseEvent) => {
-      const el = document.createElement("div");
-      el.className = "ripple";
-      el.style.cssText = `left:${e.clientX}px;top:${e.clientY}px;width:80px;height:80px;`;
-      document.body.appendChild(el);
-      el.addEventListener("animationend", () => el.remove());
-    };
-    document.addEventListener("click", handleClick);
-
-    const handleCursorHover = () => document.body.classList.add("cursor-hover");
-    const handleCursorLeave = () => document.body.classList.remove("cursor-hover");
-
-    document
-      .querySelectorAll(
-        "a, button, .protocol-item, .btn-magnetic, .btn-primary, .btn-ghost, .nav-cta"
-      )
-      .forEach((el) => {
-        el.addEventListener("mouseenter", handleCursorHover);
-        el.addEventListener("mouseleave", handleCursorLeave);
-      });
-
-    return () => {
-      cancelAnimationFrame(lerpRafId);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("click", handleClick);
-    };
-  }, []);
-
   // Hero Letter Parallax
   useEffect(() => {
     const letters = document.querySelectorAll(".letter");
@@ -411,7 +305,9 @@ export default function LandingPage() {
       });
       requestAnimationFrame(tick);
     }
-    requestAnimationFrame(tick);
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      requestAnimationFrame(tick);
+    }
 
     return () => {
       hero.removeEventListener("mousemove", handleMouseMove);
@@ -490,42 +386,38 @@ export default function LandingPage() {
     track.innerHTML = html.repeat(6);
   }, []);
 
-  // Scroll Reveal + Counter
+  // Stat sayaçları — reveal görünürlüğünü GlobalInteractions yönetir
   useEffect(() => {
-    const reveals = document.querySelectorAll(".reveal");
     const counted = new Set();
 
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
           if (!e.isIntersecting) return;
-          e.target.classList.add("visible");
-
-          // counters
-          const cell = e.target.classList.contains("stat-cell")
-            ? e.target
-            : e.target.closest(".stat-cell");
-          if (!cell) return;
-          const counter = cell.querySelector(".count");
+          const counter = e.target.querySelector(".count");
           if (counter && !counted.has(counter)) {
             counted.add(counter);
             const target = parseFloat(counter.getAttribute("data-target") || "0");
             const dec = parseInt(counter.getAttribute("data-decimal") || "0");
-            const dur = 1800;
-            const start = performance.now();
-            (function tick(now: number) {
-              const p = Math.min((now - start) / dur, 1);
-              const ease = 1 - Math.pow(1 - p, 3);
-              counter.textContent = (target * ease).toFixed(dec);
-              if (p < 1) requestAnimationFrame(tick);
-            })(start);
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+              counter.textContent = target.toFixed(dec);
+            } else {
+              const dur = 1800;
+              const start = performance.now();
+              (function tick(now: number) {
+                const p = Math.min((now - start) / dur, 1);
+                const ease = 1 - Math.pow(1 - p, 3);
+                counter.textContent = (target * ease).toFixed(dec);
+                if (p < 1) requestAnimationFrame(tick);
+              })(start);
+            }
           }
         });
       },
       { threshold: 0.15 }
     );
 
-    reveals.forEach((el) => obs.observe(el));
+    document.querySelectorAll(".stat-cell").forEach((el) => obs.observe(el));
 
     return () => {
       obs.disconnect();
@@ -545,6 +437,7 @@ export default function LandingPage() {
 
       const handleMouseEnter = () => {
         if (!el || active) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
         active = true;
         frame = 0;
         cancelAnimationFrame(raf);
@@ -609,677 +502,6 @@ export default function LandingPage() {
 
   return (
     <>
-      <style>{`
-        body {
-          cursor: none;
-        }
-
-        /* ── CURSOR ─────────────────────────────────────── */
-        #cursor-dot {
-          position: fixed;
-          width: 8px;
-          height: 8px;
-          background: var(--gold);
-          border-radius: 50%;
-          pointer-events: none;
-          z-index: 9999;
-          transform: translate(-50%, -50%);
-          transition: transform 0.05s, opacity 0.2s;
-          mix-blend-mode: difference;
-        }
-        #cursor-ring {
-          position: fixed;
-          width: 40px;
-          height: 40px;
-          border: 1px solid var(--gold);
-          border-radius: 50%;
-          pointer-events: none;
-          z-index: 9998;
-          transform: translate(-50%, -50%);
-          transition: width 0.3s, height 0.3s, border-color 0.3s, opacity 0.3s;
-          opacity: 0.5;
-        }
-        body.cursor-hover #cursor-ring {
-          width: 70px;
-          height: 70px;
-          border-color: var(--copper);
-          opacity: 0.9;
-        }
-
-        /* ripple pool */
-        .ripple {
-          position: fixed;
-          border-radius: 50%;
-          border: 1px solid var(--gold);
-          pointer-events: none;
-          z-index: 9990;
-          transform: translate(-50%, -50%) scale(0);
-          opacity: 0.6;
-          animation: rippleOut 1.4s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
-        }
-        @keyframes rippleOut {
-          to {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 0;
-          }
-        }
-
-        /* ── GRAIN OVERLAY ─────────────────────────────── */
-        #grain {
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          z-index: 9000;
-          opacity: 0.035;
-        }
-
-        /* ── HERO ───────────────────────────────────────── */
-        #hero {
-          position: relative;
-          height: 100vh;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          padding: 0 48px 64px;
-          overflow: hidden;
-        }
-
-        .hero-bg-canvas {
-          position: absolute;
-          inset: 0;
-          z-index: 0;
-        }
-
-        .hero-title-wrap {
-          position: relative;
-          z-index: 2;
-          display: flex;
-          align-items: flex-end;
-          gap: 0;
-          line-height: 0.85;
-        }
-
-        .hero-title {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: clamp(120px, 20vw, 280px);
-          letter-spacing: -0.02em;
-          color: var(--ink);
-          display: flex;
-          user-select: none;
-        }
-
-        .hero-title .letter {
-          display: inline-block;
-          transform-origin: bottom center;
-          will-change: transform;
-          transition: color 0.4s;
-        }
-
-        .hero-sub {
-          position: relative;
-          z-index: 2;
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-          margin-top: 20px;
-          padding-top: 20px;
-          border-top: 1px solid var(--rule);
-        }
-
-        .hero-tagline {
-          font-family: "Cormorant Garamond", serif;
-          font-style: italic;
-          font-size: clamp(18px, 2.2vw, 32px);
-          font-weight: 300;
-          color: var(--ink-dim);
-          max-width: 500px;
-          line-height: 1.4;
-        }
-
-        .hero-tagline .typed-cursor {
-          animation: blink 1s step-end infinite;
-          color: var(--gold);
-        }
-        @keyframes blink {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0;
-          }
-        }
-
-        .hero-meta {
-          text-align: right;
-          font-size: 10px;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-          line-height: 2;
-        }
-
-        /* ── HERO BUTTONS ──────────────────────────────── */
-        .hero-actions {
-          position: relative;
-          z-index: 2;
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          margin-top: 40px;
-        }
-
-        .btn-primary {
-          display: inline-flex;
-          align-items: center;
-          gap: 14px;
-          padding: 16px 40px;
-          border: 1px solid var(--gold);
-          color: var(--ink);
-          text-decoration: none;
-          font-size: 11px;
-          letter-spacing: 0.28em;
-          text-transform: uppercase;
-          position: relative;
-          overflow: hidden;
-          cursor: none;
-          will-change: transform;
-        }
-        .btn-primary::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: var(--gold);
-          transform: translateY(100%);
-          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .btn-primary:hover {
-          color: var(--bg);
-        }
-        .btn-primary:hover::before {
-          transform: translateY(0);
-        }
-        .btn-primary span {
-          position: relative;
-          z-index: 1;
-        }
-        .btn-primary .btn-arrow {
-          position: relative;
-          z-index: 1;
-          width: 16px;
-          height: 1px;
-          background: currentColor;
-          transition: width 0.3s;
-          flex-shrink: 0;
-        }
-        .btn-primary .btn-arrow::after {
-          content: "";
-          position: absolute;
-          right: 0;
-          top: -3px;
-          width: 6px;
-          height: 6px;
-          border-right: 1px solid currentColor;
-          border-top: 1px solid currentColor;
-          transform: rotate(45deg);
-        }
-        .btn-primary:hover .btn-arrow {
-          width: 26px;
-        }
-
-        .btn-ghost {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 16px 40px;
-          border: 1px solid rgba(240, 232, 216, 0.18);
-          color: var(--ink-dim);
-          text-decoration: none;
-          font-size: 11px;
-          letter-spacing: 0.28em;
-          text-transform: uppercase;
-          position: relative;
-          overflow: hidden;
-          cursor: none;
-          transition: color 0.3s, border-color 0.3s;
-        }
-        .btn-ghost:hover {
-          color: var(--ink);
-          border-color: rgba(240, 232, 216, 0.3);
-        }
-
-        .hero-scroll-hint {
-          position: absolute;
-          right: 48px;
-          bottom: 50%;
-          transform: translateY(50%);
-          z-index: 2;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 10px;
-          font-size: 9px;
-          letter-spacing: 0.3em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-          writing-mode: vertical-lr;
-        }
-        .scroll-line {
-          width: 1px;
-          height: 60px;
-          background: linear-gradient(to bottom, transparent, var(--gold));
-          animation: scrollPulse 2s ease-in-out infinite;
-        }
-        @keyframes scrollPulse {
-          0%,
-          100% {
-            opacity: 0.3;
-            transform: scaleY(0.6);
-          }
-          50% {
-            opacity: 1;
-            transform: scaleY(1);
-          }
-        }
-
-        /* ── TICKER ─────────────────────────────────────── */
-        .ticker-wrap {
-          overflow: hidden;
-          border-top: 1px solid var(--rule);
-          border-bottom: 1px solid var(--rule);
-          padding: 18px 0;
-          background: var(--bg);
-        }
-        .ticker-track {
-          display: flex;
-          gap: 0;
-          white-space: nowrap;
-          animation: ticker 30s linear infinite;
-          will-change: transform;
-        }
-        .ticker-track:hover {
-          animation-play-state: paused;
-        }
-        @keyframes ticker {
-          from {
-            transform: translateX(0);
-          }
-          to {
-            transform: translateX(-50%);
-          }
-        }
-        .ticker-item {
-          display: inline-flex;
-          align-items: center;
-          gap: 28px;
-          padding: 0 28px;
-          font-size: 11px;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-        }
-        .ticker-item .dot {
-          width: 4px;
-          height: 4px;
-          border-radius: 50%;
-          background: var(--gold);
-          flex-shrink: 0;
-        }
-        .ticker-item .val {
-          color: var(--gold);
-        }
-
-        /* ── SECTIONS COMMON ────────────────────────────── */
-        section {
-          position: relative;
-        }
-
-        .reveal {
-          opacity: 0;
-          transform: translateY(40px);
-          transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-            transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .reveal.visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        .reveal-stagger .reveal {
-          transition-delay: calc(var(--i, 0) * 0.12s);
-        }
-
-        /* ── MANIFESTO ──────────────────────────────────── */
-        #manifesto {
-          padding: 140px 48px;
-          display: grid;
-          grid-template-columns: 1fr 2fr;
-          gap: 80px;
-          border-bottom: 1px solid var(--rule);
-        }
-        .manifesto-label {
-          font-size: 10px;
-          letter-spacing: 0.3em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-          padding-top: 8px;
-        }
-        .manifesto-body {
-          font-family: "Cormorant Garamond", serif;
-          font-size: clamp(28px, 3.5vw, 52px);
-          font-weight: 300;
-          line-height: 1.35;
-          color: var(--ink);
-        }
-        .manifesto-body em {
-          font-style: italic;
-          color: var(--gold);
-        }
-        .manifesto-body strong {
-          font-weight: 600;
-          font-style: normal;
-        }
-
-        /* ── STATS ──────────────────────────────────────── */
-        #stats {
-          padding: 100px 48px;
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 2px;
-          background: var(--rule);
-          border-bottom: 1px solid var(--rule);
-        }
-        .stat-cell {
-          background: var(--bg);
-          padding: 60px 48px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .stat-number {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: clamp(64px, 8vw, 112px);
-          letter-spacing: -0.02em;
-          line-height: 1;
-          color: var(--ink);
-          display: flex;
-          align-items: baseline;
-          gap: 4px;
-        }
-        .stat-suffix {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: 0.4em;
-          color: var(--gold);
-        }
-        .stat-label {
-          font-size: 10px;
-          letter-spacing: 0.25em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-        }
-        .stat-sub {
-          font-size: 12px;
-          color: var(--ink-dim);
-          font-family: "DM Mono", monospace;
-          font-style: italic;
-          margin-top: auto;
-          padding-top: 20px;
-          border-top: 1px solid var(--rule);
-          line-height: 1.6;
-        }
-
-        /* ── PROTOCOL ───────────────────────────────────── */
-        #protocol {
-          padding: 140px 0;
-        }
-        .protocol-header {
-          padding: 0 48px 80px;
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-          border-bottom: 1px solid var(--rule);
-        }
-        .protocol-title {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: clamp(48px, 7vw, 100px);
-          letter-spacing: -0.01em;
-          line-height: 1;
-        }
-        .protocol-desc {
-          max-width: 320px;
-          font-size: 13px;
-          color: var(--ink-dim);
-          line-height: 1.8;
-        }
-
-        .protocol-items {
-          display: flex;
-          flex-direction: column;
-        }
-        .protocol-item {
-          display: grid;
-          grid-template-columns: 80px 1fr 1fr;
-          gap: 0;
-          padding: 56px 48px;
-          border-bottom: 1px solid var(--rule);
-          align-items: center;
-          cursor: none;
-          transition: background 0.4s;
-          position: relative;
-          overflow: hidden;
-        }
-        .protocol-item::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(90deg, transparent, oklch(0.72 0.14 72 / 0.04));
-          transform: translateX(-100%);
-          transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .protocol-item:hover::before {
-          transform: translateX(0);
-        }
-
-        .protocol-num {
-          font-family: "Cormorant Garamond", serif;
-          font-style: italic;
-          font-size: 15px;
-          color: var(--gold);
-          opacity: 0.8;
-        }
-        .protocol-name {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: clamp(36px, 5vw, 72px);
-          letter-spacing: 0.02em;
-          line-height: 1;
-          color: var(--ink);
-          transition: color 0.3s;
-        }
-        .protocol-item:hover .protocol-name {
-          color: var(--gold);
-        }
-        .protocol-text {
-          font-size: 13px;
-          color: var(--ink-dim);
-          line-height: 1.8;
-          padding-left: 48px;
-          border-left: 1px solid var(--rule);
-        }
-
-        /* ── DEPTH VISUAL ───────────────────────────────── */
-        #depth {
-          height: 60vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-          position: relative;
-          border-top: 1px solid var(--rule);
-          border-bottom: 1px solid var(--rule);
-        }
-        .depth-canvas {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-        }
-        .depth-text {
-          position: relative;
-          z-index: 2;
-          text-align: center;
-          font-family: "Cormorant Garamond", serif;
-          font-style: italic;
-          font-size: clamp(16px, 2.5vw, 28px);
-          color: var(--ink);
-          opacity: 0.7;
-          line-height: 1.6;
-          pointer-events: none;
-          font-weight: 300;
-          max-width: 600px;
-        }
-
-        /* ── CTA ─────────────────────────────────────────── */
-        #cta {
-          padding: 180px 48px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          gap: 60px;
-        }
-        .cta-eyebrow {
-          font-size: 10px;
-          letter-spacing: 0.4em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-        }
-        .cta-headline {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: clamp(72px, 12vw, 180px);
-          letter-spacing: -0.02em;
-          line-height: 0.9;
-          color: var(--ink);
-        }
-        .cta-headline .accent {
-          color: var(--gold);
-        }
-        .cta-headline .line2 {
-          display: block;
-          padding-left: 2em;
-          color: var(--ink-dim);
-          font-size: 0.5em;
-          font-family: "Cormorant Garamond", serif;
-          font-style: italic;
-          font-weight: 300;
-          letter-spacing: 0;
-        }
-        .btn-magnetic {
-          display: inline-flex;
-          align-items: center;
-          gap: 16px;
-          padding: 20px 48px;
-          border: 1px solid var(--gold);
-          color: var(--ink);
-          text-decoration: none;
-          font-size: 11px;
-          letter-spacing: 0.3em;
-          text-transform: uppercase;
-          transition: background 0.3s, color 0.3s;
-          position: relative;
-          overflow: hidden;
-          cursor: none;
-          will-change: transform;
-        }
-        .btn-magnetic::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: var(--gold);
-          transform: translateY(100%);
-          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .btn-magnetic:hover {
-          color: var(--bg);
-        }
-        .btn-magnetic:hover::before {
-          transform: translateY(0);
-        }
-        .btn-magnetic span {
-          position: relative;
-          z-index: 1;
-        }
-        .btn-arrow {
-          position: relative;
-          z-index: 1;
-          width: 16px;
-          height: 1px;
-          background: currentColor;
-          transition: width 0.3s;
-          flex-shrink: 0;
-        }
-        .btn-arrow::after {
-          content: "";
-          position: absolute;
-          right: 0;
-          top: -3px;
-          width: 6px;
-          height: 6px;
-          border-right: 1px solid currentColor;
-          border-top: 1px solid currentColor;
-          transform: rotate(45deg);
-        }
-        .btn-magnetic:hover .btn-arrow {
-          width: 28px;
-        }
-
-        /* ── FOOTER ─────────────────────────────────────── */
-        footer {
-          padding: 48px;
-          border-top: 1px solid var(--rule);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .footer-logo {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: 18px;
-          letter-spacing: 0.2em;
-        }
-        .footer-copy {
-          font-size: 10px;
-          letter-spacing: 0.15em;
-          color: var(--ink-dim);
-        }
-        .footer-links {
-          display: flex;
-          gap: 28px;
-          list-style: none;
-        }
-        .footer-links a {
-          font-size: 10px;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: var(--ink-dim);
-          text-decoration: none;
-          transition: color 0.2s;
-        }
-        .footer-links a:hover {
-          color: var(--ink);
-        }
-
-        /* ── SCRAMBLE TEXT ──────────────────────────────── */
-        .scramble {
-          display: inline;
-        }
-      `}</style>
-
-      {/* GRAIN */}
-      <canvas ref={grainCanvasRef} id="grain"></canvas>
-
-      {/* CURSOR */}
-      <div ref={cursorDotRef} id="cursor-dot"></div>
-      <div ref={cursorRingRef} id="cursor-ring"></div>
-
-      {/* NAV */}
       {/* HERO */}
       <section id="hero">
         <canvas ref={heroCanvasRef} className="hero-bg-canvas" id="heroCanvas"></canvas>

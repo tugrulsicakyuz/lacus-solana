@@ -20,108 +20,7 @@ export default function Footer() {
   const bg = getFooterBg(pathname);
 
   return (
-    <>
-      <style>{`
-        .lc-footer {
-          border-top: 1px solid rgba(240,232,216,0.07);
-          font-family: 'DM Mono', monospace;
-        }
-        .lc-footer-inner {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 72px 48px 48px;
-          display: grid;
-          grid-template-columns: 2fr 1fr 1fr 1fr;
-          gap: 48px;
-        }
-        @media (max-width: 900px) {
-          .lc-footer-inner {
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-          }
-        }
-        @media (max-width: 540px) {
-          .lc-footer-inner {
-            grid-template-columns: 1fr;
-            padding: 48px 24px 32px;
-          }
-          .lc-footer-bottom { padding: 20px 24px !important; }
-        }
-        .lc-footer-logo {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: 26px;
-          letter-spacing: 0.18em;
-          color: #f0e8d8;
-          text-decoration: none;
-          display: inline-block;
-          margin-bottom: 16px;
-        }
-        .lc-footer-tagline {
-          font-size: 9px;
-          letter-spacing: 0.28em;
-          text-transform: uppercase;
-          color: rgba(201,149,42,0.7);
-          margin-bottom: 14px;
-        }
-        .lc-footer-desc {
-          font-size: 11px;
-          line-height: 1.8;
-          color: rgba(240,232,216,0.28);
-          max-width: 28ch;
-          letter-spacing: 0.06em;
-        }
-        .lc-footer-col-title {
-          font-size: 9px;
-          letter-spacing: 0.28em;
-          text-transform: uppercase;
-          color: rgba(201,149,42,0.55);
-          margin-bottom: 20px;
-        }
-        .lc-footer-link {
-          display: block;
-          font-size: 11px;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: rgba(240,232,216,0.35);
-          text-decoration: none;
-          margin-bottom: 12px;
-          transition: color 0.2s;
-        }
-        .lc-footer-link:hover { color: #f0e8d8; }
-        .lc-footer-bottom {
-          border-top: 1px solid rgba(240,232,216,0.06);
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 24px 48px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 12px;
-        }
-        .lc-footer-copy {
-          font-size: 9px;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: rgba(240,232,216,0.2);
-        }
-        .lc-footer-sign {
-          font-family: 'Cormorant Garamond', serif;
-          font-style: italic;
-          font-size: 14px;
-          font-weight: 300;
-          color: rgba(240,232,216,0.2);
-          letter-spacing: 0.04em;
-        }
-        .lc-footer-rule {
-          width: 24px;
-          height: 1px;
-          background: linear-gradient(90deg, rgba(201,149,42,0.5), transparent);
-          margin-bottom: 20px;
-        }
-      `}</style>
-
-      <footer className="lc-footer" style={{ background: bg }}>
+    <footer className="lc-footer" style={{ background: bg }}>
         <div className="lc-footer-inner">
           {/* Brand */}
           <div>
@@ -164,6 +63,5 @@ export default function Footer() {
           <span className="lc-footer-sign">Two parties. One agreement. On-chain.</span>
         </div>
       </footer>
-    </>
   );
 }

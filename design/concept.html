@@ -1,0 +1,1607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lacus — Design Concept · Prospectus · Rev 6 (approved copy)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   LACUS DESIGN CONCEPT — Phase 1+2 · Rev 6
+   Layout: rev 5 unchanged. Copy: design/copy.md v1 (approved).
+   Narrative: real parties, real contracts, executed by code,
+   non-custodial, permissionless issuance. No em-dashes in copy.
+
+   Pages: home · launchpad · primary · secondary · dashboard ·
+          manage · issue · bond (ATLAS27) · about · whitepaper ·
+          pitch
+   ============================================================ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: #0B0B0C; color: #EDEDED; font-family: 'Inter', sans-serif; }
+a { text-decoration: none; color: inherit; }
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+table { border-collapse: collapse; width: 100%; }
+svg { display: block; }
+
+.num { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+
+/* ---------- concept chrome (not part of the design) ---------- */
+.chooser {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 12px 28px;
+  background: rgba(11,11,12,.92); backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  font-size: 12.5px; color: #9A9A9A;
+}
+.chooser strong { color: #EDEDED; font-weight: 600; margin-right: 12px; }
+.chooser a { color: #C9C9C9; padding: 3px 9px; border: 1px solid rgba(255,255,255,.14); border-radius: 3px; transition: border-color .15s ease, color .15s ease; }
+.chooser a:hover { color: #fff; border-color: rgba(255,255,255,.4); }
+.chooser a.on { color: #fff; border-color: rgba(255,255,255,.55); }
+
+/* ---------- page router ---------- */
+.page { display: none; }
+.page.on { display: block; }
+
+/* ============================================================ */
+.vc {
+  --bg: #F7F5F0;
+  --bg-2: #EFEBE1;
+  --paper: #FBFAF6;
+  --ink: #1C1A16;
+  --ink-2: #6E6A60;
+  --ink-3: #9B968A;
+  --line: #DCD7CB;
+  --line-2: #C9C3B4;
+  --accent: #1F6B50;
+  --green-deep: #1C5440;
+  --mint: #9FE0C0;
+  --down: #A8392E;
+  background: var(--bg); color: var(--ink);
+  font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.55;
+}
+.vc ::selection { background: rgba(31,107,80,.18); }
+.vc .wrap { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+.vc .serif { font-family: 'Spectral', serif; }
+
+.vc .drule { border-top: 2px solid var(--ink); position: relative; }
+.vc .drule::after { content: ""; display: block; border-top: 1px solid var(--ink); margin-top: 2px; }
+
+/* masthead + nav */
+.vc .masthead {
+  display: flex; justify-content: space-between; gap: 16px;
+  padding: 10px 0; border-bottom: 1px solid var(--line);
+  font-family: 'IBM Plex Mono', monospace; font-size: 10.5px;
+  letter-spacing: .06em; color: var(--ink-3); text-transform: uppercase;
+}
+.vc .nav { display: flex; align-items: center; gap: 28px; height: 68px; border-bottom: 1px solid var(--ink); }
+.vc .logo { font-family: 'Spectral', serif; font-weight: 600; font-size: 20px; }
+.vc .nav-links { display: flex; gap: 22px; font-size: 13.5px; color: var(--ink-2); }
+.vc .nav-links a { transition: color .15s ease; }
+.vc .nav-links a:hover, .vc .nav-links a.on { color: var(--ink); }
+.vc .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.vc .devnet { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .08em; color: var(--ink-2); border: 1px solid var(--line-2); padding: 3px 8px; }
+.vc .btn { display: inline-block; padding: 11px 22px; font-size: 13.5px; font-weight: 500; border-radius: 2px; transition: background .15s ease, border-color .15s ease, color .15s ease; text-align: center; }
+.vc .btn:focus-visible, .vc a:focus-visible, .vc button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.vc .btn-solid { background: var(--ink); color: var(--bg); }
+.vc .btn-solid:hover { background: #33302A; }
+.vc .btn-ghost { border: 1px solid var(--line-2); color: var(--ink); }
+.vc .btn-ghost:hover { border-color: var(--ink); }
+.vc .btn-sm { padding: 7px 15px; font-size: 12.5px; }
+.vc .btn-block { display: block; width: 100%; }
+
+/* page headers (subpages) */
+.vc .pagehead { padding: 64px 0 0; }
+.vc .pagehead .kicker { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.vc .pagehead h1 { font-family: 'Spectral', serif; font-size: 46px; line-height: 1.06; font-weight: 500; letter-spacing: -0.01em; margin-top: 14px; }
+.vc .pagehead .lede { margin-top: 16px; max-width: 560px; color: var(--ink-2); font-size: 16px; }
+.vc .crumb { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .06em; color: var(--ink-3); padding-top: 24px; text-transform: uppercase; }
+.vc .crumb a:hover { color: var(--accent); }
+
+/* hero (home) */
+.vc .hero { padding: 84px 0 96px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 56px; align-items: center; }
+.vc .kicker { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.vc .hero h1 { font-family: 'Spectral', serif; font-size: 76px; line-height: 1.02; font-weight: 500; letter-spacing: -0.015em; margin-top: 22px; }
+.vc .hero .lede { margin-top: 26px; max-width: 460px; color: var(--ink-2); font-size: 16.5px; }
+.vc .hero .ctas { margin-top: 38px; display: flex; gap: 12px; }
+
+/* bond certificate artifact */
+.vc .cert-stack { position: relative; }
+.vc .cert-stack::before {
+  content: ""; position: absolute; inset: 0;
+  background: var(--bg-2); border: 1px solid var(--line-2);
+  transform: rotate(-2.5deg) translate(-8px, 6px);
+}
+.vc .cert {
+  position: relative;
+  background: var(--paper); border: 1px solid var(--ink);
+  transform: rotate(1.6deg);
+  box-shadow: 0 18px 40px rgba(28,26,22,.10);
+  padding: 22px 26px 0;
+}
+.vc .cert.flat { transform: none; box-shadow: 0 10px 28px rgba(28,26,22,.08); }
+.vc .cert .inner-rule { border-top: 2px solid var(--ink); position: relative; }
+.vc .cert .inner-rule::after { content: ""; display: block; border-top: 1px solid var(--ink); margin-top: 2px; }
+.vc .cert .row1 { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; color: var(--ink-3); padding-bottom: 10px; }
+.vc .cert .title { text-align: center; padding: 22px 0 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .28em; color: var(--ink-2); }
+.vc .cert .name { text-align: center; font-family: 'Spectral', serif; font-size: 34px; font-weight: 600; }
+.vc .cert .co { text-align: center; font-size: 12.5px; color: var(--ink-2); margin-top: 3px; }
+.vc .cert .face { text-align: center; margin: 22px 0 4px; }
+.vc .cert .face .v { font-family: 'Spectral', serif; font-size: 48px; font-weight: 500; }
+.vc .cert .face .k { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .2em; color: var(--ink-3); margin-top: 2px; }
+.vc .cert .terms { display: flex; justify-content: center; gap: 26px; padding: 16px 0 20px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-2); letter-spacing: .04em; }
+.vc .cert .seal {
+  position: absolute; right: 18px; bottom: 84px;
+  width: 64px; height: 64px; border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  display: grid; place-items: center;
+  transform: rotate(-9deg); color: var(--accent);
+}
+.vc .cert .seal::before { content: ""; position: absolute; inset: 5px; border: 1px solid var(--accent); border-radius: 50%; opacity: .55; }
+.vc .cert .seal span { font-family: 'Spectral', serif; font-size: 24px; font-weight: 600; }
+.vc .cert .stub { border-top: 1.5px dashed var(--line-2); margin: 0 -26px; padding: 12px 26px 14px; display: flex; justify-content: space-between; align-items: baseline; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .06em; color: var(--ink-2); background: var(--bg); }
+.vc .cert .stub .cut { color: var(--ink-3); }
+.vc .cert .stub .pay { color: var(--accent); }
+.vc .cert .draft-stamp {
+  position: absolute; top: 40%; left: 50%;
+  transform: translate(-50%,-50%) rotate(-14deg);
+  border: 2px solid var(--ink-3); color: var(--ink-3);
+  font-family: 'IBM Plex Mono', monospace; font-size: 18px; letter-spacing: .3em;
+  padding: 6px 18px; opacity: .5;
+}
+
+/* ink band */
+.vc .inkband { background: var(--ink); color: var(--bg); }
+.vc .inkband .stats { display: grid; grid-template-columns: repeat(4, 1fr); }
+.vc .inkband .stat { padding: 44px 0 40px; }
+.vc .inkband .stat + .stat { padding-left: 32px; border-left: 1px solid rgba(247,245,240,.16); }
+.vc .inkband .k { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: rgba(247,245,240,.5); }
+.vc .inkband .v { margin-top: 12px; font-size: 38px; font-weight: 500; letter-spacing: -0.01em; }
+.vc .inkband .fn { padding-bottom: 26px; margin-top: -8px; font-size: 12px; color: rgba(247,245,240,.45); max-width: 720px; line-height: 1.6; }
+.vc .inkband sup { font-size: 10px; }
+.vc .ctaband { padding: 56px 0; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+.vc .ctaband h2 { font-family: 'Spectral', serif; font-size: 30px; font-weight: 500; }
+.vc .ctaband p { color: rgba(247,245,240,.6); margin-top: 8px; max-width: 480px; font-size: 14.5px; }
+.vc .ctaband .btn { margin-left: auto; background: var(--bg); color: var(--ink); }
+.vc .ctaband .btn:hover { background: #fff; }
+
+/* sections */
+.vc .section { padding: 96px 0; }
+.vc .section.tight { padding: 64px 0; }
+.vc .sec-head { display: flex; align-items: baseline; gap: 18px; border-bottom: 1px solid var(--ink); padding-bottom: 16px; }
+.vc .sec-no { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--accent); }
+.vc .sec-head h2 { font-family: 'Spectral', serif; font-size: 34px; font-weight: 500; letter-spacing: -0.01em; }
+.vc .sec-head .sub { color: var(--ink-2); font-size: 14px; }
+.vc .sec-head .more { margin-left: auto; font-size: 13.5px; color: var(--accent); }
+.vc h3.subhead { font-family: 'Spectral', serif; font-size: 20px; font-weight: 500; padding-bottom: 10px; }
+.vc .fn { margin-top: 12px; font-size: 12px; color: var(--ink-3); line-height: 1.6; max-width: 720px; }
+.vc sup { font-size: 10px; color: var(--ink-3); }
+.vc .soonline { margin-top: 32px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .16em; color: var(--ink-3); }
+
+/* clauses with ghost numerals */
+.vc .clauses { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; padding-top: 52px; }
+.vc .clause { position: relative; padding-top: 34px; }
+.vc .clause .ghost {
+  position: absolute; top: -42px; left: -14px;
+  font-family: 'Spectral', serif; font-size: 170px; font-weight: 500; line-height: 1;
+  color: rgba(28,26,22,.055); pointer-events: none; user-select: none;
+}
+.vc .clause .no { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--accent); letter-spacing: .08em; position: relative; }
+.vc .clause h3 { font-family: 'Spectral', serif; font-size: 22px; font-weight: 500; margin-top: 10px; position: relative; }
+.vc .clause p { margin-top: 10px; color: var(--ink-2); font-size: 14px; position: relative; }
+.vc .clause .fine { margin-top: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-3); position: relative; }
+
+.vc .tintband { background: var(--bg-2); }
+
+/* term sheet */
+.vc .sheet { margin-top: 44px; border: 1px solid var(--ink); background: var(--paper); }
+.vc .sheet.mt0 { margin-top: 0; }
+.vc .sheet-head { display: flex; align-items: baseline; gap: 14px; padding: 16px 24px; flex-wrap: wrap; background: var(--ink); color: var(--bg); }
+.vc .sheet-head .t { font-family: 'Spectral', serif; font-size: 20px; font-weight: 600; }
+.vc .sheet-head .series { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .08em; color: rgba(247,245,240,.55); }
+.vc .sheet-head .st { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .06em; color: var(--mint); }
+.vc .sheet-head .st.dim { color: rgba(247,245,240,.5); }
+.vc .sheet-body { display: grid; grid-template-columns: 1fr 1fr 300px; }
+.vc .sheet-body.two { grid-template-columns: 1fr 1fr; }
+.vc .sheet-col { padding: 22px 24px; }
+.vc .sheet-col + .sheet-col { border-left: 1px solid var(--line); }
+.vc .sheet dl, .vc dl.terms-list { display: grid; grid-template-columns: auto 1fr; row-gap: 12px; column-gap: 18px; font-size: 13.5px; }
+.vc .sheet dt, .vc dl.terms-list dt { color: var(--ink-3); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding-top: 2px; }
+.vc .sheet dd, .vc dl.terms-list dd { text-align: right; }
+.vc .submeter .cap { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.vc .submeter .bar { margin-top: 8px; height: 6px; background: var(--bg-2); border: 1px solid var(--line); }
+.vc .submeter .bar i { display: block; height: 100%; background: var(--accent); }
+.vc .submeter .fig { margin-top: 8px; font-size: 12.5px; color: var(--ink-2); }
+.vc .sheet-cta { margin-top: 18px; }
+.vc .sheet-foot { border-top: 1px solid var(--line); padding: 12px 24px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-3); letter-spacing: .04em; display: flex; gap: 24px; flex-wrap: wrap; }
+.vc .sheet-foot a { color: var(--ink-3); } .vc .sheet-foot a:hover { color: var(--accent); }
+
+/* issuer profile */
+.vc .issuer-block { margin-top: 56px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 48px; }
+.vc .issuer-block p { margin-top: 14px; color: var(--ink-2); font-size: 14.5px; max-width: 520px; }
+.vc .issuer-block .readmore { display: inline-block; margin-top: 16px; font-size: 13.5px; color: var(--accent); }
+.vc .figures { display: grid; grid-template-columns: auto 1fr; column-gap: 18px; font-size: 13.5px; }
+.vc .figures > div { display: contents; }
+.vc .figures dt { color: var(--ink-3); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.vc .figures dd { text-align: right; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.vc .figures .good { color: var(--accent); }
+
+/* tables */
+.vc .scroll { overflow-x: auto; }
+.vc th { text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); padding: 14px 14px 10px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+.vc td { padding: 17px 14px; border-bottom: 1px solid var(--line); font-size: 14px; white-space: nowrap; vertical-align: middle; }
+.vc tbody tr { transition: background .15s ease; }
+.vc tbody tr:hover { background: var(--bg-2); }
+.vc tbody tr.dim { color: var(--ink-3); }
+.vc tbody tr.dim .sym, .vc tbody tr.dim .issuer { color: var(--ink-3); }
+.vc th.r, .vc td.r { text-align: right; }
+.vc .rowno { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-3); }
+.vc .sym { font-weight: 600; }
+.vc .issuer { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+.vc .up { color: var(--accent); } .vc .down { color: var(--down); }
+.vc .stamp { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .05em; color: var(--ink-2); }
+.vc .stamp.open { color: var(--accent); }
+.vc .subsection { margin-top: 64px; }
+.vc tfoot td { border-bottom: none; border-top: 1px solid var(--ink); font-weight: 500; padding-top: 12px; padding-bottom: 4px; }
+.vc tfoot .total-val { border-bottom: 3px double var(--ink); padding-bottom: 6px; }
+
+/* filters */
+.vc .filters { display: flex; gap: 8px; margin-top: 28px; align-items: center; flex-wrap: wrap; }
+.vc .chip { font-size: 12.5px; color: var(--ink-2); padding: 6px 14px; border: 1px solid transparent; border-radius: 2px; }
+.vc .chip.on { color: var(--ink); border-color: var(--ink); }
+.vc .chip:hover { color: var(--ink); }
+.vc .searchbox { margin-left: auto; font-size: 12.5px; color: var(--ink-3); border: 1px solid var(--line-2); padding: 6px 14px; min-width: 200px; background: var(--paper); }
+
+/* green band */
+.vc .greenband { background: var(--green-deep); color: var(--bg); }
+.vc .greenband .sec-head { border-bottom-color: rgba(247,245,240,.85); }
+.vc .greenband .sec-no { color: var(--mint); }
+.vc .greenband .sec-head .sub { color: rgba(247,245,240,.6); }
+.vc .greenband h3.subhead { color: var(--bg); }
+.vc .greenband .drule { border-top-color: rgba(247,245,240,.85); }
+.vc .greenband .drule::after { border-top-color: rgba(247,245,240,.85); }
+.vc .payrecord { display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; padding-top: 44px; align-items: start; }
+.vc .chart-cap { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 10px; }
+.vc .chart-cap .total { font-size: 13px; color: rgba(247,245,240,.55); }
+.vc .chart { margin-top: 20px; }
+.vc .chart text { font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: rgba(247,245,240,.55); letter-spacing: .04em; }
+.vc .chart .gline { stroke: rgba(247,245,240,.16); stroke-width: 1; }
+.vc .chart .axis { stroke: rgba(247,245,240,.4); stroke-width: 1; }
+.vc .chart .step { stroke: var(--bg); stroke-width: 1.5; fill: none; }
+.vc .chart .fill { fill: rgba(247,245,240,.07); }
+.vc .chart .enddot { fill: var(--mint); }
+.vc .chart .endlbl { fill: var(--mint); font-size: 10.5px; font-weight: 500; }
+.vc .log-row { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(247,245,240,.18); font-size: 13px; align-items: baseline; }
+.vc .log-row .date { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(247,245,240,.5); width: 90px; flex: none; }
+.vc .log-row .kind { color: rgba(247,245,240,.6); }
+.vc .log-row .amt { margin-left: auto; }
+.vc .log-row .tx { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: rgba(247,245,240,.45); }
+.vc .log-row .tx:hover { color: var(--mint); }
+.vc .log-row .ok { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .06em; color: var(--mint); }
+.vc .log-foot { margin-top: 16px; font-size: 13px; }
+.vc .log-foot a { color: var(--mint); }
+.vc .bigclaim { font-family: 'Spectral', serif; font-size: 22px; font-weight: 500; max-width: 380px; line-height: 1.35; margin-top: 26px; color: rgba(247,245,240,.92); }
+
+/* statement / ledgers */
+.vc .meta-line { display: flex; gap: 32px; padding: 18px 0 0; font-size: 13px; color: var(--ink-2); flex-wrap: wrap; }
+.vc .meta-line .k { color: var(--ink-3); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; margin-right: 8px; }
+.vc .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 40px; }
+.vc .card { border-top: 2px solid var(--ink); padding-top: 18px; }
+.vc .card.feature { background: var(--ink); color: var(--bg); border-top: none; padding: 22px 22px 20px; margin-top: -4px; }
+.vc .card.feature .k { color: rgba(247,245,240,.5); }
+.vc .card.feature .btn { background: var(--bg); color: var(--ink); }
+.vc .card.feature .btn:hover { background: #fff; }
+.vc .card .k { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.vc .card .v { margin-top: 10px; font-size: 32px; font-weight: 500; }
+.vc .card .d { margin-top: 8px; font-size: 13.5px; color: var(--ink-2); }
+.vc .card.feature .d { color: rgba(247,245,240,.6); }
+.vc .card .act { margin-top: 16px; }
+.vc .statement { margin-top: 52px; }
+.vc .upcoming { margin-top: 52px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+.vc .ledger-row { display: flex; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; align-items: baseline; }
+.vc .ledger-row .date { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-3); width: 92px; flex: none; }
+.vc .ledger-row .amt { margin-left: auto; }
+.vc .ledger-row .note { color: var(--ink-3); font-size: 12px; }
+.vc .ledger-row .tx { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-3); }
+.vc .ledger-row .tx:hover { color: var(--accent); }
+
+/* trade ticket / buy box */
+.vc .ticket { border: 1px solid var(--ink); background: var(--paper); }
+.vc .ticket-head { display: flex; gap: 0; border-bottom: 1px solid var(--ink); }
+.vc .ticket-head button { flex: 1; padding: 12px; font-size: 12.5px; font-weight: 500; letter-spacing: .04em; color: var(--ink-3); }
+.vc .ticket-head button.on { background: var(--ink); color: var(--bg); }
+.vc .ticket-body { padding: 20px; }
+.vc .trow { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; font-size: 13px; color: var(--ink-2); }
+.vc .trow .v { color: var(--ink); }
+.vc .trow.total { border-top: 1px solid var(--ink); margin-top: 10px; padding-top: 14px; font-weight: 500; color: var(--ink); }
+.vc .trow.total .v { border-bottom: 3px double var(--ink); padding-bottom: 4px; }
+.vc .ticket .field { margin: 14px 0; }
+.vc .ticket-foot { padding: 0 20px 20px; }
+.vc .ticket .finefoot { padding: 10px 20px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-3); letter-spacing: .04em; border-top: 1px solid var(--line); }
+.vc .sticky { position: sticky; top: 76px; }
+
+/* forms */
+.vc .field { display: block; }
+.vc .field label { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 7px; }
+.vc .field input, .vc .field select, .vc .field textarea {
+  width: 100%; background: var(--paper); border: 1px solid var(--line-2);
+  padding: 11px 12px; font: inherit; font-size: 14px; color: var(--ink); border-radius: 2px;
+}
+.vc .field input.mono, .vc .field select.mono { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+.vc .field input:focus, .vc .field select:focus, .vc .field textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+.vc .field .help { margin-top: 6px; font-size: 12px; color: var(--ink-3); }
+.vc .formgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.vc .formgrid .full { grid-column: 1 / -1; }
+
+/* issue page layout */
+.vc .issuegrid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: start; padding-top: 48px; }
+
+/* bond page layout */
+.vc .bondgrid { display: grid; grid-template-columns: 1fr 340px; gap: 56px; align-items: start; padding: 48px 0 0; }
+.vc .pricestrip { display: grid; grid-template-columns: repeat(5, auto); gap: 40px; padding: 24px 0; border-bottom: 1px solid var(--line); }
+.vc .pricestrip .k { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.vc .pricestrip .v { margin-top: 6px; font-size: 20px; font-weight: 500; }
+
+/* whitepaper */
+.vc .wpgrid { display: grid; grid-template-columns: 240px 1fr; gap: 64px; padding-top: 48px; align-items: start; }
+.vc .toc { position: sticky; top: 76px; }
+.vc .toc .cap { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); padding-bottom: 12px; border-bottom: 1px solid var(--ink); margin-bottom: 6px; }
+.vc .toc a { display: flex; gap: 10px; padding: 9px 0; font-size: 13.5px; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+.vc .toc a:hover { color: var(--ink); }
+.vc .toc a .n { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-3); }
+.vc .toc .dl { margin-top: 20px; }
+.vc .wpbody { max-width: 640px; }
+.vc .wpbody h2 { font-family: 'Spectral', serif; font-size: 26px; font-weight: 500; margin-top: 52px; padding-bottom: 10px; }
+.vc .wpbody h2:first-child { margin-top: 0; }
+.vc .wpbody h2 .n { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--accent); margin-right: 10px; }
+.vc .wpbody p { font-family: 'Spectral', serif; font-size: 16.5px; line-height: 1.7; color: #33302A; margin-top: 14px; }
+.vc .wpbody .abstract { border-left: 2px solid var(--ink); padding-left: 20px; }
+.vc .wpbody .abstract p { font-size: 17.5px; }
+
+/* about */
+.vc .prose { max-width: 640px; padding-top: 44px; }
+.vc .prose p { font-family: 'Spectral', serif; font-size: 17.5px; line-height: 1.72; color: #33302A; margin-bottom: 18px; }
+.vc .prose p strong { font-weight: 600; }
+.vc .principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; padding-top: 48px; }
+.vc .addrlist { margin-top: 32px; }
+.vc .addr-row2 { display: flex; gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; align-items: baseline; }
+.vc .addr-row2 .k { color: var(--ink-3); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; width: 160px; flex: none; }
+.vc .addr-row2 code { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--ink-2); }
+.vc .addr-row2 a { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-3); }
+.vc .addr-row2 a:hover { color: var(--accent); }
+
+/* pitch */
+.vc .deckframe { margin-top: 48px; border: 1px solid var(--ink); background: var(--ink); aspect-ratio: 16/9; display: grid; place-items: center; color: rgba(247,245,240,.5); }
+.vc .deckframe .inner { text-align: center; }
+.vc .deckframe .t { font-family: 'Spectral', serif; font-size: 26px; color: var(--bg); }
+.vc .deckframe .d { margin-top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .08em; }
+.vc .deckctrl { display: flex; align-items: center; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--line); font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-2); }
+.vc .deckctrl button { border: 1px solid var(--line-2); padding: 4px 12px; border-radius: 2px; }
+.vc .deckctrl button:hover { border-color: var(--ink); }
+.vc .deckctrl .dl { margin-left: auto; color: var(--accent); }
+
+/* footer */
+.vc .footer { background: var(--ink); color: rgba(247,245,240,.65); padding: 64px 0 48px; font-size: 13.5px; margin-top: 96px; }
+.vc .footer .cols { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
+.vc .footer .brand { font-family: 'Spectral', serif; font-size: 22px; font-weight: 600; color: var(--bg); }
+.vc .footer h4 { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: rgba(247,245,240,.4); margin-bottom: 14px; font-weight: 500; }
+.vc .footer li { list-style: none; margin-bottom: 10px; }
+.vc .footer a:hover { color: var(--bg); }
+.vc .colophon { margin-top: 52px; padding-top: 18px; border-top: 1px solid rgba(247,245,240,.18); display: flex; gap: 24px; flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .04em; color: rgba(247,245,240,.4); }
+.vc .footer .legal { margin-top: 18px; color: rgba(247,245,240,.45); font-size: 12.5px; max-width: 640px; line-height: 1.6; }
+
+/* responsive */
+@media (max-width: 980px) {
+  .vc .hero { grid-template-columns: 1fr; gap: 64px; }
+  .vc .hero h1 { font-size: 46px; }
+  .vc .pagehead h1 { font-size: 36px; }
+  .vc .inkband .stats { grid-template-columns: repeat(2, 1fr); }
+  .vc .inkband .stat + .stat { padding-left: 0; border-left: none; }
+  .vc .inkband .stat { padding: 20px 0; }
+  .vc .sheet-body, .vc .sheet-body.two { grid-template-columns: 1fr; }
+  .vc .sheet-col + .sheet-col { border-left: none; border-top: 1px solid var(--line); }
+  .vc .clauses, .vc .principles { grid-template-columns: 1fr; gap: 64px; }
+  .vc .issuer-block, .vc .payrecord, .vc .upcoming, .vc .issuegrid, .vc .bondgrid, .vc .wpgrid { grid-template-columns: 1fr; }
+  .vc .cards { grid-template-columns: 1fr; }
+  .vc .formgrid { grid-template-columns: 1fr; }
+  .vc .pricestrip { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .vc .nav-links { display: none; }
+  .vc .footer .cols { grid-template-columns: 1fr 1fr; }
+  .vc .toc { position: static; }
+  .vc .sticky { position: static; }
+}
+</style>
+<noscript><style>.page { display: block !important; }</style></noscript>
+</head>
+<body>
+
+<header class="chooser">
+  <strong>Lacus · Rev 6</strong>
+  <a href="#home">Landing</a>
+  <a href="#launchpad">Launchpad</a>
+  <a href="#primary">Primary</a>
+  <a href="#secondary">Secondary</a>
+  <a href="#dashboard">Dashboard</a>
+  <a href="#manage">Manage</a>
+  <a href="#issue">Issue</a>
+  <a href="#bond">Bond detail</a>
+  <a href="#about">About</a>
+  <a href="#whitepaper">Whitepaper</a>
+  <a href="#pitch">Pitch</a>
+</header>
+
+<div class="vc">
+  <div class="wrap">
+    <div class="masthead">
+      <span>Peer-to-peer credit, executed on Solana</span>
+      <span class="num">10 Jun 2026 · Slot 391,442,118 · Devnet</span>
+    </div>
+    <nav class="nav">
+      <a class="logo" href="#home">Lacus</a>
+      <div class="nav-links">
+        <a href="#launchpad" data-nav="launchpad">Launchpad</a>
+        <a href="#primary" data-nav="primary">Primary</a>
+        <a href="#secondary" data-nav="secondary">Secondary</a>
+        <a href="#dashboard" data-nav="dashboard">Dashboard</a>
+        <a href="#manage" data-nav="manage">Manage</a>
+        <a href="#about" data-nav="about">About</a>
+        <a href="#whitepaper" data-nav="whitepaper">Whitepaper</a>
+      </div>
+      <div class="nav-right">
+        <span class="devnet">DEVNET</span>
+        <a class="btn btn-ghost btn-sm" href="#dashboard">Connect wallet</a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ================= HOME ================= -->
+  <section class="page" id="home">
+    <div class="wrap">
+      <div class="hero">
+        <div>
+          <div class="kicker">Credit, not speculation · Solana</div>
+          <h1>Crypto that does what banks do.</h1>
+          <p class="lede">Lacus turns a loan between two parties into a contract that executes itself on Solana. Companies borrow, lenders earn coupons, and nobody holds the money in between. Not even us.</p>
+          <div class="ctas">
+            <a class="btn btn-solid" href="#primary">Explore bonds</a>
+            <a class="btn btn-ghost" href="#whitepaper">Read the whitepaper</a>
+          </div>
+        </div>
+        <div class="cert-stack">
+          <div class="cert">
+            <div class="row1"><span>No. 0001 / 5,000</span><span>SERIES 2025-A</span></div>
+            <div class="inner-rule"></div>
+            <div class="title">CORPORATE BOND · SENIOR UNSECURED</div>
+            <div class="name serif">ATLAS27</div>
+            <div class="co">Atlas Lojistik A.Ş., İzmir</div>
+            <div class="face">
+              <div class="v num">$100.00</div>
+              <div class="k">FACE VALUE · PAYABLE IN USDC</div>
+            </div>
+            <div class="terms">
+              <span>COUPON 11.50%</span>
+              <span>SEMI-ANNUAL</span>
+              <span>DUE 15 MAR 2027</span>
+            </div>
+            <div class="seal"><span>L</span></div>
+            <div class="stub">
+              <span class="cut">✂ ·······</span>
+              <span>COUPON № 3 · $5.75 · 15 SEP 2026</span>
+              <span class="pay">CLAIM IN USDC ↗</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="inkband">
+      <div class="wrap">
+        <div class="stats">
+          <div class="stat"><div class="k">Total face value</div><div class="v num">$2.30M</div></div>
+          <div class="stat"><div class="k">Active bonds</div><div class="v num">4</div></div>
+          <div class="stat"><div class="k">Coupons paid on time<sup>1</sup></div><div class="v num">128 / 128</div></div>
+          <div class="stat"><div class="k">Interest distributed</div><div class="v num">$190.1K</div></div>
+        </div>
+        <p class="fn"><sup>1</sup> Counted per holder per payment date, across all issues since protocol launch. A late payment would show here, permanently.</p>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="section">
+        <div class="sec-head">
+          <span class="sec-no">§ 1–3</span>
+          <h2>How it works</h2>
+          <span class="sub">Three clauses, no fine print</span>
+        </div>
+        <div class="clauses">
+          <div class="clause">
+            <div class="ghost">1</div>
+            <div class="no">§ 1 · AGREE</div>
+            <h3>A borrower signs a loan agreement</h3>
+            <p>A company sets the amount, the coupon, and the maturity. The agreement is locked in a program account. Neither side can quietly amend it.</p>
+            <div class="fine">Terms hash: 4f2a…9c1e</div>
+          </div>
+          <div class="clause">
+            <div class="ghost">2</div>
+            <div class="no">§ 2 · FUND</div>
+            <h3>Lenders fund it, peer to peer</h3>
+            <p>Each unit is $100.00 of the loan, paid in USDC. Money moves from your wallet into program-owned escrow. Lacus never touches it.</p>
+            <div class="fine">Escrow: program-owned, auditable</div>
+          </div>
+          <div class="clause">
+            <div class="ghost">3</div>
+            <div class="no">§ 3 · EXECUTE</div>
+            <h3>The contract executes itself</h3>
+            <p>Coupons flow from borrower to lender on fixed dates, principal at maturity. There is no bank in the middle. Late is visible. Missing is undeniable.</p>
+            <div class="fine">Record to date: 128 / 128 on time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tintband">
+      <div class="wrap">
+        <div class="section">
+          <div class="sec-head">
+            <span class="sec-no">§ 4</span>
+            <h2>Current offering</h2>
+            <span class="sub">Open for subscription until 28 Jun 2026</span>
+            <a class="more" href="#launchpad">All offerings →</a>
+          </div>
+          <div class="sheet">
+            <div class="sheet-head">
+              <span class="t">ATLAS27 · Atlas Lojistik A.Ş.</span>
+              <span class="series">SERIES 2025-A · SENIOR UNSECURED</span>
+              <span class="st">● OPEN</span>
+            </div>
+            <div class="sheet-body">
+              <div class="sheet-col">
+                <dl>
+                  <dt>Face value</dt><dd class="num">$100.00 / unit</dd>
+                  <dt>Issue size</dt><dd class="num">$500,000.00</dd>
+                  <dt>Units</dt><dd class="num">5,000</dd>
+                  <dt>Price</dt><dd class="num">$98.40</dd>
+                  <dt>Yield to maturity</dt><dd class="num">12.71%</dd>
+                </dl>
+              </div>
+              <div class="sheet-col">
+                <dl>
+                  <dt>Coupon</dt><dd class="num">11.50% p.a.</dd>
+                  <dt>Frequency</dt><dd>Semi-annual</dd>
+                  <dt>Settlement</dt><dd>USDC</dd>
+                  <dt>Maturity</dt><dd class="num">15 Mar 2027</dd>
+                  <dt>Next payment</dt><dd class="num">15 Sep 2026</dd>
+                </dl>
+              </div>
+              <div class="sheet-col">
+                <div class="submeter">
+                  <div class="cap"><span>Subscribed</span><span class="num">84%</span></div>
+                  <div class="bar"><i style="width:84%"></i></div>
+                  <div class="fig num">$420,000.00 of $500,000.00</div>
+                </div>
+                <div class="sheet-cta">
+                  <a class="btn btn-solid btn-sm btn-block" href="#bond">Buy units</a>
+                </div>
+              </div>
+            </div>
+            <div class="sheet-foot">
+              <span>MINT <code class="num">AtLs4k…W9qw</code></span>
+              <span>ESCROW <code class="num">3rNdQe…Xz2p</code></span>
+              <span>ISSUER <code class="num">9wAtLs…7mKe</code></span>
+              <span>STRUCTURE: BILATERAL LOAN AGREEMENT</span>
+              <a style="margin-left:auto" href="#bond">VERIFY ON EXPLORER ↗</a>
+            </div>
+          </div>
+
+          <div class="issuer-block">
+            <div>
+              <h3 class="subhead">About the issuer</h3>
+              <div class="drule"></div>
+              <p>Atlas Lojistik runs contract freight for industrial exporters out of İzmir: 86 trucks, three depots, and long-term volume agreements with manufacturers in the Aegean free zones. The company has been profitable for six consecutive years.</p>
+              <p>Proceeds fund twelve additional vehicles and warehouse automation at the Çiğli depot.</p>
+              <a class="readmore" href="#bond">Read the full disclosure ↗</a>
+            </div>
+            <div>
+              <h3 class="subhead">Key figures</h3>
+              <div class="drule"></div>
+              <dl class="figures">
+                <div><dt>Founded</dt><dd class="num">2011 · İzmir</dd></div>
+                <div><dt>Sector</dt><dd>Freight &amp; logistics</dd></div>
+                <div><dt>Employees</dt><dd class="num">142</dd></div>
+                <div><dt>Revenue · FY2025</dt><dd class="num">$18.4M</dd></div>
+                <div><dt>Use of proceeds</dt><dd>Fleet expansion</dd></div>
+                <div><dt>Prior issue</dt><dd class="good">ATLAS25: repaid in full, 4/4 on time</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="section">
+        <div class="sec-head">
+          <span class="sec-no">§ 5</span>
+          <h2>Markets</h2>
+          <span class="sub">Live issues at a glance</span>
+          <a class="more" href="#primary">Primary market →</a>
+        </div>
+        <div class="scroll" style="margin-top:8px">
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th><th>Bond</th><th class="r">Coupon</th><th class="r">Maturity</th>
+                <th class="r">Price</th><th class="r">YTM</th><th class="r">Subscription</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="rowno">01</td>
+                <td><div class="sym">ATLAS27</div><div class="issuer">Atlas Lojistik A.Ş.</div></td>
+                <td class="r num">11.50%</td><td class="r num">15 Mar 2027</td>
+                <td class="r num">$98.40</td><td class="r num">12.71%</td>
+                <td class="r"><span class="stamp open num">84% SOLD</span></td>
+                <td class="r"><a class="btn btn-ghost btn-sm" href="#bond">Buy</a></td>
+              </tr>
+              <tr>
+                <td class="rowno">02</td>
+                <td><div class="sym">VEGA28</div><div class="issuer">Vega Tarım Gıda A.Ş.</div></td>
+                <td class="r num">9.25%</td><td class="r num">30 Sep 2028</td>
+                <td class="r num">$101.20</td><td class="r num">8.82%</td>
+                <td class="r"><span class="stamp num">SOLD OUT</span></td>
+                <td class="r"><a class="btn btn-ghost btn-sm" href="#secondary">Trade</a></td>
+              </tr>
+              <tr>
+                <td class="rowno">03</td>
+                <td><div class="sym">NOVA26</div><div class="issuer">Nova Enerji Sistemleri A.Ş.</div></td>
+                <td class="r num">13.00%</td><td class="r num">01 Dec 2026</td>
+                <td class="r num">$96.10</td><td class="r num">15.34%</td>
+                <td class="r"><span class="stamp open num">67% SOLD</span></td>
+                <td class="r"><a class="btn btn-ghost btn-sm" href="#bond">Buy</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="soonline">CORPORATE BONDS TODAY · MORE INSTRUMENTS SOON</div>
+      </div>
+    </div>
+
+    <div class="greenband">
+      <div class="wrap">
+        <div class="section">
+          <div class="sec-head">
+            <span class="sec-no">§ 6</span>
+            <h2>Payment record</h2>
+            <span class="sub">Every coupon, on the record</span>
+          </div>
+          <div class="payrecord">
+            <div>
+              <div class="chart-cap">
+                <h3 class="subhead" style="padding-bottom:0">Interest distributed</h3>
+                <span class="total">cumulative since launch · USDC</span>
+              </div>
+              <div class="drule"></div>
+              <svg class="chart" viewBox="0 0 520 210" role="img" aria-label="Cumulative interest distributed to investors, from zero at launch in July 2025 to 190.1 thousand dollars in June 2026, rising in steps at each coupon payment date">
+                <line class="gline" x1="40" y1="60"  x2="500" y2="60"/>
+                <line class="gline" x1="40" y1="120" x2="500" y2="120"/>
+                <line class="axis"  x1="40" y1="180" x2="500" y2="180"/>
+                <text x="34" y="183" text-anchor="end">$0</text>
+                <text x="34" y="123" text-anchor="end">$100K</text>
+                <text x="34" y="63"  text-anchor="end">$200K</text>
+                <path class="fill" d="M40,180 H136 V165.5 H155 V130.8 H197 V123 H352 V108.5 H365 V73.8 H440 V65.9 H500 V180 Z"/>
+                <path class="step" d="M40,180 H136 V165.5 H155 V130.8 H197 V123 H352 V108.5 H365 V73.8 H440 V65.9 H500"/>
+                <circle class="enddot" cx="500" cy="65.9" r="3.5"/>
+                <text class="endlbl" x="497" y="52" text-anchor="end">$190.1K</text>
+                <text x="40"  y="198">JUL 25</text>
+                <text x="155" y="198">OCT 25</text>
+                <text x="269" y="198">JAN 26</text>
+                <text x="384" y="198">APR 26</text>
+                <text x="478" y="198">JUN 26</text>
+              </svg>
+              <p class="bigclaim serif">No banker vouches for anyone here. The record vouches for itself.</p>
+            </div>
+            <div>
+              <h3 class="subhead">Payment log</h3>
+              <div class="drule"></div>
+              <div class="log-row"><span class="date">01 Jun 2026</span><span class="sym">NOVA26</span><span class="kind">coupon</span><a class="tx" href="#bond">4mPz…Tq8c ↗</a><span class="amt num">$13,065.00</span><span class="ok">✓ ON TIME</span></div>
+              <div class="log-row"><span class="date">30 Mar 2026</span><span class="sym">VEGA28</span><span class="kind">coupon</span><a class="tx" href="#bond">8jQw…Lr4t ↗</a><span class="amt num">$57,812.50</span><span class="ok">✓ ON TIME</span></div>
+              <div class="log-row"><span class="date">15 Mar 2026</span><span class="sym">ATLAS27</span><span class="kind">coupon</span><a class="tx" href="#bond">5Kd9…2mVp ↗</a><span class="amt num">$24,150.00</span><span class="ok">✓ ON TIME</span></div>
+              <div class="log-row"><span class="date">01 Dec 2025</span><span class="sym">NOVA26</span><span class="kind">coupon</span><a class="tx" href="#bond">2xNe…9aGd ↗</a><span class="amt num">$13,065.00</span><span class="ok">✓ ON TIME</span></div>
+              <div class="log-row"><span class="date">30 Sep 2025</span><span class="sym">VEGA28</span><span class="kind">coupon</span><a class="tx" href="#bond">7tRk…Mw3s ↗</a><span class="amt num">$57,812.50</span><span class="ok">✓ ON TIME</span></div>
+              <p class="log-foot"><a href="#about">View the full record on-chain ↗</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LAUNCHPAD ================= -->
+  <section class="page" id="launchpad">
+    <div class="wrap">
+      <div class="pagehead">
+        <div class="kicker">Launchpad</div>
+        <h1>New and upcoming issues.</h1>
+        <p class="lede">Offerings open for subscription. Funds stay in program escrow until a raise fills. If it does not fill, lenders are refunded automatically.</p>
+      </div>
+
+      <div class="section tight">
+        <div class="sec-head">
+          <span class="sec-no">NOW</span>
+          <h2>Open for subscription</h2>
+          <span class="sub">2 offerings</span>
+        </div>
+
+        <div class="sheet">
+          <div class="sheet-head">
+            <span class="t">PERA29 · Pera Tekstil Sanayi A.Ş.</span>
+            <span class="series">SERIES 2026-A · SENIOR UNSECURED</span>
+            <span class="st">● NEW ISSUE</span>
+          </div>
+          <div class="sheet-body">
+            <div class="sheet-col">
+              <dl>
+                <dt>Face value</dt><dd class="num">$100.00 / unit</dd>
+                <dt>Issue size</dt><dd class="num">$250,000.00</dd>
+                <dt>Price</dt><dd class="num">$100.00</dd>
+                <dt>YTM</dt><dd class="num">10.00%</dd>
+              </dl>
+            </div>
+            <div class="sheet-col">
+              <dl>
+                <dt>Coupon</dt><dd class="num">10.00% p.a.</dd>
+                <dt>Frequency</dt><dd>Semi-annual</dd>
+                <dt>Maturity</dt><dd class="num">20 Jun 2029</dd>
+                <dt>Closes</dt><dd class="num">20 Jul 2026</dd>
+              </dl>
+            </div>
+            <div class="sheet-col">
+              <div class="submeter">
+                <div class="cap"><span>Subscribed</span><span class="num">0%</span></div>
+                <div class="bar"><i style="width:0%"></i></div>
+                <div class="fig num">$0.00 of $250,000.00</div>
+              </div>
+              <div class="sheet-cta"><a class="btn btn-solid btn-sm btn-block" href="#bond">Buy units</a></div>
+            </div>
+          </div>
+          <div class="sheet-foot">
+            <span>MINT <code class="num">PeRa9s…K2vu</code></span>
+            <span>ESCROW <code class="num">6vBnTy…Qe8r</code></span>
+            <span>STRUCTURE: BILATERAL LOAN AGREEMENT</span>
+            <a style="margin-left:auto" href="#bond">VERIFY ON EXPLORER ↗</a>
+          </div>
+        </div>
+
+        <div class="sheet">
+          <div class="sheet-head">
+            <span class="t">ATLAS27 · Atlas Lojistik A.Ş.</span>
+            <span class="series">SERIES 2025-A · SENIOR UNSECURED</span>
+            <span class="st">● OPEN · 84% SOLD</span>
+          </div>
+          <div class="sheet-body">
+            <div class="sheet-col">
+              <dl>
+                <dt>Face value</dt><dd class="num">$100.00 / unit</dd>
+                <dt>Issue size</dt><dd class="num">$500,000.00</dd>
+                <dt>Price</dt><dd class="num">$98.40</dd>
+                <dt>YTM</dt><dd class="num">12.71%</dd>
+              </dl>
+            </div>
+            <div class="sheet-col">
+              <dl>
+                <dt>Coupon</dt><dd class="num">11.50% p.a.</dd>
+                <dt>Frequency</dt><dd>Semi-annual</dd>
+                <dt>Maturity</dt><dd class="num">15 Mar 2027</dd>
+                <dt>Closes</dt><dd class="num">28 Jun 2026</dd>
+              </dl>
+            </div>
+            <div class="sheet-col">
+              <div class="submeter">
+                <div class="cap"><span>Subscribed</span><span class="num">84%</span></div>
+                <div class="bar"><i style="width:84%"></i></div>
+                <div class="fig num">$420,000.00 of $500,000.00</div>
+              </div>
+              <div class="sheet-cta"><a class="btn btn-solid btn-sm btn-block" href="#bond">Buy units</a></div>
+            </div>
+          </div>
+          <div class="sheet-foot">
+            <span>MINT <code class="num">AtLs4k…W9qw</code></span>
+            <span>ESCROW <code class="num">3rNdQe…Xz2p</code></span>
+            <span>STRUCTURE: BILATERAL LOAN AGREEMENT</span>
+            <a style="margin-left:auto" href="#bond">VERIFY ON EXPLORER ↗</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="section tight">
+        <div class="sec-head">
+          <span class="sec-no">NEXT</span>
+          <h2>Scheduled</h2>
+          <span class="sub">Announced, not yet open</span>
+        </div>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Bond</th><th class="r">Coupon</th><th class="r">Maturity</th>
+                <th class="r">Size</th><th class="r">Opens</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="sym">DORUK30</div><div class="issuer">Doruk Makine A.Ş.</div></td>
+                <td class="r num">12.25%</td>
+                <td class="r num">08 Jul 2030</td>
+                <td class="r num">$400.0K</td>
+                <td class="r num">08 Jul 2026</td>
+                <td class="r"><a class="btn btn-ghost btn-sm" href="#bond">Preview terms</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="inkband" style="margin-top:48px">
+      <div class="wrap">
+        <div class="ctaband">
+          <div>
+            <h2>Borrow without the gatekeepers.</h2>
+            <p>No advisors, no underwriting syndicate, no six-month process. Draft a term sheet and raise from lenders who can verify every promise you make.</p>
+          </div>
+          <a class="btn" href="#issue">Issue a bond</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PRIMARY ================= -->
+  <section class="page" id="primary">
+    <div class="wrap">
+      <div class="pagehead">
+        <div class="kicker">Primary market</div>
+        <h1>Subscribe to live issues.</h1>
+        <p class="lede">Lend directly to the borrower at the offering price. No underwriter sets the terms. Your money sits in program escrow until close, not with us.</p>
+      </div>
+
+      <div class="filters">
+        <button class="chip on">All</button>
+        <button class="chip">Open</button>
+        <button class="chip">Upcoming</button>
+        <button class="chip">Matured</button>
+        <span class="searchbox">Search by symbol or issuer…</span>
+      </div>
+
+      <div class="section tight" style="padding-top:24px">
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th><th>Bond</th><th class="r">Coupon</th><th class="r">Maturity</th>
+                <th class="r">Price</th><th class="r">YTM<sup>2</sup></th><th class="r">Size</th>
+                <th class="r">Subscription</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="rowno">01</td>
+                <td><div class="sym">ATLAS27</div><div class="issuer">Atlas Lojistik A.Ş.</div></td>
+                <td class="r num">11.50%</td><td class="r num">15 Mar 2027</td>
+                <td class="r num">$98.40</td><td class="r num">12.71%</td>
+                <td class="r num">$500.0K</td>
+                <td class="r"><span class="stamp open num">84% SOLD</span></td>
+                <td class="r"><a class="btn btn-ghost btn-sm" href="#bond">Buy</a></td>
+              </tr>
+              <tr>
+                <td class="rowno">02</td>
+                <td><div class="sym">VEGA28</div><div class="issuer">Vega Tarım Gıda A.Ş.</div></td>
+                <td class="r num">9.25%</td><td class="r num">30 Sep 2028</td>
+                <td class="r num">$101.20</td><td class="r num">8.82%</td>
+                <td class="r num">$1.25M</td>
+                <td class="r"><span class="stamp num">SOLD OUT</span></td>
+                <td class="r"><a class="btn btn-ghost btn-sm" href="#secondary">Trade</a></td>
+              </tr>
+              <tr>
+                <td class="rowno">03</td>
+                <td><div class="sym">NOVA26</div><div class="issuer">Nova Enerji Sistemleri A.Ş.</div></td>
+                <td class="r num">13.00%</td><td class="r num">01 Dec 2026</td>
+                <td class="r num">$96.10</td><td class="r num">15.34%</td>
+                <td class="r num">$300.0K</td>
+                <td class="r"><span class="stamp open num">67% SOLD</span></td>
+                <td class="r"><a class="btn btn-ghost btn-sm" href="#bond">Buy</a></td>
+              </tr>
+              <tr>
+                <td class="rowno">04</td>
+                <td><div class="sym">PERA29</div><div class="issuer">Pera Tekstil Sanayi A.Ş.</div></td>
+                <td class="r num">10.00%</td><td class="r num">20 Jun 2029</td>
+                <td class="r num">$100.00</td><td class="r num">10.00%</td>
+                <td class="r num">$250.0K</td>
+                <td class="r"><span class="stamp">NEW ISSUE</span></td>
+                <td class="r"><a class="btn btn-ghost btn-sm" href="#bond">Buy</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="fn"><sup>2</sup> Yield to maturity at the current price, annualized. Prices are quoted per $100.00 of face value and settle in USDC.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SECONDARY ================= -->
+  <section class="page" id="secondary">
+    <div class="wrap">
+      <div class="pagehead">
+        <div class="kicker">Secondary market</div>
+        <h1>Trade before maturity.</h1>
+        <p class="lede">Sell your side of the agreement before maturity, or buy into one that is already live. The market sets the price. The contract handles accrued interest.</p>
+      </div>
+
+      <div class="section tight" style="padding-top:40px">
+        <div class="bondgrid" style="padding-top:0">
+          <div>
+            <div class="scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Bond</th><th class="r">Last</th><th class="r">24h</th>
+                    <th class="r">Bid</th><th class="r">Ask</th><th class="r">Volume · 24h</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><div class="sym">ATLAS27</div><div class="issuer">Atlas Lojistik A.Ş.</div></td>
+                    <td class="r num">$98.40</td>
+                    <td class="r num up">+0.42%</td>
+                    <td class="r num">$98.10</td>
+                    <td class="r num">$98.65</td>
+                    <td class="r num">$18.7K</td>
+                  </tr>
+                  <tr>
+                    <td><div class="sym">VEGA28</div><div class="issuer">Vega Tarım Gıda A.Ş.</div></td>
+                    <td class="r num">$101.20</td>
+                    <td class="r num down">-0.11%</td>
+                    <td class="r num">$101.05</td>
+                    <td class="r num">$101.35</td>
+                    <td class="r num">$42.3K</td>
+                  </tr>
+                  <tr>
+                    <td><div class="sym">NOVA26</div><div class="issuer">Nova Enerji Sistemleri A.Ş.</div></td>
+                    <td class="r num">$96.10</td>
+                    <td class="r num up">+1.05%</td>
+                    <td class="r num">$95.80</td>
+                    <td class="r num">$96.45</td>
+                    <td class="r num">$9.2K</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="fn">Quotes are per $100.00 of face value. Accrued interest is settled automatically at trade time.</p>
+          </div>
+
+          <div class="sticky">
+            <div class="ticket">
+              <div class="ticket-head">
+                <button class="on">BUY</button>
+                <button>SELL</button>
+              </div>
+              <div class="ticket-body">
+                <div class="trow"><span>Bond</span><span class="v sym">ATLAS27</span></div>
+                <div class="trow"><span>Ask price</span><span class="v num">$98.65</span></div>
+                <label class="field" style="margin:14px 0">
+                  <label>Units</label>
+                  <input class="mono" value="10">
+                </label>
+                <div class="trow"><span>Subtotal</span><span class="v num">$986.50</span></div>
+                <div class="trow"><span>Fee · 0.25%</span><span class="v num">$2.47</span></div>
+                <div class="trow total"><span>Total</span><span class="v num">$988.97</span></div>
+              </div>
+              <div class="ticket-foot">
+                <button class="btn btn-solid btn-block">Review order</button>
+              </div>
+              <div class="finefoot">SETTLES IN USDC · ACCRUED INTEREST INCLUDED</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DASHBOARD ================= -->
+  <section class="page" id="dashboard">
+    <div class="wrap">
+      <div class="pagehead">
+        <div class="kicker">Dashboard · Lender view</div>
+        <h1>Your account, as a statement.</h1>
+      </div>
+      <div class="meta-line">
+        <span><span class="k">Account</span><span class="num">7xKp…3Fqm</span></span>
+        <span><span class="k">Statement date</span><span class="num">10 Jun 2026</span></span>
+        <span><span class="k">Settlement</span>USDC</span>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <div class="k">Portfolio value</div>
+          <div class="v num">$12,433.50</div>
+          <div class="d"><span class="num up">+$214.30</span> since cost</div>
+        </div>
+        <div class="card feature">
+          <div class="k">Claimable coupons</div>
+          <div class="v num">$184.12</div>
+          <div class="act"><a class="btn btn-sm" href="#dashboard">Claim all</a></div>
+        </div>
+        <div class="card">
+          <div class="k">Next coupon</div>
+          <div class="v num">$287.50</div>
+          <div class="d num">ATLAS27 · 15 Sep 2026</div>
+        </div>
+      </div>
+
+      <div class="statement">
+        <h3 class="subhead">Statement of holdings</h3>
+        <div class="drule"></div>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Bond</th><th class="r">Units</th><th class="r">Avg. cost</th>
+                <th class="r">Price</th><th class="r">Value</th><th class="r">P&amp;L</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="sym">ATLAS27</div><div class="issuer">Atlas Lojistik A.Ş.</div></td>
+                <td class="r num">50</td><td class="r num">$97.10</td><td class="r num">$98.40</td>
+                <td class="r num">$4,920.00</td><td class="r num up">+1.34%</td>
+              </tr>
+              <tr>
+                <td><div class="sym">VEGA28</div><div class="issuer">Vega Tarım Gıda A.Ş.</div></td>
+                <td class="r num">60</td><td class="r num">$100.45</td><td class="r num">$101.20</td>
+                <td class="r num">$6,072.00</td><td class="r num up">+0.75%</td>
+              </tr>
+              <tr>
+                <td><div class="sym">NOVA26</div><div class="issuer">Nova Enerji Sistemleri A.Ş.</div></td>
+                <td class="r num">15</td><td class="r num">$97.80</td><td class="r num">$96.10</td>
+                <td class="r num">$1,441.50</td><td class="r num down">-1.74%</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                <td class="r num">125</td><td></td><td></td>
+                <td class="r"><span class="total-val num">$12,433.50</span></td>
+                <td class="r num up">+1.75%</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="upcoming">
+        <div>
+          <h3 class="subhead">Upcoming payments</h3>
+          <div class="drule"></div>
+          <div class="ledger-row"><span class="date">15 Sep 2026</span><span class="sym">ATLAS27</span><span class="amt num">$287.50</span></div>
+          <div class="ledger-row"><span class="date">30 Sep 2026</span><span class="sym">VEGA28</span><span class="amt num">$277.50</span></div>
+          <div class="ledger-row"><span class="date">01 Dec 2026</span><span class="sym">NOVA26</span><span class="note">maturity</span><span class="amt num">$1,597.50</span></div>
+          <div class="ledger-row"><span class="date">15 Mar 2027</span><span class="sym">ATLAS27</span><span class="note">maturity</span><span class="amt num">$5,287.50</span></div>
+        </div>
+        <div>
+          <h3 class="subhead">Recent activity</h3>
+          <div class="drule"></div>
+          <div class="ledger-row"><span class="date">01 Jun 2026</span><span>Coupon paid · <span class="sym">NOVA26</span></span><a class="tx" href="#bond">tx ↗</a><span class="amt num up">+$97.50</span></div>
+          <div class="ledger-row"><span class="date">14 May 2026</span><span>Bought 20 · <span class="sym">ATLAS27</span></span><a class="tx" href="#bond">tx ↗</a><span class="amt num">-$1,946.00</span></div>
+          <div class="ledger-row"><span class="date">30 Mar 2026</span><span>Coupon claimed · <span class="sym">VEGA28</span></span><a class="tx" href="#bond">tx ↗</a><span class="amt num up">+$277.50</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MANAGE ================= -->
+  <section class="page" id="manage">
+    <div class="wrap">
+      <div class="pagehead">
+        <div class="kicker">Manage · Borrower view</div>
+        <h1>Your obligations, in plain sight.</h1>
+        <p class="lede">Your payment record is your credit rating. Fund coupons on time and every future lender sees it before they subscribe.</p>
+      </div>
+      <div class="meta-line">
+        <span><span class="k">Issuer</span>Atlas Lojistik A.Ş.</span>
+        <span><span class="k">Authority</span><span class="num">9wAtLs…7mKe</span></span>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <div class="k">Outstanding face value</div>
+          <div class="v num">$500.0K</div>
+          <div class="d">ATLAS27 · matures <span class="num">15 Mar 2027</span></div>
+        </div>
+        <div class="card feature">
+          <div class="k">Next coupon due</div>
+          <div class="v num">$28,750.00</div>
+          <div class="d num">15 Sep 2026 · in 97 days</div>
+          <div class="act"><a class="btn btn-sm" href="#manage">Deposit USDC</a></div>
+        </div>
+        <div class="card">
+          <div class="k">Escrow · subscription</div>
+          <div class="v num">$420,000.00</div>
+          <div class="d">releases at close · <span class="num">28 Jun 2026</span></div>
+        </div>
+      </div>
+
+      <div class="statement">
+        <h3 class="subhead">Your issues</h3>
+        <div class="drule"></div>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Bond</th><th>Status</th><th class="r">Sold</th><th class="r">Outstanding</th>
+                <th class="r">Next obligation</th><th class="r">Record</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="sym">ATLAS27</div><div class="issuer">Series 2025-A</div></td>
+                <td><span class="stamp open">● OPEN</span></td>
+                <td class="r num">84%</td>
+                <td class="r num">$500.0K</td>
+                <td class="r num">$28,750.00 · 15 Sep 2026</td>
+                <td class="r"><span class="stamp open num">2/2 ON TIME</span></td>
+                <td class="r"><a class="btn btn-ghost btn-sm" href="#bond">Manage</a></td>
+              </tr>
+              <tr class="dim">
+                <td><div class="sym">ATLAS25</div><div class="issuer">Series 2023-A</div></td>
+                <td><span class="stamp">REPAID</span></td>
+                <td class="r num">100%</td>
+                <td class="r num">$0.00</td>
+                <td class="r num">--</td>
+                <td class="r"><span class="stamp open num">4/4 ON TIME</span></td>
+                <td class="r"><a class="btn btn-ghost btn-sm" href="#bond">View</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="upcoming">
+        <div>
+          <h3 class="subhead">Obligation schedule</h3>
+          <div class="drule"></div>
+          <div class="ledger-row"><span class="date">15 Sep 2026</span><span>Coupon · <span class="sym">ATLAS27</span></span><span class="amt num">$28,750.00</span></div>
+          <div class="ledger-row"><span class="date">15 Mar 2027</span><span>Coupon + principal · <span class="sym">ATLAS27</span></span><span class="amt num">$528,750.00</span></div>
+        </div>
+        <div>
+          <h3 class="subhead">Payments made</h3>
+          <div class="drule"></div>
+          <div class="ledger-row"><span class="date">15 Mar 2026</span><span>Coupon · <span class="sym">ATLAS27</span></span><a class="tx" href="#bond">tx ↗</a><span class="amt num">$24,150.00</span></div>
+          <div class="ledger-row"><span class="date">15 Sep 2025</span><span>Coupon · <span class="sym">ATLAS27</span></span><a class="tx" href="#bond">tx ↗</a><span class="amt num">$24,150.00</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="inkband" style="margin-top:96px">
+      <div class="wrap">
+        <div class="ctaband">
+          <div>
+            <h2>Raise your next round of debt.</h2>
+            <p>Your on-time record is portable. It follows you to the next raise.</p>
+          </div>
+          <a class="btn" href="#issue">Issue a new bond</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ISSUE ================= -->
+  <section class="page" id="issue">
+    <div class="wrap">
+      <div class="crumb"><a href="#manage">MANAGE</a> / ISSUE</div>
+      <div class="pagehead" style="padding-top:32px">
+        <div class="kicker">Form D-1 · New issue</div>
+        <h1>Draft your term sheet.</h1>
+        <p class="lede">This is a loan agreement between you and your lenders. Set the terms below. The contract does the collecting, and Lacus never touches the funds.</p>
+      </div>
+
+      <div class="issuegrid">
+        <div>
+          <div class="formgrid">
+            <label class="field full">
+              <label>Issuer name</label>
+              <input value="Atlas Lojistik A.Ş.">
+            </label>
+            <label class="field">
+              <label>Symbol</label>
+              <input class="mono" value="ATLAS28">
+            </label>
+            <label class="field">
+              <label>Series</label>
+              <input class="mono" value="2026-B">
+            </label>
+            <label class="field">
+              <label>Face value · USDC</label>
+              <input class="mono" value="100.00">
+            </label>
+            <label class="field">
+              <label>Units</label>
+              <input class="mono" value="6,000">
+            </label>
+            <label class="field">
+              <label>Coupon · % p.a.</label>
+              <input class="mono" value="11.00">
+            </label>
+            <label class="field">
+              <label>Frequency</label>
+              <select class="mono"><option>Semi-annual</option><option>Quarterly</option><option>Annual</option></select>
+            </label>
+            <label class="field">
+              <label>Maturity</label>
+              <input class="mono" value="15 Sep 2028">
+            </label>
+            <label class="field">
+              <label>Subscription closes</label>
+              <input class="mono" value="15 Aug 2026">
+            </label>
+            <label class="field full">
+              <label>Use of proceeds</label>
+              <textarea rows="3">Twelve additional vehicles and warehouse automation at the Çiğli depot.</textarea>
+              <span class="help">Shown verbatim on the term sheet. Lenders read this.</span>
+            </label>
+          </div>
+          <div style="margin-top:28px; display:flex; gap:12px; align-items:center">
+            <button class="btn btn-solid">Sign and publish</button>
+            <span class="fn" style="margin-top:0">Issuance is permissionless. Your offering goes live the moment you sign, and the terms lock permanently.</span>
+          </div>
+        </div>
+
+        <div class="sticky">
+          <div class="cert flat">
+            <div class="draft-stamp">DRAFT</div>
+            <div class="row1"><span>No. ···· / 6,000</span><span>SERIES 2026-B</span></div>
+            <div class="inner-rule"></div>
+            <div class="title">CORPORATE BOND · SENIOR UNSECURED</div>
+            <div class="name serif">ATLAS28</div>
+            <div class="co">Atlas Lojistik A.Ş., İzmir</div>
+            <div class="face">
+              <div class="v num">$100.00</div>
+              <div class="k">FACE VALUE · PAYABLE IN USDC</div>
+            </div>
+            <div class="terms">
+              <span>COUPON 11.00%</span>
+              <span>SEMI-ANNUAL</span>
+              <span>DUE 15 SEP 2028</span>
+            </div>
+            <div class="stub">
+              <span class="cut">✂ ·······</span>
+              <span>TOTAL RAISE · $600,000.00</span>
+              <span class="pay">6,000 UNITS</span>
+            </div>
+          </div>
+          <p class="fn">Live preview. The certificate updates as you type.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BOND DETAIL ================= -->
+  <section class="page" id="bond">
+    <div class="wrap">
+      <div class="crumb"><a href="#primary">MARKETS</a> / ATLAS27</div>
+      <div class="pagehead" style="padding-top:32px">
+        <div class="kicker">Series 2025-A · Senior unsecured · <span style="color:var(--accent)">● OPEN</span></div>
+        <h1>ATLAS27, Atlas Lojistik A.Ş.</h1>
+      </div>
+
+      <div class="pricestrip">
+        <div><div class="k">Price</div><div class="v num">$98.40</div></div>
+        <div><div class="k">24h</div><div class="v num up">+0.42%</div></div>
+        <div><div class="k">Yield to maturity</div><div class="v num">12.71%</div></div>
+        <div><div class="k">Coupon</div><div class="v num">11.50%</div></div>
+        <div><div class="k">Maturity</div><div class="v num">15 Mar 2027</div></div>
+      </div>
+
+      <div class="bondgrid">
+        <div>
+          <h3 class="subhead">Terms</h3>
+          <div class="drule"></div>
+          <div style="padding-top:18px">
+            <dl class="terms-list" style="grid-template-columns: auto 1fr; max-width: 460px;">
+              <dt>Face value</dt><dd class="num">$100.00 / unit</dd>
+              <dt>Issue size</dt><dd class="num">$500,000.00 · 5,000 units</dd>
+              <dt>Coupon</dt><dd class="num">11.50% p.a. · semi-annual</dd>
+              <dt>Day count</dt><dd>30 / 360</dd>
+              <dt>Settlement</dt><dd>USDC</dd>
+              <dt>Subscription closes</dt><dd class="num">28 Jun 2026</dd>
+              <dt>Structure</dt><dd>Bilateral loan agreement, peer to peer</dd>
+            </dl>
+          </div>
+
+          <div class="subsection">
+            <h3 class="subhead">Coupon schedule</h3>
+            <div class="drule"></div>
+            <div class="scroll">
+              <table>
+                <thead>
+                  <tr><th>Date</th><th>Type</th><th class="r">Per unit</th><th class="r">Total</th><th class="r">Status</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="num">15 Sep 2025</td><td>Coupon</td>
+                    <td class="r num">$5.75</td><td class="r num">$24,150.00</td>
+                    <td class="r"><span class="stamp open num">✓ PAID · <a href="#bond" style="color:inherit">tx ↗</a></span></td>
+                  </tr>
+                  <tr>
+                    <td class="num">15 Mar 2026</td><td>Coupon</td>
+                    <td class="r num">$5.75</td><td class="r num">$24,150.00</td>
+                    <td class="r"><span class="stamp open num">✓ PAID · <a href="#bond" style="color:inherit">tx ↗</a></span></td>
+                  </tr>
+                  <tr>
+                    <td class="num">15 Sep 2026</td><td>Coupon</td>
+                    <td class="r num">$5.75</td><td class="r num">$28,750.00</td>
+                    <td class="r"><span class="stamp num">SCHEDULED</span></td>
+                  </tr>
+                  <tr>
+                    <td class="num">15 Mar 2027</td><td>Coupon + principal</td>
+                    <td class="r num">$105.75</td><td class="r num">$528,750.00</td>
+                    <td class="r"><span class="stamp num">AT MATURITY</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="subsection">
+            <h3 class="subhead">About the issuer</h3>
+            <div class="drule"></div>
+            <div class="issuer-block" style="margin-top:0; padding-top:18px">
+              <div>
+                <p style="margin-top:0">Atlas Lojistik runs contract freight for industrial exporters out of İzmir: 86 trucks, three depots, and long-term volume agreements with manufacturers in the Aegean free zones. Profitable for six consecutive years.</p>
+                <p>Proceeds fund twelve additional vehicles and warehouse automation at the Çiğli depot.</p>
+                <a class="readmore" href="#about">Read the full disclosure ↗</a>
+              </div>
+              <div>
+                <dl class="figures">
+                  <div><dt>Founded</dt><dd class="num">2011 · İzmir</dd></div>
+                  <div><dt>Sector</dt><dd>Freight &amp; logistics</dd></div>
+                  <div><dt>Revenue · FY2025</dt><dd class="num">$18.4M</dd></div>
+                  <div><dt>Prior issue</dt><dd class="good">ATLAS25: repaid, 4/4 on time</dd></div>
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          <div class="subsection">
+            <h3 class="subhead">On-chain</h3>
+            <div class="drule"></div>
+            <div class="addrlist" style="margin-top:6px">
+              <div class="addr-row2"><span class="k">Bond mint</span><code>AtLs4kQmW3nXp7Rv9sTzYbCdEfGh2jW9qw</code><a href="#bond">EXPLORER ↗</a></div>
+              <div class="addr-row2"><span class="k">Escrow</span><code>3rNdQePzKx8mVtYw2bGhJcLs5fAqXz2p</code><a href="#bond">EXPLORER ↗</a></div>
+              <div class="addr-row2"><span class="k">Issuer authority</span><code>9wAtLsMheR4kQv7nXp2bTzYc8dFg7mKe</code><a href="#bond">EXPLORER ↗</a></div>
+              <div class="addr-row2"><span class="k">Terms hash</span><code>4f2a8c91d6e35b07a4f29c8e1d57b36f9c1e</code><a href="#bond">VERIFY ↗</a></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky">
+          <div class="ticket">
+            <div class="ticket-head">
+              <button class="on">SUBSCRIBE</button>
+              <button>SELL</button>
+            </div>
+            <div class="ticket-body">
+              <div class="trow"><span>Offering price</span><span class="v num">$98.40</span></div>
+              <label class="field" style="margin:14px 0">
+                <label>Units</label>
+                <input class="mono" value="10">
+              </label>
+              <div class="trow"><span>Subtotal</span><span class="v num">$984.00</span></div>
+              <div class="trow"><span>Protocol fee · 0.20%</span><span class="v num">$1.97</span></div>
+              <div class="trow total"><span>Total</span><span class="v num">$985.97</span></div>
+              <div class="trow"><span>You'll receive</span><span class="v num">10 × ATLAS27</span></div>
+              <div class="trow"><span>Annual interest</span><span class="v num">$57.50</span></div>
+            </div>
+            <div class="ticket-foot">
+              <button class="btn btn-solid btn-block">Review subscription</button>
+            </div>
+            <div class="finefoot">FUNDS IN PROGRAM ESCROW UNTIL CLOSE · LACUS NEVER HOLDS THEM</div>
+          </div>
+
+          <div class="submeter" style="margin-top:28px">
+            <div class="cap"><span>Subscribed</span><span class="num">84%</span></div>
+            <div class="bar"><i style="width:84%"></i></div>
+            <div class="fig num">$420,000.00 of $500,000.00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ABOUT ================= -->
+  <section class="page" id="about">
+    <div class="wrap">
+      <div class="pagehead">
+        <div class="kicker">About</div>
+        <h1>The part of finance crypto skipped.</h1>
+      </div>
+
+      <div class="prose">
+        <p>Strip a bank down to its essentials and the job is simple: bind real parties to real contracts, then make sure those contracts execute. Loans, schedules, payments. Everything else is overhead on that one function.</p>
+        <p>Crypto built exchanges, derivatives, and a thousand ways to bet. It never built the function itself. A decade in, most of the ecosystem still runs on speculation, and that keeps it fragile.</p>
+        <p>Lacus rebuilds that function as software. A bond here is a loan agreement between two parties. The terms live in a program account that neither side can change. Payments execute on Solana, wallet to wallet, in USDC. The protocol is non-custodial: we provide the paper and the rails, never the bank account.</p>
+        <p>Today that means corporate bonds. The goal is a real credit layer for the network: startup debt, traditional companies, one day even mortgages, sitting next to tokenized treasuries and stocks in a single portfolio. Real cash flows are how this ecosystem grows up.</p>
+      </div>
+
+      <div class="section tight">
+        <div class="sec-head">
+          <h2>Principles</h2>
+        </div>
+        <div class="principles">
+          <div class="clause">
+            <div class="ghost">1</div>
+            <div class="no">PRINCIPLE 1</div>
+            <h3>Non-custodial, always</h3>
+            <p>Funds move wallet to wallet through program-owned escrow. Lacus has no account to freeze and no till to raid.</p>
+          </div>
+          <div class="clause">
+            <div class="ghost">2</div>
+            <div class="no">PRINCIPLE 2</div>
+            <h3>The contract is the product</h3>
+            <p>Terms lock at issuance and execute on schedule. Not by goodwill, by code.</p>
+          </div>
+          <div class="clause">
+            <div class="ghost">3</div>
+            <div class="no">PRINCIPLE 3</div>
+            <h3>Real economy only</h3>
+            <p>Every instrument is a real obligation of a real party. No tokens for the sake of tokens.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section tight">
+        <div class="sec-head">
+          <h2>Protocol addresses</h2>
+          <span class="sub">Verify everything</span>
+        </div>
+        <div class="addrlist">
+          <div class="addr-row2"><span class="k">Program</span><code>Lacus11QmW3nXp7Rv9sTzYbCdEfGh2j3xQv</code><a href="#about">EXPLORER ↗</a></div>
+          <div class="addr-row2"><span class="k">USDC mint · devnet</span><code>4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU</code><a href="#about">EXPLORER ↗</a></div>
+          <div class="addr-row2"><span class="k">Source code</span><code>github.com/lacus-protocol/lacus</code><a href="#about">GITHUB ↗</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WHITEPAPER ================= -->
+  <section class="page" id="whitepaper">
+    <div class="wrap">
+      <div class="pagehead">
+        <div class="kicker">Whitepaper · v1.0 · June 2026</div>
+        <h1>Lacus: a tokenized bond protocol.</h1>
+      </div>
+
+      <div class="wpgrid">
+        <div class="toc">
+          <div class="cap">Contents</div>
+          <a href="#whitepaper"><span class="n">1</span>Abstract</a>
+          <a href="#whitepaper"><span class="n">2</span>Architecture</a>
+          <a href="#whitepaper"><span class="n">3</span>Agreement lifecycle</a>
+          <a href="#whitepaper"><span class="n">4</span>Escrow &amp; settlement</a>
+          <a href="#whitepaper"><span class="n">5</span>Risk disclosures</a>
+          <a href="#whitepaper"><span class="n">6</span>Roadmap</a>
+          <a href="#whitepaper"><span class="n">7</span>Regulatory posture</a>
+          <div class="dl"><a class="btn btn-ghost btn-sm btn-block" href="#whitepaper">Download PDF ↗</a></div>
+        </div>
+
+        <div class="wpbody">
+          <h2><span class="n">1</span>Abstract</h2>
+          <div class="abstract">
+            <p>Lacus is a non-custodial protocol that turns bilateral loan agreements into self-executing instruments on Solana. Terms are immutable program state. Subscriptions sit in program-owned escrow. Coupons and principal settle wallet to wallet in USDC. The aim is a credit layer with a public, portable record of who borrowed, who paid, and when.</p>
+          </div>
+
+          <h2><span class="n">2</span>Architecture</h2>
+          <p>Each bond is a factory-created account triple: a terms account, immutable after issuance; an SPL token mint representing units of face value; and an escrow vault owned by the program. No upgrade authority can modify live agreements; the program's own upgrade path is timelocked and announced on-chain.</p>
+
+          <h2><span class="n">3</span>Agreement lifecycle</h2>
+          <p>An agreement moves through four states: <em>draft, open, active, settled</em>. Issuance is permissionless: an offering goes live when the borrower signs it. Subscription is atomic, USDC in and units out, and refunds in full if the offering fails to fill by its close date. Once active, the schedule is enforced by permissionless crank: anyone can trigger a due payment from the borrower's funding account.</p>
+
+          <h2><span class="n">4</span>Escrow &amp; settlement</h2>
+          <p>Subscription proceeds never touch the borrower's wallet until close. Coupons settle pro-rata to token holders at the payment date snapshot. Secondary trades settle with accrued interest computed on a 30/360 day count, so a seller is paid for the days they held.</p>
+
+          <h2><span class="n">5</span>Risk disclosures</h2>
+          <p>Lacus removes opacity, not credit risk. A borrower can still default. The protocol guarantees that a default is visible and timestamped, not that it cannot happen. Devnet instruments carry no monetary value. Smart-contract risk and jurisdictional questions are discussed in the full document.</p>
+
+          <h2><span class="n">6</span>Roadmap</h2>
+          <p>Mainnet launch follows third-party audit and a minimum six-month devnet record. Planned work includes amortizing structures, a standardized disclosure schema for borrowers, and listing additional real-world instruments alongside bonds.</p>
+
+          <h2><span class="n">7</span>Regulatory posture</h2>
+          <p>Lacus is software that two parties use to document and execute a private loan between themselves. The protocol takes no custody, no spread, and no discretion over payments.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PITCH ================= -->
+  <section class="page" id="pitch">
+    <div class="wrap">
+      <div class="pagehead">
+        <div class="kicker">Investor deck</div>
+        <h1>The Lacus pitch.</h1>
+      </div>
+      <div class="deckctrl">
+        <button>‹</button>
+        <span class="num">1 / 12</span>
+        <button>›</button>
+        <a class="dl" href="#pitch">DOWNLOAD PDF ↗</a>
+      </div>
+      <div class="deckframe">
+        <div class="inner">
+          <div class="t serif">Crypto that does what banks do.</div>
+          <div class="d">LACUS PITCH DECK · PDF VIEWER PLACEHOLDER</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER (shared) ================= -->
+  <footer class="footer">
+    <div class="wrap">
+      <div class="cols">
+        <div>
+          <div class="brand">Lacus</div>
+          <p style="margin-top:12px;max-width:280px">Real borrowers, real contracts, executed on Solana. Lacus never holds your funds.</p>
+        </div>
+        <ul>
+          <h4>Markets</h4>
+          <li><a href="#launchpad">Launchpad</a></li>
+          <li><a href="#primary">Primary</a></li>
+          <li><a href="#secondary">Secondary</a></li>
+        </ul>
+        <ul>
+          <h4>Account</h4>
+          <li><a href="#dashboard">Dashboard</a></li>
+          <li><a href="#manage">Manage</a></li>
+          <li><a href="#issue">Issue a bond</a></li>
+        </ul>
+        <ul>
+          <h4>Resources</h4>
+          <li><a href="#about">About</a></li>
+          <li><a href="#whitepaper">Whitepaper</a></li>
+          <li><a href="#pitch">Pitch deck</a></li>
+          <li><a href="#about">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="colophon">
+        <span>SET IN SPECTRAL &amp; IBM PLEX MONO</span>
+        <span>RECORDS ON SOLANA DEVNET</span>
+        <span>PROGRAM Lacus11…3xQv</span>
+        <span style="margin-left:auto">EST. 2025</span>
+      </div>
+      <p class="legal">Lacus is experimental software running on Solana devnet. Bonds shown here are test instruments with no monetary value. Nothing on this site is investment advice. Lacus is non-custodial software: funds move wallet to wallet through program-owned escrow.</p>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var ids = ['home','launchpad','primary','secondary','dashboard','manage','issue','bond','about','whitepaper','pitch'];
+  function route() {
+    var h = location.hash.replace('#', '');
+    if (ids.indexOf(h) === -1) h = 'home';
+    ids.forEach(function (id) {
+      document.getElementById(id).classList.toggle('on', id === h);
+    });
+    document.querySelectorAll('.chooser a, .nav-links a').forEach(function (a) {
+      a.classList.toggle('on', a.getAttribute('href') === '#' + h);
+    });
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', route);
+  route();
+})();
+</script>
+
+</body>
+</html>

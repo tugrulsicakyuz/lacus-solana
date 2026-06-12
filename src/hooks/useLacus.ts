@@ -7,6 +7,14 @@ import { useCallback, useState, useMemo } from 'react';
 import { getLacusProgram, getLacusProgramReadOnly, getFactoryStatePDA, getBondStatePDA, getBondMintPDA, getInvestorPositionPDA } from '@/lib/lacus-program';
 import type { BondState, FactoryState } from '@/types/lacus';
 
+// Eski struct'tan bozuk deserialize olan hesapları ele
+const isValidBond = (bond: BondState) =>
+  !!bond.name && bond.name.trim().length > 0 &&
+  !!bond.symbol && bond.symbol.trim().length > 0 &&
+  Number(bond.faceValue) > 0 &&
+  Number(bond.maxSupply) > 0 &&
+  Number(bond.maturityTimestamp) > 1700000000; // Kasım 2023 sonrası
+
 export function useLacusProgram() {
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
@@ -19,12 +27,7 @@ export function useLacusProgram() {
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
     tx.recentBlockhash = blockhash;
     tx.feePayer = wallet!.publicKey;
-    let sig: string;
-    try {
-      sig = await sendTransaction(tx, connection);
-    } catch (e: any) {
-      throw e;
-    }
+    const sig = await sendTransaction(tx, connection);
     await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
     return sig;
   }, [connection, sendTransaction, wallet]);
@@ -38,15 +41,7 @@ export function useLacusProgram() {
       const bonds = await (readProgram.account as any).bondState.all();
       const validBonds = bonds
         .map((b: { account: BondState }) => b.account)
-        .filter((bond: BondState) => {
-          return (
-            bond.name && bond.name.trim().length > 0 &&
-            bond.symbol && bond.symbol.trim().length > 0 &&
-            Number(bond.faceValue) > 0 &&
-            Number(bond.maxSupply) > 0 &&
-            Number(bond.maturityTimestamp) > 1700000000
-          );
-        });
+        .filter(isValidBond);
       return validBonds;
     } catch (e) {
       console.error('fetchAllBonds error:', e);
@@ -68,18 +63,9 @@ export function useLacusProgram() {
       const allBonds = await (program.account as any).bondState.all();
       const myBonds = allBonds
         .map((b: { account: BondState }) => b.account)
-        .filter((bond: BondState) => {
-          // Filter out bonds with garbage deserialized data from old struct
-          const isValid = (
-            bond.name && bond.name.trim().length > 0 &&
-            bond.symbol && bond.symbol.trim().length > 0 &&
-            Number(bond.faceValue) > 0 &&
-            Number(bond.maxSupply) > 0 &&
-            Number(bond.maturityTimestamp) > 1700000000 // after Nov 2023
-          );
-          const isMine = bond.issuer.toString() === wallet.publicKey.toString();
-          return isValid && isMine;
-        });
+        .filter((bond: BondState) =>
+          isValidBond(bond) && bond.issuer.toString() === wallet.publicKey.toString()
+        );
       return myBonds;
     } catch (e) {
       console.error('fetchMyBonds error:', e);
@@ -104,16 +90,7 @@ export function useLacusProgram() {
           bond: b.account,
           bondStatePDA: b.publicKey,
         }))
-        .filter(({ bond }: { bond: BondState }) => {
-          // Filter out bonds with garbage deserialized data from old struct
-          return (
-            bond.name && bond.name.trim().length > 0 &&
-            bond.symbol && bond.symbol.trim().length > 0 &&
-            Number(bond.faceValue) > 0 &&
-            Number(bond.maxSupply) > 0 &&
-            Number(bond.maturityTimestamp) > 1700000000 // after Nov 2023
-          );
-        });
+        .filter(({ bond }: { bond: BondState }) => isValidBond(bond));
 
       // Check token balances and investor positions in parallel
       const balanceChecks = validBonds.map(async ({ bond, bondStatePDA }: { bond: BondState; bondStatePDA: PublicKey }) => {

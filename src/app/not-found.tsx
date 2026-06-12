@@ -14,7 +14,7 @@ export default function NotFound() {
           justify-content: center;
           position: relative;
           overflow: hidden;
-          font-family: 'DM Mono', monospace;
+          font-family: var(--font-dm-mono);
         }
         .nf-glow {
           pointer-events: none;
@@ -29,7 +29,7 @@ export default function NotFound() {
           filter: blur(60px);
         }
         .nf-code {
-          font-family: 'Bebas Neue', sans-serif;
+          font-family: var(--font-bebas);
           font-size: clamp(100px, 18vw, 160px);
           letter-spacing: 0.06em;
           color: rgba(201,149,42,0.15);
@@ -37,7 +37,7 @@ export default function NotFound() {
           margin: 0;
         }
         .nf-title {
-          font-family: 'Bebas Neue', sans-serif;
+          font-family: var(--font-bebas);
           font-size: clamp(28px, 5vw, 42px);
           letter-spacing: 0.12em;
           color: #f0e8d8;
@@ -65,7 +65,7 @@ export default function NotFound() {
           overflow: hidden;
           cursor: pointer;
           transition: color 0.3s;
-          font-family: 'DM Mono', monospace;
+          font-family: var(--font-dm-mono);
         }
         .nf-btn::before {
           content: "";

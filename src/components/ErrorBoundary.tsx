@@ -42,8 +42,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
           border: "1px solid rgba(251,113,133,0.15)",
           background: "rgba(251,113,133,0.03)",
         }}>
-          <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 48, letterSpacing: "0.06em", color: "rgba(251,113,133,0.25)" }}>!</p>
-          <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.1em", color: "#f0e8d8", margin: "8px 0" }}>
+          <p style={{ fontFamily: "var(--font-bebas)", fontSize: 48, letterSpacing: "0.06em", color: "rgba(251,113,133,0.25)" }}>!</p>
+          <p style={{ fontFamily: "var(--font-bebas)", fontSize: 22, letterSpacing: "0.1em", color: "#f0e8d8", margin: "8px 0" }}>
             Section Failed to Load
           </p>
           <p style={{ fontSize: 11, letterSpacing: "0.12em", color: "rgba(240,232,216,0.35)", maxWidth: 320, lineHeight: 1.7, marginBottom: 24 }}>
@@ -52,13 +52,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
           <div style={{ display: "flex", gap: 10 }}>
             <button
               onClick={() => this.setState({ hasError: false })}
-              style={{ padding: "8px 20px", border: "1px solid rgba(251,113,133,0.5)", color: "#fb7185", background: "none", cursor: "pointer", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "'DM Mono', monospace" }}
+              style={{ padding: "8px 20px", border: "1px solid rgba(251,113,133,0.5)", color: "#fb7185", background: "none", cursor: "pointer", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "var(--font-dm-mono)" }}
             >
               Try Again
             </button>
             <Link
               href="/"
-              style={{ display: "inline-flex", alignItems: "center", padding: "8px 20px", border: "1px solid rgba(240,232,216,0.14)", color: "rgba(240,232,216,0.5)", textDecoration: "none", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "'DM Mono', monospace" }}
+              style={{ display: "inline-flex", alignItems: "center", padding: "8px 20px", border: "1px solid rgba(240,232,216,0.14)", color: "rgba(240,232,216,0.5)", textDecoration: "none", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "var(--font-dm-mono)" }}
             >
               Home
             </Link>

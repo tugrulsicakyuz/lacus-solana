@@ -163,16 +163,7 @@ function BondDetailContent() {
   if (loading) {
     return (
       <div className="bd-root" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <style>{`
-          .bd-root {
-            --bd-aqua: #22d3ee;
-            min-height: 100vh;
-            background: #030d10;
-            font-family: 'DM Mono', monospace;
-          }
-        `}</style>
         <Loader2 style={{ width: 32, height: 32, color: "#22d3ee", animation: "spin 1s linear infinite" }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -180,16 +171,8 @@ function BondDetailContent() {
   if (notFound || !bond) {
     return (
       <>
-        <style>{`
-          .bd-root {
-            --bd-aqua: #22d3ee;
-            min-height: 100vh;
-            background: #030d10;
-            font-family: 'DM Mono', monospace;
-          }
-        `}</style>
         <div className="bd-root" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, paddingTop: 96 }}>
-          <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 32, letterSpacing: "0.12em", color: "#f0e8d8" }}>Bond Not Found</p>
+          <p style={{ fontFamily: "var(--font-bebas)", fontSize: 32, letterSpacing: "0.12em", color: "#f0e8d8" }}>Bond Not Found</p>
           <p style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(240,232,216,0.4)" }}>No bond found with symbol &ldquo;{symbol}&rdquo;</p>
           <Link href="/launchpad" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 16, padding: "10px 24px", border: "1px solid rgba(34,211,238,0.6)", color: "#22d3ee", textDecoration: "none", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase" }}>
             <ArrowLeft style={{ width: 14, height: 14 }} />
@@ -207,275 +190,6 @@ function BondDetailContent() {
 
   return (
     <>
-      <style>{`
-        .bd-root {
-          --bd-aqua: #22d3ee;
-          min-height: 100vh;
-          background: #030d10;
-          background-image: radial-gradient(ellipse 70% 50% at 50% 0%, oklch(0.14 0.09 200) 0%, #030d10 60%);
-          font-family: 'DM Mono', monospace;
-          color: #f0e8d8;
-          padding-top: 100px;
-          padding-bottom: 80px;
-        }
-        .bd-container {
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 0 48px;
-        }
-        .bd-back {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 10px;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          color: rgba(240,232,216,0.4);
-          text-decoration: none;
-          margin-bottom: 40px;
-          transition: color 0.2s;
-        }
-        .bd-back:hover { color: rgba(240,232,216,0.8); }
-        .bd-eyebrow {
-          font-size: 10px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          color: var(--bd-aqua);
-          margin-bottom: 8px;
-        }
-        .bd-symbol {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(56px, 8vw, 80px);
-          letter-spacing: 0.06em;
-          color: #f0e8d8;
-          line-height: 1;
-          margin: 0;
-        }
-        .bd-issuer {
-          font-size: 12px;
-          letter-spacing: 0.14em;
-          color: rgba(240,232,216,0.4);
-          margin-top: 8px;
-          text-transform: uppercase;
-        }
-        .bd-apy-val {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(48px, 7vw, 68px);
-          letter-spacing: 0.06em;
-          color: var(--bd-aqua);
-          line-height: 1;
-        }
-        .bd-apy-label {
-          font-size: 10px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          color: rgba(240,232,216,0.35);
-          margin-top: 4px;
-        }
-        .bd-header-row {
-          display: flex;
-          align-items: flex-end;
-          justify-content: space-between;
-          gap: 32px;
-          flex-wrap: wrap;
-          margin-bottom: 56px;
-          padding-bottom: 40px;
-          border-bottom: 1px solid rgba(240,232,216,0.06);
-        }
-        .bd-actions {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-        .bd-btn-primary {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 24px;
-          border: 1px solid rgba(34,211,238,0.7);
-          color: #f0e8d8;
-          text-decoration: none;
-          font-size: 10px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          position: relative;
-          overflow: hidden;
-          cursor: pointer;
-          transition: color 0.3s;
-          font-family: 'DM Mono', monospace;
-        }
-        .bd-btn-primary::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: #22d3ee;
-          transform: translateY(100%);
-          transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
-        }
-        .bd-btn-primary:hover { color: #030d10; }
-        .bd-btn-primary:hover::before { transform: translateY(0); }
-        .bd-btn-primary span { position: relative; z-index: 1; }
-        .bd-btn-ghost {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 22px;
-          border: 1px solid rgba(240,232,216,0.15);
-          color: rgba(240,232,216,0.5);
-          text-decoration: none;
-          font-size: 10px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          cursor: pointer;
-          transition: color 0.2s, border-color 0.2s;
-          font-family: 'DM Mono', monospace;
-          background: none;
-        }
-        .bd-btn-ghost:hover { color: #f0e8d8; border-color: rgba(240,232,216,0.35); }
-        .bd-metrics-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 16px;
-          margin-bottom: 24px;
-        }
-        @media (max-width: 640px) { .bd-metrics-grid { grid-template-columns: 1fr; } }
-        .bd-card {
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(240,232,216,0.06);
-          padding: 24px;
-        }
-        .bd-card-label {
-          font-size: 9px;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: rgba(240,232,216,0.35);
-          margin-bottom: 10px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .bd-card-value {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: 28px;
-          letter-spacing: 0.06em;
-          color: #f0e8d8;
-        }
-        .bd-section-title {
-          font-size: 9px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          color: rgba(240,232,216,0.35);
-          margin-bottom: 20px;
-          padding-bottom: 12px;
-          border-bottom: 1px solid rgba(240,232,216,0.06);
-        }
-        .bd-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 14px 0;
-          border-bottom: 1px solid rgba(240,232,216,0.05);
-          font-size: 12px;
-        }
-        .bd-row:last-child { border-bottom: none; }
-        .bd-row-label { color: rgba(240,232,216,0.4); letter-spacing: 0.12em; text-transform: uppercase; font-size: 10px; }
-        .bd-row-value { color: #f0e8d8; }
-        .bd-fill-bar-track {
-          width: 100%;
-          height: 3px;
-          background: rgba(240,232,216,0.06);
-          margin-top: 16px;
-          overflow: hidden;
-        }
-        .bd-fill-bar-fill {
-          height: 100%;
-          background: var(--bd-aqua);
-          transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
-        }
-        .bd-two-col {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-          margin-bottom: 24px;
-        }
-        @media (max-width: 768px) { .bd-two-col { grid-template-columns: 1fr; } }
-        .bd-holding-card {
-          background: rgba(34,211,238,0.04);
-          border: 1px solid rgba(34,211,238,0.12);
-          padding: 28px;
-          margin-bottom: 24px;
-        }
-        .bd-holding-title {
-          font-size: 9px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          color: var(--bd-aqua);
-          margin-bottom: 20px;
-        }
-        .bd-holding-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 24px;
-        }
-        @media (max-width: 640px) { .bd-holding-grid { grid-template-columns: 1fr; } }
-        .bd-holding-val {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: 26px;
-          letter-spacing: 0.05em;
-          color: var(--bd-aqua);
-        }
-        .bd-sold-out {
-          display: inline-block;
-          padding: 3px 10px;
-          border: 1px solid rgba(240,232,216,0.2);
-          font-size: 9px;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: rgba(240,232,216,0.4);
-          margin-left: 16px;
-          vertical-align: middle;
-        }
-        .bd-contract-link {
-          font-size: 11px;
-          color: var(--bd-aqua);
-          text-decoration: none;
-          word-break: break-all;
-          transition: opacity 0.2s;
-        }
-        .bd-contract-link:hover { opacity: 0.7; }
-        .bd-doc-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 16px 0;
-          border-bottom: 1px solid rgba(240,232,216,0.05);
-          text-decoration: none;
-          transition: background 0.2s;
-        }
-        .bd-doc-row:last-child { border-bottom: none; }
-        .bd-doc-name { font-size: 12px; color: #f0e8d8; margin-bottom: 2px; }
-        .bd-doc-sub { font-size: 10px; color: rgba(240,232,216,0.35); }
-        .bd-disclaimer {
-          font-size: 10px;
-          color: rgba(240,232,216,0.25);
-          margin-top: 16px;
-          line-height: 1.7;
-          letter-spacing: 0.08em;
-        }
-        .bd-no-wallet {
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(240,232,216,0.06);
-          padding: 18px 24px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          font-size: 11px;
-          color: rgba(240,232,216,0.35);
-          margin-bottom: 24px;
-          letter-spacing: 0.1em;
-        }
-        .bd-rule { width: 32px; height: 1px; background: linear-gradient(90deg, rgba(34,211,238,0.5), transparent); margin-bottom: 16px; }
-      `}</style>
 
       <div className="bd-root">
         <div className="bd-container">
@@ -566,7 +280,7 @@ function BondDetailContent() {
             <div style={{ marginTop: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(240,232,216,0.35)" }}>Fill Rate</span>
-                <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, letterSpacing: "0.06em", color: "#22d3ee" }}>{bond.filled_percentage}%</span>
+                <span style={{ fontFamily: "var(--font-bebas)", fontSize: 22, letterSpacing: "0.06em", color: "#22d3ee" }}>{bond.filled_percentage}%</span>
               </div>
               <div className="bd-fill-bar-track">
                 <div className="bd-fill-bar-fill" style={{ width: `${fillPct}%` }} />

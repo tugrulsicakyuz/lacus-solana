@@ -2,14 +2,9 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useClientInteractions, useStickyNav } from "@/lib/useClientInteractions";
 
 export default function GlobalInteractions() {
   const pathname = usePathname();
-
-  // Cursor orb + sticky nav — run once, persist across navigation
-  useClientInteractions();
-  useStickyNav();
 
   // ── Scroll reveal ──
   // Uses IntersectionObserver for existing elements + MutationObserver for async-loaded content

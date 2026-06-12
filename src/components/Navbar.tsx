@@ -37,7 +37,7 @@ export default function Navbar() {
     padding: "9px 12px",
     borderRadius: "6px",
     color: "rgba(240,232,216,0.8)",
-    fontFamily: "'DM Mono', monospace",
+    fontFamily: "var(--font-dm-mono)",
     fontSize: "10px",
     letterSpacing: "0.15em",
     textTransform: "uppercase",
@@ -46,102 +46,6 @@ export default function Navbar() {
   };
 
   return (
-    <>
-      <style>{`
-        .lc-nav {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 500;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 28px 48px;
-          mix-blend-mode: difference;
-          pointer-events: none;
-        }
-        .lc-nav > * {
-          pointer-events: all;
-        }
-        .lc-nav-logo {
-          font-family: "Bebas Neue", sans-serif;
-          font-size: 22px;
-          letter-spacing: 0.18em;
-          color: #f0e8d8;
-          text-decoration: none;
-        }
-        .lc-nav-links {
-          display: flex;
-          gap: 36px;
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          align-items: center;
-        }
-        .lc-nav-links a,
-        .lc-nav-btn {
-          font-size: 11px;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          color: rgba(240,232,216,0.5);
-          text-decoration: none;
-          transition: color 0.3s;
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-family: inherit;
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          padding: 0;
-        }
-        .lc-nav-links a:hover,
-        .lc-nav-btn:hover {
-          color: #f0e8d8;
-        }
-        .lc-nav-cta {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 9px 22px;
-          border: 1px solid rgba(201,149,42,0.8);
-          color: #f0e8d8;
-          text-decoration: none;
-          font-size: 10px;
-          letter-spacing: 0.25em;
-          text-transform: uppercase;
-          position: relative;
-          overflow: hidden;
-          cursor: pointer;
-          transition: color 0.3s;
-          font-family: 'DM Mono', monospace;
-        }
-        .lc-nav-cta::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: oklch(0.72 0.14 72);
-          transform: translateY(100%);
-          transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
-        }
-        .lc-nav-cta:hover { color: #0d0b08; }
-        .lc-nav-cta:hover::before { transform: translateY(0); }
-        .lc-nav-cta span { position: relative; z-index: 1; }
-
-        /* Dropdown escapes the blend mode by sitting in a higher stacking context */
-        .lc-dropdown-wrap {
-          position: relative;
-          display: flex;
-          align-items: center;
-        }
-        .lc-dropdown-portal {
-          position: fixed;
-          mix-blend-mode: normal;
-          z-index: 9999;
-        }
-      `}</style>
-
       <nav className="lc-nav">
         {/* Logo */}
         <Link href="/" className="lc-nav-logo">LACUS</Link>
@@ -234,7 +138,7 @@ export default function Navbar() {
                 fontSize: "10px",
                 height: "34px",
                 padding: "0 14px",
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "var(--font-dm-mono)",
                 letterSpacing: "0.18em",
                 textTransform: "uppercase",
                 color: "#f0e8d8",
@@ -243,6 +147,5 @@ export default function Navbar() {
           )}
         </div>
       </nav>
-    </>
   );
 }
