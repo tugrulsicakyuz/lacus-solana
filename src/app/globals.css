@@ -721,91 +721,22 @@ sup { font-size: 10px; color: var(--ink-3); }
 .iss-wallet-hint { font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--iss-ink-dim); }
 
 /* ═══════════════════════════════════════════════════════════
-   PRIMARY MARKET
+   PRIMARY MARKET (pri-*)
    ═══════════════════════════════════════════════════════════ */
-@keyframes spin { to { transform:rotate(360deg); } }
-.pri-root { --pri-bg:#0d0b08;--pri-ink:#f0e8d8;--pri-ink-dim:#7a6f60;--pri-gold:oklch(0.72 0.14 72);--pri-copper:oklch(0.52 0.13 38);--pri-moss:oklch(0.48 0.09 145);--pri-rule:rgba(240,232,216,0.12);min-height:100vh;background:var(--pri-bg);color:var(--pri-ink);font-family:var(--font-dm-mono);cursor:none;overflow-x:hidden; }
-@keyframes priFadeRow { from { opacity:0;transform:translateY(16px); } to { opacity:1;transform:translateY(0); } }
-.pri-row:not(.hdr) { animation:priFadeRow 0.5s cubic-bezier(.16,1,.3,1) both; }
-.pri-hero { height:100vh;display:grid;grid-template-columns:1fr 1fr;position:relative;overflow:hidden;border-bottom:1px solid var(--pri-rule); }
-.pri-hero-left { display:flex;flex-direction:column;justify-content:flex-end;padding:0 48px 80px;border-right:1px solid var(--pri-rule);position:relative;z-index:2; }
-.pri-hero-eyebrow { font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--pri-ink-dim);margin-bottom:32px; }
-.pri-hero-title { font-family:var(--font-bebas);font-size:clamp(80px,11vw,160px);letter-spacing:-.02em;line-height:.88;margin-bottom:40px; }
-.pri-hero-title .gold { color:var(--pri-gold); }
-.pri-hero-rule { width:100%;height:1px;background:var(--pri-rule);margin-bottom:32px; }
-.pri-hero-desc { font-family:var(--font-cormorant);font-style:italic;font-size:20px;font-weight:300;color:var(--pri-ink-dim);line-height:1.65;max-width:380px; }
-.pri-hero-right { display:flex;flex-direction:column;justify-content:flex-end;padding:0 48px 80px;position:relative;z-index:2; }
-.pri-stats-grid { display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--pri-rule);margin-bottom:48px; }
-.pri-stat { background:var(--pri-bg);padding:36px 32px; }
-.pri-stat-num { font-family:var(--font-bebas);font-size:52px;color:var(--pri-ink);line-height:1;letter-spacing:-.02em; }
-.pri-stat-num .suf { font-size:.4em;color:var(--pri-gold); }
-.pri-stat-lbl { font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--pri-ink-dim);margin-top:6px; }
-.pri-hero-cta { display:flex;gap:16px;flex-wrap:wrap; }
-.pri-btn { display:inline-flex;align-items:center;gap:16px;padding:18px 40px;border:1px solid var(--pri-gold);color:var(--pri-ink);text-decoration:none;font-size:11px;letter-spacing:.3em;text-transform:uppercase;position:relative;overflow:hidden;cursor:none;transition:color .3s;background:none;font-family:var(--font-dm-mono); }
-.pri-btn::before { content:'';position:absolute;inset:0;background:var(--pri-gold);transform:translateY(100%);transition:transform .4s cubic-bezier(.16,1,.3,1); }
-.pri-btn:hover { color:var(--pri-bg); }
-.pri-btn:hover::before { transform:translateY(0); }
-.pri-btn span { position:relative;z-index:1; }
-.pri-btn:disabled { opacity:.4;pointer-events:none; }
-.pri-btn-ghost { display:inline-flex;align-items:center;gap:12px;padding:18px 40px;border:1px solid var(--pri-rule);color:var(--pri-ink-dim);text-decoration:none;font-size:11px;letter-spacing:.3em;text-transform:uppercase;cursor:none;transition:color .3s,border-color .3s;background:none;font-family:var(--font-dm-mono); }
-.pri-btn-ghost:hover { border-color:var(--pri-ink-dim);color:var(--pri-ink); }
-.pri-offerings-header { padding:100px 48px 60px;display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--pri-rule); }
-.pri-offerings-title { font-family:var(--font-bebas);font-size:clamp(56px,7vw,88px);letter-spacing:-.01em;line-height:1; }
-.pri-offerings-meta { font-size:12px;color:var(--pri-ink-dim);line-height:1.8;text-align:right; }
-.pri-offerings-body { display:grid;grid-template-columns:1fr 400px;border-bottom:1px solid var(--pri-rule); }
-.pri-table-wrap { border-right:1px solid var(--pri-rule); }
-.pri-row { display:grid;grid-template-columns:52px 1fr 130px 110px 140px 140px;align-items:center;padding:36px 48px;border-bottom:1px solid var(--pri-rule);gap:24px;cursor:none;position:relative;overflow:hidden;transition:background .3s; }
-.pri-row::before { content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--pri-gold);transform:scaleY(0);transition:transform .4s cubic-bezier(.16,1,.3,1);transform-origin:bottom; }
-.pri-row:hover::before,.pri-row.selected::before { transform:scaleY(1); }
-.pri-row:hover,.pri-row.selected { background:oklch(0.12 0.01 72 / 0.8); }
-.pri-row.hdr { background:oklch(0.11 0.005 72);cursor:default;padding:18px 48px; }
-.pri-row.hdr:hover { background:oklch(0.11 0.005 72); }
-.pri-row.hdr:hover::before { transform:scaleY(0); }
-.pri-row-idx { font-family:var(--font-cormorant);font-style:italic;font-size:13px;color:var(--pri-gold);opacity:.7; }
-.pri-row-name { font-family:var(--font-bebas);font-size:28px;letter-spacing:.02em;color:var(--pri-ink);line-height:1;margin-bottom:4px; }
-.pri-row-sub { font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--pri-ink-dim); }
-.pri-cell { font-size:13px;color:var(--pri-ink); }
-.pri-cell .lbl { font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--pri-ink-dim);margin-bottom:4px; }
-.pri-cell.hdr { font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--pri-ink-dim); }
-.pri-badge { display:inline-block;padding:4px 12px;font-size:9px;letter-spacing:.2em;text-transform:uppercase;border:1px solid; }
-.pri-badge-live { border-color:var(--pri-moss);color:var(--pri-moss); }
-.pri-badge-ended { border-color:var(--pri-rule);color:var(--pri-ink-dim); }
-.pri-badge-sold { border-color:var(--pri-copper);color:var(--pri-copper); }
-.pri-buy-panel { padding:48px 40px;position:sticky;top:0;max-height:100vh;overflow-y:auto; }
-.pri-buy-lbl { font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--pri-ink-dim);margin-bottom:32px; }
-.pri-buy-name { font-family:var(--font-bebas);font-size:36px;letter-spacing:.02em;color:var(--pri-gold);line-height:1;margin-bottom:8px; }
-.pri-buy-sub { font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--pri-ink-dim);margin-bottom:32px; }
-.pri-fill-head { display:flex;justify-content:space-between;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--pri-ink-dim);margin-bottom:8px; }
-.pri-fill-track { height:2px;background:var(--pri-rule);margin-bottom:28px; }
-.pri-fill-fill { height:100%;background:var(--pri-gold);transition:width .5s; }
-.pri-ibox { border:1px solid var(--pri-rule);padding:24px;margin-bottom:2px;transition:border-color .3s; }
-.pri-ibox:focus-within { border-color:var(--pri-gold); }
-.pri-ibox-lbl { display:flex;justify-content:space-between;font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--pri-ink-dim);margin-bottom:12px; }
-.pri-ifield { width:100%;background:none;border:none;outline:none;font-family:var(--font-bebas);font-size:36px;color:var(--pri-ink);cursor:none; }
-.pri-ifield::placeholder { color:var(--pri-ink-dim); }
-.pri-ifield::-webkit-outer-spin-button,.pri-ifield::-webkit-inner-spin-button { -webkit-appearance:none; }
-.pri-itoken { font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--pri-ink-dim);margin-top:4px; }
-.pri-ireadonly { font-family:var(--font-bebas);font-size:36px;color:var(--pri-ink-dim); }
-.pri-bstats { border:1px solid var(--pri-rule);margin:24px 0; }
-.pri-bstat { display:flex;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--pri-rule);font-size:11px; }
-.pri-bstat:last-child { border-bottom:none; }
-.pri-bstat-k { color:var(--pri-ink-dim);letter-spacing:.1em;text-transform:uppercase;font-size:9px; }
-.pri-bstat-v { color:var(--pri-ink); }
-.pri-bstat-v.g { color:var(--pri-moss); }
-.pri-no-bond { padding:48px 40px;display:flex;align-items:center;justify-content:center;text-align:center;min-height:300px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--pri-ink-dim); }
-.pri-wallet-wrap { display:flex;flex-direction:column;align-items:flex-start;gap:16px;padding-top:24px; }
-.pri-wallet-hint { font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--pri-ink-dim); }
-.pri-depth { height:50vh;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;border-top:1px solid var(--pri-rule);border-bottom:1px solid var(--pri-rule); }
-.pri-depth-quote { position:relative;z-index:2;text-align:center;font-family:var(--font-cormorant);font-style:italic;font-size:clamp(20px,3vw,36px);font-weight:300;color:var(--pri-ink);opacity:.7;line-height:1.55;max-width:700px;pointer-events:none; }
-.pri-how { padding:140px 48px;border-bottom:1px solid var(--pri-rule); }
-.pri-how-header { display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:100px; }
-.pri-how-title { font-family:var(--font-bebas);font-size:clamp(56px,7vw,88px);letter-spacing:-.01em;line-height:1; }
-.pri-how-note { max-width:300px;font-size:12px;color:var(--pri-ink-dim);line-height:1.8; }
-.pri-how-steps { display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--pri-rule); }
-.pri-how-step { background:var(--pri-bg);padding:52px 40px;position:relative; }
-.pri-how-step-n { font-family:var(--font-cormorant);font-style:italic;font-size:80px;color:var(--pri-gold);opacity:.08;line-height:1;position:absolute;top:24px;right:32px; }
-.pri-how-step-t { font-family:var(--font-bebas);font-size:36px;letter-spacing:.02em;color:var(--pri-ink);margin-bottom:20px;margin-top:8px; }
-.pri-how-step-d { font-size:12px;color:var(--pri-ink-dim);line-height:1.8; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pri-grid { display: grid; grid-template-columns: 1fr 340px; gap: 56px; align-items: start; padding: 48px 0 64px; }
+.pri-row { cursor: pointer; }
+.pri-row.sel { background: var(--bg-2); box-shadow: inset 2px 0 0 var(--accent); }
+.pri-wallet { display: flex; flex-direction: column; gap: 12px; padding: 14px 0; }
+.pri-wallet .wallet-adapter-button {
+  background: var(--ink); color: var(--bg); border-radius: 2px;
+  font-family: var(--font-inter), sans-serif; font-size: 12.5px; font-weight: 500;
+  height: 38px; padding: 0 16px; justify-content: center; width: 100%;
+}
+.pri-wallet .wallet-adapter-button:not([disabled]):hover { background: #33302a; }
+@media (max-width: 980px) {
+  .pri-grid { grid-template-columns: 1fr; }
+}
 
 /* ═══════════════════════════════════════════════════════════
    ABOUT

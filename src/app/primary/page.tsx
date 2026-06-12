@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense, useCallback } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { formatDate } from "@/lib/format";
 import { useSearchParams } from "next/navigation";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
@@ -39,8 +39,6 @@ interface CombinedBond extends OnChainBond {
   description?: string;
 }
 
-const ROMAN = ["i","ii","iii","iv","v","vi","vii","viii","ix","x","xi","xii"];
-
 // ── Main content ──────────────────────────────────────────────────────────────
 function PrimaryContent() {
   const searchParams = useSearchParams();
@@ -57,62 +55,6 @@ function PrimaryContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [solBalance, setSolBalance]     = useState(0);
   const [refreshKey, setRefreshKey]     = useState(0);
-
-  const heroBgRef = useRef<HTMLCanvasElement>(null);
-  const depthRef  = useRef<HTMLCanvasElement>(null);
-
-  // ── Hero bg canvas (flowing dot grid)
-  useEffect(() => {
-    const c = heroBgRef.current; if (!c) return;
-    const ctx = c.getContext("2d"); if (!ctx) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let rafId: number;
-    const resize = () => { c.width = c.offsetWidth || window.innerWidth; c.height = c.offsetHeight || window.innerHeight; };
-    resize(); window.addEventListener("resize", resize);
-    const draw = (t: number) => {
-      const W = c.width, H = c.height; ctx.clearRect(0, 0, W, H);
-      const step = 60;
-      for (let x = 0; x < W + step; x += step) {
-        for (let y = 0; y < H + step; y += step) {
-          const wave = Math.sin((x + t * 0.04) * 0.02) * Math.cos((y + t * 0.03) * 0.025) * 20;
-          const op = 0.04 + Math.abs(wave) * 0.002;
-          ctx.beginPath();
-          ctx.arc(x + wave, y + Math.cos((x + t * 0.02) * 0.015) * 15, Math.max(0, 0.8), 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(201,149,42,${op})`; ctx.fill();
-        }
-      }
-      rafId = requestAnimationFrame(draw);
-    };
-    rafId = requestAnimationFrame(draw);
-    return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(rafId); };
-  }, []);
-
-  // ── Depth band canvas (horizontal waves)
-  useEffect(() => {
-    const c = depthRef.current; if (!c) return;
-    const ctx = c.getContext("2d"); if (!ctx) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let rafId: number;
-    const resize = () => { c.width = c.offsetWidth || window.innerWidth; c.height = c.offsetHeight || 400; };
-    resize(); window.addEventListener("resize", resize);
-    const draw = (t: number) => {
-      const W = c.width, H = c.height; ctx.clearRect(0, 0, W, H);
-      for (let i = 0; i < 8; i++) {
-        ctx.beginPath();
-        const y0 = H / 2 + (i - 4) * 40; ctx.moveTo(0, y0);
-        for (let x = 0; x <= W; x += 4) {
-          ctx.lineTo(x, y0 + Math.sin((x * 0.008 + t * 0.0006 + i * 0.8)) * 18 * Math.sin(i * 0.4 + 0.2));
-        }
-        ctx.strokeStyle = `rgba(201,149,42,${0.05 + i * 0.015})`; ctx.lineWidth = 0.8; ctx.stroke();
-      }
-      rafId = requestAnimationFrame(draw);
-    };
-    rafId = requestAnimationFrame(draw);
-    return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(rafId); };
-  }, []);
-
-  // Scroll reveal: GlobalInteractions'taki global .reveal observer'ı yönetir
-  // (MutationObserver'ı async yüklenen bond satırlarını da yakalar)
 
   // ── SOL balance
   const fetchBalance = useCallback(async () => {
@@ -196,231 +138,156 @@ function PrimaryContent() {
   const soldOut = selected ? selected.tokensSold >= selected.maxSupply : false;
 
   return (
-      <div className="pri-root">
+    <div className="lx-wrap">
+      <div className="lx-pagehead">
+        <div className="lx-kicker">Primary market</div>
+        <h1>Subscribe to live issues.</h1>
+        <p className="lx-lede">
+          Lend directly to the borrower at the offering price. No underwriter sets the terms. Your
+          money sits in program escrow until close, not with us.
+        </p>
+      </div>
 
-        {/* Hero */}
-        <section className="pri-hero">
-          <canvas ref={heroBgRef} style={{ position:"absolute", inset:0, pointerEvents:"none" }} />
-          <div className="pri-hero-left">
-            <div className="pri-hero-eyebrow reveal">§ Primary Market — Initial Offerings</div>
-            <h1 className="pri-hero-title reveal">FIRST<br /><span className="gold">DEPTH.</span></h1>
-            <div className="pri-hero-rule" />
-            <p className="pri-hero-desc reveal">
-              The primary market is where capital meets conviction. New instruments, first prices, verified issuers — before the world finds out.
-            </p>
-          </div>
-          <div className="pri-hero-right">
-            <div className="pri-stats-grid reveal">
-              <div className="pri-stat">
-                <div className="pri-stat-num">{loading ? "—" : bonds.length}</div>
-                <div className="pri-stat-lbl">Active Offerings</div>
-              </div>
-              <div className="pri-stat">
-                <div className="pri-stat-num">
-                  {loading || bonds.length === 0 ? "—" : (bonds.reduce((s,b) => s + b.couponRateBps/100, 0) / bonds.length).toFixed(1)}
-                  <span className="suf">%</span>
-                </div>
-                <div className="pri-stat-lbl">Avg APY</div>
-              </div>
-              <div className="pri-stat">
-                <div className="pri-stat-num">
-                  {loading || bonds.length === 0 ? "—" : Math.round(bonds.reduce((s,b) => s + Math.min((b.tokensSold/b.maxSupply)*100,100), 0) / bonds.length)}
-                  <span className="suf">%</span>
-                </div>
-                <div className="pri-stat-lbl">Avg Fill Rate</div>
-              </div>
-              <div className="pri-stat">
-                <div className="pri-stat-num">SOL</div>
-                <div className="pri-stat-lbl">Settlement Layer</div>
-              </div>
+      <div className="pri-grid">
+        {/* Table */}
+        <div>
+          {loading ? (
+            <div className="lx-loading">
+              <Loader2 style={{ width: 16, height: 16, animation: "spin 1s linear infinite" }} />
+              Loading bonds from Solana…
             </div>
-            <div className="pri-hero-cta reveal">
-              <a href="#offerings" className="pri-btn"><span>Browse Offerings</span></a>
-              <a href="/manage/issue" className="pri-btn-ghost">Issue →</a>
+          ) : fetchError ? (
+            <div className="lx-empty">
+              <p>{fetchError}</p>
+              <button className="lx-btn lx-btn-ghost lx-btn-sm" onClick={() => setRefreshKey(k => k + 1)}>Retry</button>
             </div>
-          </div>
-        </section>
-
-        {/* Offerings */}
-        <section id="offerings">
-          <div className="pri-offerings-header">
-            <div className="pri-offerings-title reveal">Open<br />Offerings.</div>
-            <div className="pri-offerings-meta reveal">
-              {bonds.length} bonds on Solana Devnet<br />
-              Click a row to select and purchase
+          ) : bonds.length === 0 ? (
+            <div className="lx-empty">
+              <p>No offerings are open right now. New issues appear here the moment a borrower publishes one.</p>
             </div>
-          </div>
+          ) : (
+            <div className="lx-scroll">
+              <table className="lx-table">
+                <thead>
+                  <tr>
+                    <th>No.</th><th>Bond</th><th className="r">Coupon</th><th className="r">Maturity</th>
+                    <th className="r">Face value</th><th className="r">Subscription</th><th className="r">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bonds.map((bond, i) => {
+                    const fvSol  = bond.faceValue / 1e9;
+                    const bApy   = bond.couponRateBps / 100;
+                    const bFill  = Math.min((bond.tokensSold / bond.maxSupply) * 100, 100);
+                    const isSel  = selected?.bondId === bond.bondId;
+                    const isSold = bond.tokensSold >= bond.maxSupply;
+                    return (
+                      <tr
+                        key={bond.bondId}
+                        className={`pri-row${isSel ? " sel" : ""}`}
+                        onClick={() => setSelected(bond)}
+                      >
+                        <td className="lx-rowno">{String(i + 1).padStart(2, "0")}</td>
+                        <td>
+                          <div className="lx-sym">{bond.symbol}</div>
+                          <div className="lx-issuer">{bond.issuerName}</div>
+                        </td>
+                        <td className="r num">{bApy.toFixed(2)}%</td>
+                        <td className="r num">{formatDate(bond.maturityTimestamp)}</td>
+                        <td className="r num">{fvSol.toFixed(4)} SOL</td>
+                        <td className="r"><span className={`lx-stamp num${isSold ? "" : " open"}`}>{bFill.toFixed(0)}% SOLD</span></td>
+                        <td className="r">
+                          {isSold
+                            ? <span className="lx-stamp">SOLD OUT</span>
+                            : bond.isMatured
+                            ? <span className="lx-stamp">MATURED</span>
+                            : <span className="lx-stamp open">● OPEN</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
-          <div className="pri-offerings-body">
-            {/* Table */}
-            <div className="pri-table-wrap">
-              <div className="pri-row hdr">
-                <div className="pri-row-idx">#</div>
-                <div className="pri-cell hdr">Instrument</div>
-                <div className="pri-cell hdr">Face Value</div>
-                <div className="pri-cell hdr">APY</div>
-                <div className="pri-cell hdr">Maturity</div>
-                <div className="pri-cell hdr">Status</div>
+        {/* Subscription ticket */}
+        <div className="lx-sticky">
+          {!selected ? (
+            <div className="lx-empty" style={{ marginTop: 0 }}>
+              <p>Select an offering to subscribe.</p>
+            </div>
+          ) : (
+            <div className="lx-ticket">
+              <div className="lx-ticket-head">
+                <button className="on">SUBSCRIBE</button>
               </div>
+              <div className="lx-ticket-body">
+                <div className="lx-trow"><span>Bond</span><span className="v lx-sym">{selected.symbol}</span></div>
+                <div className="lx-trow"><span>Face value</span><span className="v num">{fv.toFixed(4)} SOL / unit</span></div>
+                <div className="lx-trow"><span>Coupon</span><span className="v num">{apy.toFixed(2)}%</span></div>
+                <div className="lx-trow"><span>Maturity</span><span className="v num">{formatDate(selected.maturityTimestamp)}</span></div>
 
-              {loading ? (
-                <div style={{ padding:"80px 48px", display:"flex", alignItems:"center", gap:16, color:"var(--pri-ink-dim)", fontSize:11, letterSpacing:".2em" }}>
-                  <Loader2 style={{ width:16, height:16, animation:"spin 1s linear infinite" }} />
-                  Loading bonds from Solana…
+                <div className="lx-submeter" style={{ margin: "14px 0" }}>
+                  <div className="cap"><span>Subscribed</span><span className="num">{fill.toFixed(1)}%</span></div>
+                  <div className="bar"><i style={{ width: `${fill}%` }}></i></div>
                 </div>
-              ) : fetchError ? (
-                <div style={{ padding:"80px 48px" }}>
-                  <p style={{ fontSize:11, letterSpacing:".2em", color:"var(--pri-ink-dim)", marginBottom:24, textTransform:"uppercase" }}>{fetchError}</p>
-                  <button className="pri-btn-ghost" onClick={() => setRefreshKey(k => k+1)}><span>Retry</span></button>
-                </div>
-              ) : bonds.length === 0 ? (
-                <div style={{ padding:"80px 48px", fontSize:11, letterSpacing:".2em", color:"var(--pri-ink-dim)", textTransform:"uppercase" }}>
-                  No offerings on Solana Devnet
-                </div>
-              ) : (
-                bonds.map((bond, i) => {
-                  const fvSol  = bond.faceValue / 1e9;
-                  const bApy   = bond.couponRateBps / 100;
-                  const isSel  = selected?.bondId === bond.bondId;
-                  const isSold = bond.tokensSold >= bond.maxSupply;
-                  return (
-                    <div
-                      key={bond.bondId}
-                      className={`pri-row${isSel ? " selected" : ""}`}
-                      onClick={() => setSelected(bond)}
-                      onMouseEnter={() => document.body.classList.add("cursor-hover")}
-                      onMouseLeave={() => document.body.classList.remove("cursor-hover")}
-                    >
-                      <div className="pri-row-idx">{ROMAN[i] ?? i+1}.</div>
-                      <div>
-                        <div className="pri-row-name">{bond.symbol}</div>
-                        <div className="pri-row-sub">{bond.issuerName} · Fixed-Rate</div>
-                      </div>
-                      <div className="pri-cell"><div className="lbl">Face Value</div>{fvSol.toFixed(4)} SOL</div>
-                      <div className="pri-cell"><div className="lbl">APY</div><span style={{ color:"var(--pri-moss)" }}>{bApy}%</span></div>
-                      <div className="pri-cell"><div className="lbl">Maturity</div>{formatDate(bond.maturityTimestamp)}</div>
-                      <div className="pri-cell">
-                        {isSold
-                          ? <span className="pri-badge pri-badge-sold">Sold Out</span>
-                          : bond.isMatured
-                          ? <span className="pri-badge pri-badge-ended">Matured</span>
-                          : <span className="pri-badge pri-badge-live">Live</span>}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Buy Panel */}
-            {!selected ? (
-              <div className="pri-no-bond">Select an offering<br />to purchase</div>
-            ) : (
-              <div className="pri-buy-panel">
-                <div className="pri-buy-lbl">Purchase</div>
-                <div className="pri-buy-name">{selected.symbol}</div>
-                <div className="pri-buy-sub">{selected.issuerName}</div>
-                <div className="pri-fill-head"><span>Fill</span><span>{fill.toFixed(1)}%</span></div>
-                <div className="pri-fill-track"><div className="pri-fill-fill" style={{ width:`${fill}%` }} /></div>
 
                 {!connected ? (
-                  <div className="pri-wallet-wrap">
-                    <div className="pri-wallet-hint">Connect wallet to purchase</div>
+                  <div className="pri-wallet">
+                    <p className="lx-fn" style={{ marginTop: 0 }}>Connect wallet to purchase</p>
                     <WalletMultiButton />
                   </div>
                 ) : soldOut ? (
-                  <div style={{ fontSize:11, letterSpacing:".2em", textTransform:"uppercase", color:"var(--pri-copper)", padding:"24px 0", borderTop:"1px solid var(--pri-rule)" }}>
-                    This offering is fully sold
-                  </div>
+                  <p className="lx-fn" style={{ marginTop: 0 }}>This offering is fully sold</p>
                 ) : (
                   <>
-                    <div className="pri-ibox">
-                      <div className="pri-ibox-lbl"><span>You Pay</span><span style={{ color:"var(--pri-ink)" }}>{solBalance.toFixed(4)} SOL</span></div>
+                    <label className="lx-field" style={{ margin: "14px 0" }}>
+                      <span>You pay · SOL (balance: {solBalance.toFixed(4)})</span>
                       <input
-                        className="pri-ifield"
+                        className="num"
                         type="number" placeholder="0"
                         value={payAmount}
-                        onKeyDown={e => ["e","E","+","-"].includes(e.key) && e.preventDefault()}
+                        onKeyDown={e => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
                         onChange={e => {
                           setPayAmount(e.target.value);
                           const n = parseFloat(e.target.value);
-                          setReceiveAmt(!isNaN(n) && n > 0 && fv > 0 ? (n/fv).toFixed(4) : "");
+                          setReceiveAmt(!isNaN(n) && n > 0 && fv > 0 ? (n / fv).toFixed(4) : "");
                         }}
                       />
-                      <div className="pri-itoken">SOL</div>
-                    </div>
-                    <div className="pri-ibox" style={{ marginBottom:24 }}>
-                      <div className="pri-ibox-lbl"><span>You Receive</span><span>{selected.symbol}</span></div>
-                      <div className="pri-ireadonly">{receiveAmt || "0"}</div>
-                      <div className="pri-itoken">{selected.symbol} tokens</div>
-                    </div>
-                    <div className="pri-bstats">
-                      <div className="pri-bstat"><span className="pri-bstat-k">Face Value</span><span className="pri-bstat-v">{fv.toFixed(4)} SOL / token</span></div>
-                      <div className="pri-bstat"><span className="pri-bstat-k">APY</span><span className="pri-bstat-v g">{apy}%</span></div>
-                      <div className="pri-bstat"><span className="pri-bstat-k">Maturity</span><span className="pri-bstat-v">{formatDate(selected.maturityTimestamp)}</span></div>
-                      <div className="pri-bstat"><span className="pri-bstat-k">Remaining</span><span className="pri-bstat-v">{(selected.maxSupply - selected.tokensSold).toLocaleString()} tokens</span></div>
-                      <div className="pri-bstat"><span className="pri-bstat-k">Network</span><span className="pri-bstat-v g">Solana Devnet</span></div>
-                    </div>
-                    <button
-                      className="pri-btn"
-                      style={{ width:"100%", justifyContent:"center" }}
-                      onClick={handleBuy}
-                      disabled={!payAmount || payAmount === "0" || isProcessing}
-                    >
-                      <span>
-                        {isProcessing
-                          ? <span style={{ display:"flex", alignItems:"center", gap:8 }}><Loader2 style={{ width:14, height:14, animation:"spin 1s linear infinite" }} />Processing…</span>
-                          : "Buy Bonds"}
-                      </span>
-                    </button>
+                    </label>
+                    <div className="lx-trow"><span>You&apos;ll receive</span><span className="v num">{receiveAmt || "0"} × {selected.symbol}</span></div>
+                    <div className="lx-trow"><span>Remaining</span><span className="v num">{(selected.maxSupply - selected.tokensSold).toLocaleString()} units</span></div>
+                    <div className="lx-trow total"><span>Total</span><span className="v num">{payAmount || "0"} SOL</span></div>
                   </>
                 )}
               </div>
-            )}
-          </div>
-        </section>
-
-        {/* Depth band */}
-        <section className="pri-depth">
-          <canvas ref={depthRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%" }} />
-          <p className="pri-depth-quote reveal">
-            "The first price is the truest price.<br />Before noise. Before narrative."
-          </p>
-        </section>
-
-        {/* How It Works */}
-        <section className="pri-how">
-          <div className="pri-how-header">
-            <div className="pri-how-title reveal">How<br />It Works.</div>
-            <p className="pri-how-note reveal">Four steps from intent to instrument. The primary market is not a portal — it is a protocol.</p>
-          </div>
-          <div className="pri-how-steps">
-            {[
-              { n:"1", t:"SELECT", d:"Browse live offerings. Each bond shows face value, APY, maturity, and fill rate — all pulled directly from Solana." },
-              { n:"2", t:"PAY",    d:"Enter the SOL amount. The interface computes the exact bond token quantity at face value. No slippage, no hidden fees." },
-              { n:"3", t:"SETTLE", d:"Solana-native settlement — sub-second finality. Allocations are final and recorded on-chain immediately." },
-              { n:"4", t:"HOLD",   d:"Your bond tokens accrue yield until maturity. Transfer them freely on the secondary market any time before then." },
-            ].map(s => (
-              <div key={s.n} className="pri-how-step reveal">
-                <div className="pri-how-step-n">{s.n}</div>
-                <div className="pri-how-step-t">{s.t}</div>
-                <div className="pri-how-step-d">{s.d}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
+              {connected && !soldOut && (
+                <div className="lx-ticket-foot">
+                  <button
+                    className="lx-btn lx-btn-solid lx-btn-block"
+                    onClick={handleBuy}
+                    disabled={!payAmount || payAmount === "0" || isProcessing}
+                  >
+                    {isProcessing
+                      ? <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} />Processing…</span>
+                      : "Buy units"}
+                  </button>
+                </div>
+              )}
+              <div className="lx-finefoot">SOLANA DEVNET · TEST INSTRUMENTS</div>
+            </div>
+          )}
+        </div>
       </div>
+    </div>
   );
 }
 
 export default function PrimaryPage() {
   return (
-    <Suspense fallback={
-      <div style={{ minHeight:"100vh", background:"#0d0b08", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"monospace", color:"rgba(240,232,216,0.3)", fontSize:10, letterSpacing:"0.3em", textTransform:"uppercase" }}>
-        Loading…
-      </div>
-    }>
+    <Suspense fallback={<div className="lx-loading">Loading…</div>}>
       <PrimaryContent />
     </Suspense>
   );
