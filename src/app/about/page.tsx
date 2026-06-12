@@ -1,237 +1,99 @@
 "use client";
 
-import Link from "next/link";
+import { LACUS_PROGRAM_ID } from "@/config/solana";
+
+const PROGRAM_ID = LACUS_PROGRAM_ID.toBase58();
+const USDC_DEVNET = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 
 export default function AboutPage() {
-  // Scroll reveal: GlobalInteractions'taki global .reveal observer'ı yönetir
   return (
-    <div className="about-root">
+    <div className="lx-wrap">
+      <div className="lx-pagehead">
+        <div className="lx-kicker">About</div>
+        <h1>The part of finance crypto skipped.</h1>
+      </div>
 
-      {/* ── Hero ── */}
-      <section className="ab-hero reveal">
-        <div className="ab-hero-inner">
+      <div className="ab-prose">
+        <p>
+          Strip a bank down to its essentials and the job is simple: bind real parties to real
+          contracts, then make sure those contracts execute. Loans, schedules, payments.
+          Everything else is overhead on that one function.
+        </p>
+        <p>
+          Crypto built exchanges, derivatives, and a thousand ways to bet. It never built the
+          function itself. A decade in, most of the ecosystem still runs on speculation, and that
+          keeps it fragile.
+        </p>
+        <p>
+          Lacus rebuilds that function as software. A bond here is a loan agreement between two
+          parties. The terms live in a program account that neither side can change. Payments
+          execute on Solana, wallet to wallet, in USDC. The protocol is non-custodial: we provide
+          the paper and the rails, never the bank account.
+        </p>
+        <p>
+          Today that means corporate bonds. The goal is a real credit layer for the network:
+          startup debt, traditional companies, one day even mortgages, sitting next to tokenized
+          treasuries and stocks in a single portfolio. Real cash flows are how this ecosystem
+          grows up.
+        </p>
+      </div>
 
-          {/* Left text */}
-          <div className="ab-hero-left">
-            <p className="ab-eyebrow">§ Protocol — Mission &amp; Vision</p>
-            <h1 className="ab-title">
-              CREDIT<br />
-              MAR<span>KETS.</span>
-            </h1>
-            <p className="ab-desc">
-              Lacus is transparent credit infrastructure for on-chain capital markets. Companies can issue debt, investors can build fixed-income portfolios, and every agreement is a bilateral loan — auditable, transferable, on-chain.
-            </p>
-            <div className="ab-cta-row">
-              <Link href="/launchpad" className="ab-btn-fill">
-                Explore Bonds
-                <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 7h8m0 0L7 3m4 4L7 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </Link>
-              <Link href="/whitepaper" className="ab-btn-ghost">
-                Read Whitepaper
-              </Link>
-            </div>
-          </div>
-
-          {/* Mock bond card */}
-          <div className="ab-card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <span className="ab-card-badge">Active Bond</span>
-              <span className="ab-card-network">Solana Devnet</span>
-            </div>
-            <p className="ab-card-company">NovaTech AI</p>
-            <p className="ab-card-sub">Series A Bridge Note</p>
-            <div className="ab-card-stats">
-              {[{ label: "APR", value: "18.5%" }, { label: "Term", value: "12 mo" }, { label: "Size", value: "$500K" }].map((s) => (
-                <div key={s.label} className="ab-card-stat">
-                  <span className="ab-card-stat-val">{s.value}</span>
-                  <span className="ab-card-stat-lbl">{s.label}</span>
-                </div>
-              ))}
-            </div>
-            <div className="ab-fill-label">
-              <span>Filled</span>
-              <span>68%</span>
-            </div>
-            <div className="ab-fill-track">
-              <div className="ab-fill-bar" />
-            </div>
-            <div className="ab-trust">
-              {["Loan agreement hashed on-chain", "KYC verified issuer", "Protocol never takes custody"].map((txt) => (
-                <div key={txt} className="ab-trust-item">
-                  <span className="ab-trust-check">
-                    <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-                      <path d="M2 5l2.5 2.5L8 3" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                  {txt}
-                </div>
-              ))}
-            </div>
-          </div>
-
+      <section className="lx-section tight">
+        <div className="lx-sec-head">
+          <h2>Principles</h2>
         </div>
-      </section>
-
-      {/* ── The Problem ── */}
-      <section className="about-section reveal">
-        <p className="ab-sec-eyebrow">§ 01 — The Problem</p>
-        <h2 className="ab-sec-title">TWO MARKETS.<br /><span>BOTH BROKEN.</span></h2>
-        <div className="ab-problem-grid">
-          <div className="ab-prob-card">
-            <div className="ab-prob-icon">
-              {/* Building icon */}
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="1" />
-                <path d="M9 22V12h6v10M9 7h1m4 0h1M9 12h1m4 0h1" />
-              </svg>
-            </div>
-            <h3 className="ab-prob-h">Companies can't access debt</h3>
-            <p className="ab-prob-p">
-              Traditional debt markets are built for incumbents. Startups and SMEs struggle to access straightforward financing even when the business is healthy. The bank laughs. The VC wants equity. Lacus offers a third option.
+        <div className="lx-clauses">
+          <div className="lx-clause reveal">
+            <div className="ghost">1</div>
+            <div className="no">PRINCIPLE 1</div>
+            <h3>Non-custodial, always</h3>
+            <p>
+              Funds move wallet to wallet through program-owned escrow. Lacus has no account to
+              freeze and no till to raid.
             </p>
           </div>
-          <div className="ab-prob-card">
-            <div className="ab-prob-icon">
-              {/* Users icon */}
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="9" cy="7" r="3" />
-                <path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
-                <circle cx="18" cy="7" r="2" />
-                <path d="M22 21v-1.5a3 3 0 00-2-2.83" />
-              </svg>
-            </div>
-            <h3 className="ab-prob-h">Retail investors can't access bonds</h3>
-            <p className="ab-prob-p">
-              Most fixed-income products are still gated behind institutions or wrapped into opaque vehicles. Retail investors rarely get direct access. When credit gets packaged, they can't see what's inside — 2008 proved what that costs.
+          <div className="lx-clause reveal">
+            <div className="ghost">2</div>
+            <div className="no">PRINCIPLE 2</div>
+            <h3>The contract is the product</h3>
+            <p>Terms lock at issuance and execute on schedule. Not by goodwill, by code.</p>
+          </div>
+          <div className="lx-clause reveal">
+            <div className="ghost">3</div>
+            <div className="no">PRINCIPLE 3</div>
+            <h3>Real economy only</h3>
+            <p>
+              Every instrument is a real obligation of a real party. No tokens for the sake of
+              tokens.
             </p>
           </div>
         </div>
       </section>
 
-      {/* ── How It Works ── */}
-      <section className="about-section reveal">
-        <p className="ab-sec-eyebrow">§ 02 — How It Works</p>
-        <h2 className="ab-sec-title">DIRECT.<br /><span>TRANSPARENT.</span></h2>
-        <div className="ab-hiw-grid">
-          <div>
-            <p className="ab-hiw-col-title">Issue a bond</p>
-            <p className="ab-hiw-col-sub">Raise debt capital on your own terms</p>
-            {[
-              "Apply with your business info, credit terms, and required documents",
-              "Sign a bilateral loan agreement that is hashed for on-chain verification",
-              "Your issuance goes live and investors can subscribe without traditional middlemen.",
-            ].map((txt, i) => (
-              <div key={i} className="ab-step">
-                <span className="ab-step-num">{i + 1}</span>
-                <p className="ab-step-text">{txt}</p>
-              </div>
-            ))}
+      <section className="lx-section tight" style={{ paddingTop: 0 }}>
+        <div className="lx-sec-head">
+          <h2>Protocol addresses</h2>
+          <span className="sub">Verify everything</span>
+        </div>
+        <div className="ab-addrs">
+          <div className="lx-addr-row">
+            <span className="k">Program</span>
+            <code className="num">{PROGRAM_ID}</code>
+            <a href={`https://explorer.solana.com/address/${PROGRAM_ID}?cluster=devnet`} target="_blank" rel="noopener noreferrer">EXPLORER ↗</a>
           </div>
-          <div>
-            <p className="ab-hiw-col-title">Invest in bonds</p>
-            <p className="ab-hiw-col-sub">Build transparent fixed-income exposure</p>
-            {[
-              "Browse issuances, inspect loan terms, and review uploaded financials",
-              "Build your own mix of startup credit, lower-risk paper, and future structured products",
-              "Exit through peer-to-peer secondary liquidity instead of waiting for legacy settlement cycles.",
-            ].map((txt, i) => (
-              <div key={i} className="ab-step">
-                <span className="ab-step-num">{i + 1}</span>
-                <p className="ab-step-text">{txt}</p>
-              </div>
-            ))}
+          <div className="lx-addr-row">
+            <span className="k">USDC mint · devnet</span>
+            <code className="num">{USDC_DEVNET}</code>
+            <a href={`https://explorer.solana.com/address/${USDC_DEVNET}?cluster=devnet`} target="_blank" rel="noopener noreferrer">EXPLORER ↗</a>
+          </div>
+          <div className="lx-addr-row">
+            <span className="k">Source code</span>
+            <code>github.com/lacus-fi</code>
+            <a href="https://github.com/lacus-fi" target="_blank" rel="noopener noreferrer">GITHUB ↗</a>
           </div>
         </div>
       </section>
-
-      {/* ── Why On-Chain ── */}
-      <section className="about-section reveal">
-        <p className="ab-sec-eyebrow">§ 03 — Why On-Chain</p>
-        <div className="ab-onchain-box">
-          <h2 className="ab-onchain-title">No hidden structures. No black-box credit.</h2>
-          <p className="ab-onchain-p">
-            Every credit agreement on Lacus is designed to be inspectable. Documents are hashed, settlement is on-chain, and the protocol is built so originators can package bonds, loans, BNPL receivables, or other paper without hiding the underlying assets from investors. The goal is simple: if credit gets bundled, the market should still be able to see what it owns.
-          </p>
-          <div className="ab-badges">
-            {["SHA-256 hashing", "Atomic P2P settlement", "Non-custodial"].map((txt) => (
-              <span key={txt} className="ab-badge">
-                <span className="ab-badge-dot" />
-                {txt}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Roadmap ── */}
-      <section className="about-section reveal">
-        <p className="ab-sec-eyebrow">§ 04 — Roadmap</p>
-        <h2 className="ab-sec-title">WHERE WE&rsquo;RE<br /><span>GOING.</span></h2>
-        <div className="ab-roadmap">
-          {[
-            {
-              name: "Phase 1 — Devnet Launch",
-              tag: null,
-              active: false,
-              desc: "Core issuance, buying, yield, and portfolio flows live on Solana Devnet. Primary market open.",
-            },
-            {
-              name: "Phase 2 — Secondary Market",
-              tag: "CURRENT",
-              active: true,
-              desc: "P2P trading layer — list, match, and settle bond positions without a central exchange.",
-            },
-            {
-              name: "Phase 3 — Portfolio Layer",
-              tag: null,
-              active: false,
-              desc: "Let investors build diversified fixed-income portfolios across startup debt, safer paper, and future packaged credit strategies.",
-            },
-            {
-              name: "Phase 4 — Credit Packaging",
-              tag: null,
-              active: false,
-              desc: "Package bonds, receivables, BNPL flows, mortgages, and other debt instruments into auditable structures instead of opaque products.",
-            },
-            {
-              name: "Phase 5 — Equity & IPO Rails",
-              tag: null,
-              active: false,
-              desc: "Extend the infrastructure toward tokenized equity and eventually internet-native IPO flows built on the same transparent market rails.",
-            },
-          ].map((phase) => (
-            <div key={phase.name} className="ab-phase">
-              <div className="ab-phase-line">
-                <span className={`ab-phase-dot ${phase.active ? "active" : "future"}`} />
-                <span className={`ab-phase-connector ${phase.active ? "active" : "future"}`} />
-              </div>
-              <div className="ab-phase-body">
-                <div className="ab-phase-head">
-                  <span className={`ab-phase-name ${phase.active ? "active" : "future"}`}>
-                    {phase.name}
-                  </span>
-                  {phase.tag && <span className="ab-phase-tag">{phase.tag}</span>}
-                </div>
-                <p className="ab-phase-desc">{phase.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Footer CTA ── */}
-      <section className="ab-footer-cta reveal">
-        <h2 className="ab-footer-cta-title">READ THE<br />WHITEPAPER.</h2>
-        <p className="ab-footer-cta-sub">Technical architecture, compliance framework, and legal approach.</p>
-        <Link href="/whitepaper" className="ab-btn-fill">
-          Open Whitepaper
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <path d="M3 7h8m0 0L7 3m4 4L7 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </Link>
-      </section>
+      <div style={{ paddingBottom: 48 }} />
     </div>
   );
 }
