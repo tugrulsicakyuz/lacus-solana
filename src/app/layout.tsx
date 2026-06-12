@@ -1,56 +1,45 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, DM_Mono, Cormorant_Garamond, Spectral } from "next/font/google";
+import { Inter, IBM_Plex_Mono, Spectral } from "next/font/google";
 import "./globals.css";
 import SolanaWalletProvider from "@/components/SolanaWalletProvider";
 import { Toaster } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import GlobalInteractions from "@/components/GlobalInteractions";
-import PageEffects from "@/components/PageEffects";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const bebas = Bebas_Neue({
-  weight: "400",
+const inter = Inter({
+  weight: ["400", "500", "600"],
   subsets: ["latin"],
-  variable: "--font-bebas",
+  variable: "--font-inter",
 });
-const dmMono = DM_Mono({
-  weight: ["300", "400"],
-  style: ["normal", "italic"],
+const plexMono = IBM_Plex_Mono({
+  weight: ["400", "500"],
   subsets: ["latin"],
-  variable: "--font-dm-mono",
-});
-const cormorant = Cormorant_Garamond({
-  weight: ["300", "600"],
-  style: ["normal", "italic"],
-  subsets: ["latin"],
-  variable: "--font-cormorant",
+  variable: "--font-plex-mono",
 });
 const spectral = Spectral({
-  weight: "300",
-  style: ["normal", "italic"],
+  weight: ["400", "500", "600"],
   subsets: ["latin"],
   variable: "--font-spectral",
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Lacus — Credit markets with luminous depth.",
+    default: "Lacus · Peer-to-peer credit, executed on Solana",
     template: "%s | Lacus",
   },
   description:
-    "Lacus is a Solana-native protocol for tokenizing, trading, and settling fixed-income instruments. A deep, continuous market for on-chain credit — rendered clear.",
+    "Real borrowers, real contracts, executed on Solana. Lacus never holds your funds.",
   keywords: [
-    "RWA",
     "tokenized bonds",
     "DeFi",
-    "real world assets",
     "Solana",
     "bond protocol",
     "on-chain credit",
-    "structured credit",
     "fixed income",
-    "portfolio construction",
+    "peer-to-peer lending",
+    "private credit",
   ],
   authors: [{ name: "Lacus" }],
   openGraph: {
@@ -59,13 +48,13 @@ export const metadata: Metadata = {
     siteName: "Lacus",
     title: "Lacus",
     description:
-      "Transparent credit infrastructure for tokenized bonds, portfolio construction, and auditable structured products.",
+      "Real borrowers, real contracts, executed on Solana. Lacus never holds your funds.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Lacus",
     description:
-      "Transparent credit infrastructure for tokenized bonds, portfolio construction, and auditable structured products.",
+      "Real borrowers, real contracts, executed on Solana. Lacus never holds your funds.",
   },
   robots: {
     index: true,
@@ -82,18 +71,17 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${bebas.variable} ${dmMono.variable} ${cormorant.variable} ${spectral.variable}`}
+      className={`${inter.variable} ${plexMono.variable} ${spectral.variable}`}
     >
       <body>
         <SolanaWalletProvider>
           <GlobalInteractions />
-          <PageEffects />
           <Navbar />
           <main className="flex-1">
             <ErrorBoundary>{children}</ErrorBoundary>
           </main>
           <Footer />
-          <Toaster theme="dark" richColors position="top-right" />
+          <Toaster theme="light" richColors position="top-right" />
         </SolanaWalletProvider>
       </body>
     </html>
