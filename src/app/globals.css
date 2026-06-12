@@ -370,6 +370,20 @@ sup { font-size: 10px; color: var(--ink-3); }
   text-transform: uppercase; color: var(--ink-3);
 }
 
+/* cüzdan butonu + küçük input (paylaşılan) */
+.lx-wallet .wallet-adapter-button {
+  background: var(--ink); color: var(--bg); border-radius: 2px;
+  font-family: var(--font-inter), sans-serif; font-size: 12.5px; font-weight: 500;
+  height: 38px; padding: 0 18px;
+}
+.lx-wallet .wallet-adapter-button:not([disabled]):hover { background: #33302a; }
+.lx-input-sm {
+  width: 110px; background: var(--paper); border: 1px solid var(--line-2);
+  padding: 7px 10px; font-size: 12.5px; color: var(--ink); border-radius: 2px;
+}
+.lx-input-sm::placeholder { color: var(--ink-3); }
+.lx-input-sm:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+
 /* scroll reveal — sade fade, tek sistem (GlobalInteractions.tsx) */
 .reveal { opacity: 0; transform: translateY(12px); transition: opacity 0.5s ease, transform 0.5s ease; }
 .reveal.visible { opacity: 1; transform: translateY(0); }
@@ -436,20 +450,8 @@ sup { font-size: 10px; color: var(--ink-3); }
    ═══════════════════════════════════════════════════════════ */
 .dash-connect { max-width: 520px; margin-top: 64px; }
 .dash-wallet { display: flex; justify-content: center; }
-.dash-wallet .wallet-adapter-button {
-  background: var(--ink); color: var(--bg); border-radius: 2px;
-  font-family: var(--font-inter), sans-serif; font-size: 12.5px; font-weight: 500;
-  height: 38px; padding: 0 18px;
-}
-.dash-wallet .wallet-adapter-button:not([disabled]):hover { background: #33302a; }
 .dash-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
 .dash-deposit-row { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
-.dash-input {
-  width: 110px; background: var(--paper); border: 1px solid var(--line-2);
-  padding: 7px 10px; font-size: 12.5px; color: var(--ink); border-radius: 2px;
-}
-.dash-input::placeholder { color: var(--ink-3); }
-.dash-input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
 
 /* ═══════════════════════════════════════════════════════════
    LAUNCHPAD (lp-*)
@@ -489,12 +491,6 @@ sup { font-size: 10px; color: var(--ink-3); }
 .mgmt-link { text-decoration: none; color: var(--ink); }
 .mgmt-link:hover { color: var(--accent); }
 .mgmt-deposit-row { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
-.mgmt-input {
-  width: 100px; background: var(--paper); border: 1px solid var(--line-2);
-  padding: 7px 10px; font-size: 12.5px; color: var(--ink); border-radius: 2px;
-}
-.mgmt-input::placeholder { color: var(--ink-3); }
-.mgmt-input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
 
 /* ═══════════════════════════════════════════════════════════
    ISSUE (manage/issue, iss-*)
@@ -502,12 +498,6 @@ sup { font-size: 10px; color: var(--ink-3); }
 .iss-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: start; padding-top: 48px; }
 .iss-actions { margin-top: 28px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
 .iss-wallet { margin-top: 28px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
-.iss-wallet .wallet-adapter-button {
-  background: var(--ink); color: var(--bg); border-radius: 2px;
-  font-family: var(--font-inter), sans-serif; font-size: 12.5px; font-weight: 500;
-  height: 38px; padding: 0 18px;
-}
-.iss-wallet .wallet-adapter-button:not([disabled]):hover { background: #33302a; }
 @media (max-width: 980px) {
   .iss-grid { grid-template-columns: 1fr; }
 }
@@ -520,12 +510,7 @@ sup { font-size: 10px; color: var(--ink-3); }
 .pri-row { cursor: pointer; }
 .pri-row.sel { background: var(--bg-2); box-shadow: inset 2px 0 0 var(--accent); }
 .pri-wallet { display: flex; flex-direction: column; gap: 12px; padding: 14px 0; }
-.pri-wallet .wallet-adapter-button {
-  background: var(--ink); color: var(--bg); border-radius: 2px;
-  font-family: var(--font-inter), sans-serif; font-size: 12.5px; font-weight: 500;
-  height: 38px; padding: 0 16px; justify-content: center; width: 100%;
-}
-.pri-wallet .wallet-adapter-button:not([disabled]):hover { background: #33302a; }
+.pri-wallet .wallet-adapter-button { width: 100%; justify-content: center; }
 @media (max-width: 980px) {
   .pri-grid { grid-template-columns: 1fr; }
 }

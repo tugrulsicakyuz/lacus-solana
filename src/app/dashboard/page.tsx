@@ -113,7 +113,7 @@ export default function Dashboard() {
         </div>
         <div className="lx-empty dash-connect">
           <p>Connect a wallet to see your statement.</p>
-          <div className="dash-wallet"><WalletMultiButton /></div>
+          <div className="dash-wallet lx-wallet"><WalletMultiButton /></div>
         </div>
         <div style={{ paddingBottom: 96 }} />
       </div>
@@ -293,7 +293,7 @@ export default function Dashboard() {
                                 onChange={(e) =>
                                   setYieldAmounts(prev => ({ ...prev, [bondId]: e.target.value }))
                                 }
-                                className="dash-input num"
+                                className="lx-input-sm num"
                               />
                               <button
                                 onClick={() => handleDepositYield(bondId)}

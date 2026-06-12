@@ -1,8 +1,7 @@
 "use client";
 
-import { LACUS_PROGRAM_ID } from "@/config/solana";
-
-const PROGRAM_ID = LACUS_PROGRAM_ID.toBase58();
+const PROGRAM_ID =
+  process.env.NEXT_PUBLIC_LACUS_PROGRAM_ID ?? "87fieWCffnauPhnHHM5TFqtRPNTcvup3VGUiW6Vae3PQ";
 const USDC_DEVNET = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 
 export default function AboutPage() {

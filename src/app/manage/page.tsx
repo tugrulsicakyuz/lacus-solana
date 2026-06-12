@@ -189,7 +189,7 @@ export default function ManagePage() {
                               placeholder="SOL"
                               value={yieldAmounts[bond.bondId!] || ''}
                               onChange={(e) => setYieldAmounts(prev => ({ ...prev, [bond.bondId!]: e.target.value }))}
-                              className="mgmt-input num"
+                              className="lx-input-sm num"
                             />
                             <button
                               onClick={() => handleDepositYield(bond.bondId!, parseFloat(yieldAmounts[bond.bondId!] || '0'))}

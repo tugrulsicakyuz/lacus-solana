@@ -235,7 +235,7 @@ function PrimaryContent() {
                 </div>
 
                 {!connected ? (
-                  <div className="pri-wallet">
+                  <div className="pri-wallet lx-wallet">
                     <p className="lx-fn" style={{ marginTop: 0 }}>Connect wallet to purchase</p>
                     <WalletMultiButton />
                   </div>

@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { LACUS_PROGRAM_ID } from "@/config/solana";
 
 // Statik vitrin: §4–§6'daki tahvil/ödeme içerikleri concept rev 6'daki örnek
-// veridir (devnet demo illüstrasyonu) — canlı veri /primary ve /launchpad'dedir.
-const EXPLORER = `https://explorer.solana.com/address/${LACUS_PROGRAM_ID.toBase58()}?cluster=devnet`;
+// veridir (devnet demo illüstrasyonu); canlı veri /primary ve /launchpad'dedir.
+const PROGRAM_ID =
+  process.env.NEXT_PUBLIC_LACUS_PROGRAM_ID ?? "87fieWCffnauPhnHHM5TFqtRPNTcvup3VGUiW6Vae3PQ";
+const EXPLORER = `https://explorer.solana.com/address/${PROGRAM_ID}?cluster=devnet`;
 
 export default function LandingPage() {
   return (

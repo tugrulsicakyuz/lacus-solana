@@ -12,7 +12,7 @@ export default function IssueBondPage() {
   const { connected } = useWallet();
   const { issueBond } = useLacusProgram();
 
-  // Form state — all original fields preserved
+  // Form state: all original fields preserved
   const [bondName, setBondName] = useState('');
   const [bondSymbol, setBondSymbol] = useState('');
   const [faceValueSOL, setFaceValueSOL] = useState(0.1);
@@ -178,7 +178,7 @@ export default function IssueBondPage() {
           </div>
 
           {!connected ? (
-            <div className="iss-wallet">
+            <div className="iss-wallet lx-wallet">
               <p className="lx-fn" style={{ marginTop: 0 }}>Connect wallet to deploy</p>
               <WalletMultiButton />
             </div>
