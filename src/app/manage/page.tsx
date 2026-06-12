@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Shield, TrendingUp, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useLacusProgram } from "@/hooks/useLacus";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -127,119 +127,82 @@ export default function ManagePage() {
   };
 
   return (
-      <div className="mgmt-root">
-
-        {/* Hero */}
-        <div className="mgmt-hero">
-          <p className="mgmt-eyebrow">§ Issuer — Bond Management</p>
-          <h1 className="mgmt-title">
-            MAN<span style={{ color: 'var(--mgmt-rose)' }}>AGE.</span>
-          </h1>
-          <p className="mgmt-subtitle">View and manage your issued instruments on Solana.</p>
+    <div>
+      <div className="lx-wrap">
+        <div className="lx-pagehead">
+          <div className="lx-kicker">Manage · Borrower view</div>
+          <h1>Your obligations, in plain sight.</h1>
+          <p className="lx-lede">
+            Your payment record is your credit rating. Fund coupons on time and every future
+            lender sees it before they subscribe.
+          </p>
         </div>
 
-        <div className="mgmt-body">
-
-          {/* Issue New Bond card */}
-          <Link href="/manage/issue" className="mgmt-issue-card">
-            <div className="mgmt-issue-inner">
-              <div className="mgmt-issue-left">
-                <div className="mgmt-issue-icon">
-                  <TrendingUp size={18} color="#fb7185" />
-                </div>
-                <div>
-                  <div className="mgmt-issue-label">ISSUE NEW BOND</div>
-                  <div className="mgmt-issue-desc">Deploy a tokenized instrument to Solana devnet</div>
-                </div>
-              </div>
-              <div className="mgmt-issue-arrow">
-                <span>GET STARTED</span>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-            </div>
-          </Link>
-
-          {/* Table section */}
-          <div className="mgmt-table-header">
-            <span className="mgmt-table-title">ACTIVE INSTRUMENTS</span>
-            {!loading && bonds.length > 0 && (
-              <span className="mgmt-table-count">{bonds.length} TOTAL</span>
-            )}
-          </div>
+        <div className="lx-statement">
+          <h3 className="lx-subhead">
+            Your issues{!loading && bonds.length > 0 && <span className="mgmt-count num"> · {bonds.length}</span>}
+          </h3>
+          <div className="lx-drule"></div>
 
           {loading ? (
-            <div className="mgmt-loading">
-              <Loader2 size={14} className="mgmt-spinner" />
+            <div className="lx-loading">
+              <Loader2 size={14} className="animate-spin" />
               <span>LOADING INSTRUMENTS...</span>
             </div>
           ) : bonds.length === 0 ? (
-            <div className="mgmt-empty">
-              <Shield size={32} style={{ color: 'rgba(245,232,236,0.15)', marginBottom: 32 }} />
-              <div className="mgmt-empty-title">NO INSTRUMENTS YET</div>
-              <p className="mgmt-empty-sub">No bonds have been issued on Solana devnet</p>
-              <Link href="/manage/issue" className="mgmt-empty-cta">Issue Your First Bond</Link>
+            <div className="lx-empty">
+              <p>You have not issued a bond yet. Draft your first term sheet.</p>
+              <Link href="/manage/issue" className="lx-btn lx-btn-ghost lx-btn-sm">Issue a bond</Link>
             </div>
           ) : (
-            <div className="mgmt-table-wrap">
-              <table className="mgmt-table">
+            <div className="lx-scroll">
+              <table className="lx-table">
                 <thead>
                   <tr>
                     <th>Bond</th>
                     <th>Issuer</th>
-                    <th>APY</th>
-                    <th>Price</th>
-                    <th>Maturity</th>
-                    <th>Total Size</th>
-                    <th>Pay Yield</th>
+                    <th className="r">Coupon</th>
+                    <th className="r">Face value</th>
+                    <th className="r">Maturity</th>
+                    <th className="r">Size</th>
+                    <th className="r">Pay yield</th>
                   </tr>
                 </thead>
                 <tbody>
                   {bonds.map((bond) => (
                     <tr key={bond.id}>
                       <td>
-                        <Link href={`/bond/${bond.symbol}`} className="mgmt-bond-symbol">
+                        <Link href={`/bond/${bond.symbol}`} className="lx-sym mgmt-link">
                           {bond.symbol}
                         </Link>
                       </td>
-                      <td>
-                        <span className="mgmt-cell-dim">{bond.issuer_name}</span>
-                      </td>
-                      <td>
-                        <span className="mgmt-apy">{bond.apy}%</span>
-                      </td>
-                      <td>
-                        <span className="mgmt-cell-ink">{bond.price_per_token.toFixed(4)} SOL</span>
-                      </td>
-                      <td>
-                        <span className="mgmt-cell-dim">{bond.maturity_months} mo</span>
-                      </td>
-                      <td>
-                        <span className="mgmt-cell-ink">{bond.total_issue_size.toFixed(4)} SOL</span>
-                      </td>
-                      <td>
+                      <td><span className="lx-issuer" style={{ marginTop: 0 }}>{bond.issuer_name}</span></td>
+                      <td className="r num">{bond.apy}%</td>
+                      <td className="r num">{bond.price_per_token.toFixed(4)} SOL</td>
+                      <td className="r num">{bond.maturity_months} mo</td>
+                      <td className="r num">{bond.total_issue_size.toFixed(4)} SOL</td>
+                      <td className="r">
                         {bond.source === 'onchain' ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div className="mgmt-deposit-row">
                             <input
                               type="number"
                               placeholder="SOL"
                               value={yieldAmounts[bond.bondId!] || ''}
                               onChange={(e) => setYieldAmounts(prev => ({ ...prev, [bond.bondId!]: e.target.value }))}
-                              className="mgmt-input"
+                              className="mgmt-input num"
                             />
                             <button
                               onClick={() => handleDepositYield(bond.bondId!, parseFloat(yieldAmounts[bond.bondId!] || '0'))}
                               disabled={depositingYield === bond.bondId}
-                              className="mgmt-pay-btn"
+                              className="lx-btn lx-btn-ghost lx-btn-sm"
                             >
                               {depositingYield === bond.bondId
-                                ? <Loader2 size={11} className="mgmt-spinner" />
+                                ? <Loader2 size={11} className="animate-spin" />
                                 : 'PAY'}
                             </button>
                           </div>
                         ) : (
-                          <span className="mgmt-dash">—</span>
+                          <span className="num" style={{ color: "var(--ink-3)" }}>--</span>
                         )}
                       </td>
                     </tr>
@@ -248,8 +211,19 @@ export default function ManagePage() {
               </table>
             </div>
           )}
-
         </div>
       </div>
+
+      {/* CTA */}
+      <div className="lx-inkband" style={{ marginTop: 96 }}>
+        <div className="lx-wrap lx-ctaband">
+          <div>
+            <h2>Raise your next round of debt.</h2>
+            <p>Your on-time record is portable. It follows you to the next raise.</p>
+          </div>
+          <Link href="/manage/issue" className="lx-btn">Issue a new bond</Link>
+        </div>
+      </div>
+    </div>
   );
 }
