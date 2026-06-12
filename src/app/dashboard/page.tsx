@@ -97,227 +97,228 @@ export default function Dashboard() {
     }
   };
 
+  // ── Derived: portfolio total (face value × balance)
+  const portfolioTotalSOL = holdings.reduce(
+    (sum, { bond, balance }) => sum + (Number(bond.faceValue) / 1e9) * balance,
+    0
+  );
+
   // ── Not connected state
   if (!connected) {
     return (
-      <div className="dash-root">
-        <div className="dash-nc-center">
-          <p className="dash-nc-eyebrow">§ Solana — Portfolio Layer</p>
-          <h1 className="dash-nc-title">
-            PORT<span style={{ color: 'var(--dash-violet)' }}>FOLIO</span>
-          </h1>
-          <p className="dash-nc-sub">Connect your Solana wallet to view your bond holdings and issued instruments.</p>
-          <WalletMultiButton />
+      <div className="lx-wrap">
+        <div className="lx-pagehead">
+          <div className="lx-kicker">Dashboard · Lender view</div>
+          <h1>Your account, as a statement.</h1>
         </div>
+        <div className="lx-empty dash-connect">
+          <p>Connect a wallet to see your statement.</p>
+          <div className="dash-wallet"><WalletMultiButton /></div>
+        </div>
+        <div style={{ paddingBottom: 96 }} />
       </div>
     );
   }
 
   // ── Connected state
   return (
-    <div className="dash-root">
+    <div className="lx-wrap">
+      <div className="lx-pagehead">
+        <div className="lx-kicker">Dashboard · Lender view</div>
+        <h1>Your account, as a statement.</h1>
+      </div>
+      <div className="lx-meta">
+        <span><span className="k">Account</span><span className="num">{publicKey?.toBase58().slice(0, 4)}…{publicKey?.toBase58().slice(-4)}</span></span>
+        <span><span className="k">Network</span>Solana Devnet</span>
+      </div>
 
-      {/* Hero */}
-      <header className="dash-hero">
-        <p className="dash-eyebrow">§ Solana — Portfolio Layer</p>
-        <h1 className="dash-hero-title">
-          PORT<span style={{ color: 'var(--dash-violet)' }}>FOLIO</span>
-        </h1>
-        <p className="dash-wallet-addr">
-          {publicKey?.toBase58().slice(0, 8)}...{publicKey?.toBase58().slice(-8)}
-        </p>
-      </header>
-
-      {/* Body */}
-      <main className="dash-body">
-        {loading ? (
-          <div className="dash-loading">
-            <Loader2 size={16} className="animate-spin" style={{ color: 'var(--dash-violet)' }} />
-            Fetching instruments...
+      {loading ? (
+        <div className="lx-loading">
+          <Loader2 size={16} className="animate-spin" />
+          Fetching instruments...
+        </div>
+      ) : (
+        <>
+          <div className="lx-cards">
+            <div className="lx-card">
+              <div className="k">Portfolio value</div>
+              <div className="v num">{portfolioTotalSOL.toFixed(4)} SOL</div>
+              <div className="d num">{holdings.length} bonds held</div>
+            </div>
           </div>
-        ) : (
-          <>
-            {/* Bond Holdings */}
-            <section className="dash-section">
-              <h2 className="dash-section-label">Bond Holdings</h2>
 
-              {holdings.length === 0 ? (
-                <div className="dash-empty">
-                  <div className="dash-empty-dash">—</div>
-                  <p className="dash-empty-label">No bond holdings yet</p>
-                  <Link href="/launchpad" className="dash-empty-cta">Browse Bonds</Link>
-                </div>
-              ) : (
-                <div className="dash-grid">
-                  {holdings.map(({ bond, balance, lastYieldSnapshot }, index) => {
-                    const faceValueSOL  = Number(bond.faceValue) / 1e9;
-                    const totalValueSOL = faceValueSOL * balance;
-                    const couponRate    = (bond.couponRateBps / 100).toFixed(2);
-                    const isIssuer      = bond.issuer.toString() === publicKey?.toString();
-                    const bondId        = Number(bond.bondId);
-                    const now           = Math.floor(Date.now() / 1000);
-                    const isMatured     = bond.isMatured || Number(bond.maturityTimestamp) <= now;
-                    const totalYieldDeposited = Number(bond.totalYieldDeposited);
-                    const hasClaimableYield   = totalYieldDeposited > lastYieldSnapshot;
-                    const hasPrincipal        = bond.principalDeposited;
+          {/* Statement of holdings */}
+          <div className="lx-statement">
+            <h3 className="lx-subhead">Statement of holdings</h3>
+            <div className="lx-drule"></div>
 
-                    return (
-                      <div key={index} className="dash-card">
-                        {isIssuer && <div className="dash-card-issuer-badge">Issuer</div>}
-                        <div className="dash-card-name">{bond.name}</div>
-                        <div className="dash-card-symbol">{bond.symbol}</div>
+            {holdings.length === 0 ? (
+              <div className="lx-empty">
+                <p>No bonds yet. Browse the primary market to make your first loan.</p>
+                <Link href="/primary" className="lx-btn lx-btn-ghost lx-btn-sm">Explore bonds</Link>
+              </div>
+            ) : (
+              <div className="lx-scroll">
+                <table className="lx-table">
+                  <thead>
+                    <tr>
+                      <th>Bond</th><th className="r">Units</th><th className="r">Face value</th>
+                      <th className="r">Value</th><th className="r">Coupon</th><th className="r">Maturity</th>
+                      <th className="r">Coupons</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {holdings.map(({ bond, balance, lastYieldSnapshot }, index) => {
+                      const faceValueSOL  = Number(bond.faceValue) / 1e9;
+                      const totalValueSOL = faceValueSOL * balance;
+                      const couponRate    = (bond.couponRateBps / 100).toFixed(2);
+                      const isIssuer      = bond.issuer.toString() === publicKey?.toString();
+                      const bondId        = Number(bond.bondId);
+                      const now           = Math.floor(Date.now() / 1000);
+                      const isMatured     = bond.isMatured || Number(bond.maturityTimestamp) <= now;
+                      const totalYieldDeposited = Number(bond.totalYieldDeposited);
+                      const hasClaimableYield   = totalYieldDeposited > lastYieldSnapshot;
+                      const hasPrincipal        = bond.principalDeposited;
 
-                        <div style={{ marginBottom: '24px' }}>
-                          <div className="dash-stat-row">
-                            <span className="dash-stat-label">Balance</span>
-                            <span className="dash-stat-value">{balance.toLocaleString()} tokens</span>
-                          </div>
-                          <div className="dash-stat-row">
-                            <span className="dash-stat-label">Face Value</span>
-                            <span className="dash-stat-value">{formatSOL(Number(bond.faceValue))} SOL</span>
-                          </div>
-                          <div className="dash-stat-row">
-                            <span className="dash-stat-label">Total Value</span>
-                            <span className="dash-stat-value-violet">{totalValueSOL.toFixed(4)} SOL</span>
-                          </div>
-                          <div className="dash-stat-row">
-                            <span className="dash-stat-label">Coupon Rate</span>
-                            <span className="dash-stat-value">{couponRate}%</span>
-                          </div>
-                          <div className="dash-stat-row">
-                            <span className="dash-stat-label">Maturity</span>
-                            <span className="dash-stat-value">{formatDate(Number(bond.maturityTimestamp))}</span>
-                          </div>
-                        </div>
-
-                        <hr className="dash-card-divider" />
-
-                        <button
-                          onClick={() => handleClaimYield(bondId)}
-                          disabled={processingClaim === bondId || !hasClaimableYield}
-                          title={
-                            !hasClaimableYield
-                              ? totalYieldDeposited === 0
-                                ? 'No yield has been deposited yet'
-                                : 'No new yield since your last claim'
-                              : undefined
-                          }
-                          className="dash-btn-violet"
-                        >
-                          {processingClaim === bondId ? (
-                            <><Loader2 size={12} className="animate-spin" style={{ marginRight: 8 }} />Claiming...</>
-                          ) : hasClaimableYield ? (
-                            'Claim Yield'
-                          ) : totalYieldDeposited === 0 ? (
-                            'No Yield Yet'
-                          ) : (
-                            'Yield Up to Date'
-                          )}
-                        </button>
-
-                        {isMatured && hasPrincipal && (
-                          <button
-                            onClick={() => handleRedeemBond(bondId)}
-                            disabled={processingRedeem === bondId}
-                            className="dash-btn-ghost"
-                          >
-                            {processingRedeem === bondId ? (
-                              <><Loader2 size={12} className="animate-spin" style={{ marginRight: 8 }} />Redeeming...</>
-                            ) : (
-                              'Redeem Bond'
-                            )}
-                          </button>
-                        )}
-
-                        {isMatured && !hasPrincipal && (
-                          <div className="dash-notice-warn">
-                            Awaiting principal deposit from issuer
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-
-            {/* Bonds Issued */}
-            {issuedBonds.length > 0 && (
-              <section className="dash-section">
-                <h2 className="dash-section-label">Bonds Issued</h2>
-                <div className="dash-grid">
-                  {issuedBonds.map((bond, index) => {
-                    const soldPercentage =
-                      Number(bond.maxSupply) > 0
-                        ? (Number(bond.tokensSold) / Number(bond.maxSupply)) * 100
-                        : 0;
-                    const bondId = Number(bond.bondId);
-
-                    return (
-                      <div key={index} className="dash-card">
-                        <div className="dash-card-name">{bond.name}</div>
-                        <div className="dash-card-symbol">{bond.symbol}</div>
-
-                        <div style={{ marginBottom: '24px' }}>
-                          <div className="dash-stat-row">
-                            <span className="dash-stat-label">Tokens Sold</span>
-                            <span className="dash-stat-value">
-                              {Number(bond.tokensSold).toLocaleString()} / {Number(bond.maxSupply).toLocaleString()}
-                            </span>
-                          </div>
-                          <div style={{ padding: '8px 0' }}>
-                            <div className="dash-progress-track">
-                              <div
-                                className="dash-progress-fill"
-                                style={{ width: `${Math.min(soldPercentage, 100)}%` }}
-                              />
+                      return (
+                        <tr key={index}>
+                          <td>
+                            <div className="lx-sym">{bond.symbol}</div>
+                            <div className="lx-issuer">{bond.name}{isIssuer ? " · ISSUER" : ""}</div>
+                          </td>
+                          <td className="r num">{balance.toLocaleString()}</td>
+                          <td className="r num">{formatSOL(Number(bond.faceValue))} SOL</td>
+                          <td className="r num">{totalValueSOL.toFixed(4)} SOL</td>
+                          <td className="r num">{couponRate}%</td>
+                          <td className="r num">{formatDate(Number(bond.maturityTimestamp))}</td>
+                          <td className="r">
+                            <div className="dash-actions">
+                              <button
+                                onClick={() => handleClaimYield(bondId)}
+                                disabled={processingClaim === bondId || !hasClaimableYield}
+                                title={
+                                  !hasClaimableYield
+                                    ? totalYieldDeposited === 0
+                                      ? 'No yield has been deposited yet'
+                                      : 'No new yield since your last claim'
+                                    : undefined
+                                }
+                                className="lx-btn lx-btn-solid lx-btn-sm"
+                              >
+                                {processingClaim === bondId ? (
+                                  <><Loader2 size={12} className="animate-spin" />Claiming...</>
+                                ) : hasClaimableYield ? (
+                                  'Claim Yield'
+                                ) : totalYieldDeposited === 0 ? (
+                                  'No Yield Yet'
+                                ) : (
+                                  'Yield Up to Date'
+                                )}
+                              </button>
+                              {isMatured && hasPrincipal && (
+                                <button
+                                  onClick={() => handleRedeemBond(bondId)}
+                                  disabled={processingRedeem === bondId}
+                                  className="lx-btn lx-btn-ghost lx-btn-sm"
+                                >
+                                  {processingRedeem === bondId ? (
+                                    <><Loader2 size={12} className="animate-spin" />Redeeming...</>
+                                  ) : (
+                                    'Redeem Bond'
+                                  )}
+                                </button>
+                              )}
+                              {isMatured && !hasPrincipal && (
+                                <span className="lx-stamp">AWAITING PRINCIPAL</span>
+                              )}
                             </div>
-                            <p className="dash-progress-label">{soldPercentage.toFixed(1)}% sold</p>
-                          </div>
-                          <div className="dash-stat-row">
-                            <span className="dash-stat-label">Face Value</span>
-                            <span className="dash-stat-value">{formatSOL(Number(bond.faceValue))} SOL</span>
-                          </div>
-                          <div className="dash-stat-row">
-                            <span className="dash-stat-label">Coupon Rate</span>
-                            <span className="dash-stat-value">{(bond.couponRateBps / 100).toFixed(2)}%</span>
-                          </div>
-                        </div>
-
-                        <hr className="dash-card-divider" />
-
-                        <p className="dash-stat-label" style={{ marginBottom: 10 }}>Deposit Yield Payment</p>
-                        <div className="dash-deposit-row">
-                          <input
-                            type="number"
-                            placeholder="SOL amount"
-                            value={yieldAmounts[bondId] || ''}
-                            onChange={(e) =>
-                              setYieldAmounts(prev => ({ ...prev, [bondId]: e.target.value }))
-                            }
-                            className="dash-input"
-                          />
-                          <button
-                            onClick={() => handleDepositYield(bondId)}
-                            disabled={processingDeposit === bondId}
-                            className="dash-btn-violet-sm"
-                          >
-                            {processingDeposit === bondId ? (
-                              <><Loader2 size={12} className="animate-spin" />Paying...</>
-                            ) : (
-                              'Pay Yield'
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td>Total</td>
+                      <td className="r num">{holdings.reduce((s, h) => s + h.balance, 0).toLocaleString()}</td>
+                      <td></td>
+                      <td className="r"><span className="lx-total-val num">{portfolioTotalSOL.toFixed(4)} SOL</span></td>
+                      <td></td><td></td><td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             )}
-          </>
-        )}
-      </main>
+          </div>
+
+          {/* Bonds issued */}
+          {issuedBonds.length > 0 && (
+            <div className="lx-statement">
+              <h3 className="lx-subhead">Bonds issued</h3>
+              <div className="lx-drule"></div>
+              <div className="lx-scroll">
+                <table className="lx-table">
+                  <thead>
+                    <tr>
+                      <th>Bond</th><th className="r">Sold</th><th className="r">Face value</th>
+                      <th className="r">Coupon</th><th className="r">Deposit yield</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {issuedBonds.map((bond, index) => {
+                      const soldPercentage =
+                        Number(bond.maxSupply) > 0
+                          ? (Number(bond.tokensSold) / Number(bond.maxSupply)) * 100
+                          : 0;
+                      const bondId = Number(bond.bondId);
+
+                      return (
+                        <tr key={index}>
+                          <td>
+                            <div className="lx-sym">{bond.symbol}</div>
+                            <div className="lx-issuer">{bond.name}</div>
+                          </td>
+                          <td className="r">
+                            <span className="lx-stamp open num">{soldPercentage.toFixed(0)}% SOLD</span>
+                            <div className="lx-issuer num">{Number(bond.tokensSold).toLocaleString()} / {Number(bond.maxSupply).toLocaleString()}</div>
+                          </td>
+                          <td className="r num">{formatSOL(Number(bond.faceValue))} SOL</td>
+                          <td className="r num">{(bond.couponRateBps / 100).toFixed(2)}%</td>
+                          <td className="r">
+                            <div className="dash-deposit-row">
+                              <input
+                                type="number"
+                                placeholder="SOL amount"
+                                value={yieldAmounts[bondId] || ''}
+                                onChange={(e) =>
+                                  setYieldAmounts(prev => ({ ...prev, [bondId]: e.target.value }))
+                                }
+                                className="dash-input num"
+                              />
+                              <button
+                                onClick={() => handleDepositYield(bondId)}
+                                disabled={processingDeposit === bondId}
+                                className="lx-btn lx-btn-ghost lx-btn-sm"
+                              >
+                                {processingDeposit === bondId ? (
+                                  <><Loader2 size={12} className="animate-spin" />Paying...</>
+                                ) : (
+                                  'Pay Yield'
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+      <div style={{ paddingBottom: 96 }} />
     </div>
   );
 }
