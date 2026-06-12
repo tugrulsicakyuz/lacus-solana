@@ -3,19 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import {
-  TrendingUp,
-  Calendar,
-  DollarSign,
-  ShieldCheck,
-  BarChart3,
-  Droplets,
-  ArrowLeft,
-  Loader2,
-  Info,
-  Wallet,
-  ExternalLink,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { supabase } from "@/lib/supabase";
 
@@ -162,24 +150,25 @@ function BondDetailContent() {
 
   if (loading) {
     return (
-      <div className="bd-root" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Loader2 style={{ width: 32, height: 32, color: "#22d3ee", animation: "spin 1s linear infinite" }} />
+      <div className="lx-loading" style={{ minHeight: "50vh" }}>
+        <Loader2 size={16} className="animate-spin" />
+        Loading…
       </div>
     );
   }
 
   if (notFound || !bond) {
     return (
-      <>
-        <div className="bd-root" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, paddingTop: 96 }}>
-          <p style={{ fontFamily: "var(--font-bebas)", fontSize: 32, letterSpacing: "0.12em", color: "#f0e8d8" }}>Bond Not Found</p>
-          <p style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(240,232,216,0.4)" }}>No bond found with symbol &ldquo;{symbol}&rdquo;</p>
-          <Link href="/launchpad" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 16, padding: "10px 24px", border: "1px solid rgba(34,211,238,0.6)", color: "#22d3ee", textDecoration: "none", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase" }}>
-            <ArrowLeft style={{ width: 14, height: 14 }} />
-            Back to Markets
-          </Link>
+      <div className="lx-wrap">
+        <div className="lx-pagehead">
+          <div className="lx-kicker">Bond detail</div>
+          <h1>Bond Not Found</h1>
+          <p className="lx-lede">No bond found with symbol &ldquo;{symbol}&rdquo;</p>
         </div>
-      </>
+        <div style={{ marginTop: 28, paddingBottom: 96 }}>
+          <Link href="/primary" className="lx-btn lx-btn-ghost">Back to Markets</Link>
+        </div>
+      </div>
     );
   }
 
@@ -187,229 +176,157 @@ function BondDetailContent() {
   const soldTokens = totalSupply * (bond.filled_percentage / 100);
   const remainingTokens = totalSupply - soldTokens;
   const fillPct = Math.min(bond.filled_percentage, 100);
+  const isSoldOut = bond.filled_percentage >= 100;
 
   return (
-    <>
+    <div className="lx-wrap">
+      <div className="lx-crumb"><Link href="/primary">MARKETS</Link> / {bond.symbol}</div>
+      <div className="lx-pagehead" style={{ paddingTop: 32 }}>
+        <div className="lx-kicker">
+          Bond detail · {isSoldOut
+            ? <span style={{ color: "var(--ink-2)" }}>SOLD OUT</span>
+            : <span>● OPEN</span>}
+        </div>
+        <h1>{bond.symbol}, {bond.issuer_name}</h1>
+      </div>
 
-      <div className="bd-root">
-        <div className="bd-container">
+      {/* Price strip */}
+      <div className="bd-pricestrip">
+        <div><div className="k">Price per unit</div><div className="v num">{fmtCurrency(bond.price_per_token)}</div></div>
+        <div><div className="k">Coupon</div><div className="v num">{bond.apy}%</div></div>
+        <div><div className="k">Maturity</div><div className="v num">{maturityLabel(bond.maturity_months)}</div></div>
+        <div><div className="k">Total issue</div><div className="v num">{fmtCurrencyCompact(bond.total_issue_size)}</div></div>
+        <div><div className="k">Investors</div><div className="v num">{marketData.holderCount > 0 ? marketData.holderCount : "--"}</div></div>
+      </div>
 
-          {/* Back */}
-          <Link href="/launchpad" className="bd-back">
-            <ArrowLeft style={{ width: 12, height: 12 }} />
-            Back to Markets
-          </Link>
-
-          {/* Header */}
-          <div className="bd-header-row">
-            <div>
-              <p className="bd-eyebrow">Bond Detail</p>
-              <div className="bd-rule" />
-              <h1 className="bd-symbol">
-                {bond.symbol}
-                {bond.filled_percentage >= 100 && <span className="bd-sold-out">Sold Out</span>}
-              </h1>
-              <p className="bd-issuer">{bond.issuer_name}</p>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div className="bd-apy-val">{bond.apy}%</div>
-              <div className="bd-apy-label">Annual Percentage Yield</div>
-            </div>
+      <div className="bd-grid">
+        {/* Left column */}
+        <div>
+          {/* Terms */}
+          <h3 className="lx-subhead">Terms</h3>
+          <div className="lx-drule"></div>
+          <div style={{ paddingTop: 18 }}>
+            <dl className="lx-dl" style={{ maxWidth: 460 }}>
+              <dt>Issuer</dt><dd>{bond.issuer_name}</dd>
+              <dt>Symbol</dt><dd className="num">{bond.symbol}</dd>
+              <dt>Total supply</dt><dd className="num">{totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} units</dd>
+              <dt>Total value</dt><dd className="num">{fmtCurrencyCompact(bond.total_issue_size)}</dd>
+              <dt>Remaining</dt><dd className="num">{remainingTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} units</dd>
+              <dt>Network</dt><dd>Solana Devnet</dd>
+              <dt>Structure</dt><dd>Bilateral loan agreement, peer to peer</dd>
+            </dl>
           </div>
 
-          {/* Action buttons */}
-          <div className="bd-actions" style={{ marginBottom: 40 }}>
-            <Link href={`/primary?bond=${bond.symbol}`} className="bd-btn-primary">
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <DollarSign style={{ width: 14, height: 14 }} />
-                Buy Bonds
-              </span>
-            </Link>
-            <Link href={`/secondary?bond=${bond.symbol}`} className="bd-btn-ghost">
-              <BarChart3 style={{ width: 14, height: 14 }} />
-              Secondary Market
-            </Link>
-            {bond.contract_address && (
-              <a
-                href={`https://explorer.solana.com/address/${bond.contract_address}?cluster=devnet`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bd-btn-ghost"
-              >
-                <ExternalLink style={{ width: 12, height: 12 }} />
-                View Contract
-              </a>
-            )}
-          </div>
-
-          {/* Key Metrics */}
-          <div className="bd-metrics-grid">
-            {[
-              { icon: DollarSign, label: "Price per Token", value: fmtCurrency(bond.price_per_token) },
-              { icon: Calendar, label: "Maturity", value: maturityLabel(bond.maturity_months) },
-              { icon: TrendingUp, label: "Total Issue", value: fmtCurrencyCompact(bond.total_issue_size) },
-            ].map((s) => (
-              <div key={s.label} className="bd-card">
-                <div className="bd-card-label">
-                  <s.icon style={{ width: 12, height: 12 }} />
-                  {s.label}
-                </div>
-                <div className="bd-card-value">{s.value}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bond Details */}
-          <div className="bd-card" style={{ marginBottom: 16, padding: 28 }}>
-            <p className="bd-section-title">Bond Details</p>
-            {[
-              { label: "Issuer", value: bond.issuer_name },
-              { label: "Symbol", value: bond.symbol },
-              { label: "Total Supply", value: `${totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} tokens` },
-              { label: "Total Value", value: fmtCurrencyCompact(bond.total_issue_size) },
-              { label: "Remaining Supply", value: `${remainingTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} tokens` },
-              { label: "Network", value: "Solana Devnet" },
-            ].map((row) => (
-              <div key={row.label} className="bd-row">
-                <span className="bd-row-label">{row.label}</span>
-                <span className="bd-row-value">{row.value}</span>
-              </div>
-            ))}
-
-            {/* Fill progress */}
-            <div style={{ marginTop: 24 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(240,232,216,0.35)" }}>Fill Rate</span>
-                <span style={{ fontFamily: "var(--font-bebas)", fontSize: 22, letterSpacing: "0.06em", color: "#22d3ee" }}>{bond.filled_percentage}%</span>
-              </div>
-              <div className="bd-fill-bar-track">
-                <div className="bd-fill-bar-fill" style={{ width: `${fillPct}%` }} />
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-                <span style={{ fontSize: 10, color: "rgba(240,232,216,0.3)" }}>{soldTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} sold</span>
-                <span style={{ fontSize: 10, color: "rgba(240,232,216,0.3)" }}>{totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} total</span>
-              </div>
+          {/* Market data */}
+          <div className="lx-subsection">
+            <h3 className="lx-subhead">Market data</h3>
+            <div className="lx-drule"></div>
+            <div style={{ paddingTop: 18 }}>
+              <dl className="lx-dl" style={{ maxWidth: 460 }}>
+                <dt>24h volume</dt><dd className="num">{marketData.volume24h > 0 ? fmtCurrencyCompact(marketData.volume24h) : "--"}</dd>
+                <dt>Total liquidity</dt><dd className="num">{marketData.totalLiquidity > 0 ? fmtCurrencyCompact(marketData.totalLiquidity) : "--"}</dd>
+                <dt>Investors</dt><dd className="num">{marketData.holderCount > 0 ? `${marketData.holderCount} addresses` : "--"}</dd>
+              </dl>
             </div>
           </div>
 
-          {/* Market Data + Contract */}
-          <div className="bd-two-col">
-            <div className="bd-card" style={{ padding: 28 }}>
-              <p className="bd-section-title">Market Data</p>
-              {[
-                { icon: BarChart3, label: "24h Volume", value: marketData.volume24h > 0 ? fmtCurrencyCompact(marketData.volume24h) : "—" },
-                { icon: Droplets, label: "Total Liquidity", value: marketData.totalLiquidity > 0 ? fmtCurrencyCompact(marketData.totalLiquidity) : "—" },
-                { icon: Wallet, label: "Investors", value: marketData.holderCount > 0 ? `${marketData.holderCount} addresses` : "—" },
-              ].map((row) => (
-                <div key={row.label} className="bd-row">
-                  <span className="bd-row-label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <row.icon style={{ width: 11, height: 11 }} />
-                    {row.label}
-                  </span>
-                  <span className="bd-row-value">{row.value}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="bd-card" style={{ padding: 28 }}>
-              <p className="bd-section-title">Contract Address</p>
-              {bond.contract_address ? (
+          {/* On-chain */}
+          <div className="lx-subsection">
+            <h3 className="lx-subhead">On-chain</h3>
+            <div className="lx-drule"></div>
+            {bond.contract_address ? (
+              <div className="lx-addr-row">
+                <span className="k">Contract</span>
+                <code className="num">{bond.contract_address}</code>
                 <a
                   href={`https://explorer.solana.com/address/${bond.contract_address}?cluster=devnet`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bd-contract-link"
                 >
-                  {bond.contract_address}
+                  EXPLORER ↗
                 </a>
-              ) : (
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 11, color: "rgba(251,113,133,0.8)", letterSpacing: "0.1em" }}>
-                  <Info style={{ width: 14, height: 14, flexShrink: 0, marginTop: 2 }} />
-                  Contract address not yet assigned. This bond is pending deployment.
-                </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <p className="lx-fn">Contract address not yet assigned. This bond is pending deployment.</p>
+            )}
           </div>
-
-          {/* User Holdings */}
-          {address && userHolding && userHolding.balance > 0 && (
-            <div className="bd-holding-card">
-              <p className="bd-holding-title">Your Position</p>
-              <div className="bd-holding-grid">
-                <div>
-                  <div className="bd-card-label">Balance</div>
-                  <div className="bd-holding-val">{userHolding.balance.toLocaleString("en-US", { maximumFractionDigits: 4 })}</div>
-                  <div style={{ fontSize: 10, color: "rgba(240,232,216,0.35)", letterSpacing: "0.14em", textTransform: "uppercase", marginTop: 4 }}>{bond.symbol}</div>
-                </div>
-                <div>
-                  <div className="bd-card-label">Value</div>
-                  <div className="bd-holding-val" style={{ color: "#f0e8d8" }}>{fmtCurrency(userHolding.balance * bond.price_per_token)}</div>
-                </div>
-                <div>
-                  <div className="bd-card-label">Accrued Yield</div>
-                  <div className="bd-holding-val">{fmtCurrency(userHolding.unclaimed_yield ?? 0)}</div>
-                </div>
-              </div>
-              <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid rgba(34,211,238,0.1)" }}>
-                <Link href="/dashboard" style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "#22d3ee", textDecoration: "none" }}>
-                  View in Portfolio →
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* No wallet */}
-          {!address && (
-            <div className="bd-no-wallet">
-              <Wallet style={{ width: 14, height: 14, flexShrink: 0 }} />
-              Connect your wallet to view your position in this bond.
-            </div>
-          )}
 
           {/* Documents */}
           {documents.length > 0 && (
-            <div style={{ marginTop: 40 }}>
-              <p className="bd-section-title" style={{ marginBottom: 0 }}>Issuer Documents</p>
-              <div className="bd-card" style={{ padding: "0 24px" }}>
-                {documents.map((doc) => (
-                  <a
-                    key={doc.id}
-                    href={getDocumentUrl(doc.file_path)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bd-doc-row"
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                      <div style={{ width: 36, height: 36, border: "1px solid rgba(34,211,238,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <svg style={{ width: 16, height: 16, color: "#22d3ee" }} viewBox="0 0 16 16" fill="none">
-                          <path d="M4 2h6l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2"/>
-                          <path d="M9 2v4h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                        </svg>
-                      </div>
-                      <div>
-                        <div className="bd-doc-name">{DOC_LABELS[doc.document_type] ?? doc.document_type}</div>
-                        <div className="bd-doc-sub">{doc.file_name}</div>
-                      </div>
-                    </div>
-                    <ExternalLink style={{ width: 12, height: 12, color: "rgba(240,232,216,0.3)", flexShrink: 0 }} />
-                  </a>
-                ))}
-              </div>
-              <p className="bd-disclaimer">
-                These documents were submitted by the issuer. Lacus does not verify the accuracy or authenticity of any uploaded document. Investors are solely responsible for conducting their own due diligence.
+            <div className="lx-subsection">
+              <h3 className="lx-subhead">Issuer documents</h3>
+              <div className="lx-drule"></div>
+              {documents.map((doc) => (
+                <a
+                  key={doc.id}
+                  href={getDocumentUrl(doc.file_path)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="lx-addr-row bd-doc"
+                >
+                  <span className="k">{DOC_LABELS[doc.document_type] ?? doc.document_type}</span>
+                  <code>{doc.file_name}</code>
+                  <span className="bd-doc-open num">OPEN ↗</span>
+                </a>
+              ))}
+              <p className="lx-fn">
+                These documents were submitted by the issuer. Lacus does not verify the accuracy or
+                authenticity of any uploaded document. Investors are solely responsible for
+                conducting their own due diligence.
               </p>
             </div>
           )}
+        </div>
 
+        {/* Right column */}
+        <div className="lx-sticky">
+          <div className="lx-ticket">
+            <div className="lx-ticket-head">
+              <button className="on">SUBSCRIBE</button>
+            </div>
+            <div className="lx-ticket-body">
+              <div className="lx-trow"><span>Bond</span><span className="v lx-sym">{bond.symbol}</span></div>
+              <div className="lx-trow"><span>Price per unit</span><span className="v num">{fmtCurrency(bond.price_per_token)}</span></div>
+              <div className="lx-trow"><span>Coupon</span><span className="v num">{bond.apy}%</span></div>
+              <div className="lx-submeter" style={{ margin: "14px 0" }}>
+                <div className="cap"><span>Subscribed</span><span className="num">{fillPct}%</span></div>
+                <div className="bar"><i style={{ width: `${fillPct}%` }}></i></div>
+                <div className="fig num">{soldTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} of {totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} units</div>
+              </div>
+            </div>
+            <div className="lx-ticket-foot" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <Link href={`/primary?bond=${bond.symbol}`} className="lx-btn lx-btn-solid lx-btn-block">Buy units</Link>
+              <Link href={`/secondary?bond=${bond.symbol}`} className="lx-btn lx-btn-ghost lx-btn-block">Secondary market</Link>
+            </div>
+            <div className="lx-finefoot">SOLANA DEVNET · TEST INSTRUMENTS</div>
+          </div>
+
+          {/* Your position */}
+          {address && userHolding && userHolding.balance > 0 && (
+            <div className="bd-position">
+              <h3 className="lx-subhead">Your position</h3>
+              <div className="lx-drule"></div>
+              <dl className="lx-dl" style={{ paddingTop: 14 }}>
+                <dt>Units</dt><dd className="num">{userHolding.balance.toLocaleString("en-US", { maximumFractionDigits: 4 })}</dd>
+                <dt>Value</dt><dd className="num">{fmtCurrency(userHolding.balance * bond.price_per_token)}</dd>
+                <dt>Accrued yield</dt><dd className="num">{fmtCurrency(userHolding.unclaimed_yield ?? 0)}</dd>
+              </dl>
+              <Link href="/dashboard" className="lx-readmore">View in Dashboard →</Link>
+            </div>
+          )}
+          {!address && (
+            <p className="lx-fn">Connect your wallet to view your position in this bond.</p>
+          )}
         </div>
       </div>
-    </>
+      <div style={{ paddingBottom: 96 }} />
+    </div>
   );
 }
 
 export default function BondDetailPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#030d10" }} />}>
+    <Suspense fallback={<div className="lx-loading" style={{ minHeight: "50vh" }}>Loading…</div>}>
       <BondDetailContent />
     </Suspense>
   );
