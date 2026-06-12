@@ -31,37 +31,21 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
       return (
-        <div style={{
-          minHeight: 400,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "64px 24px",
-          textAlign: "center",
-          border: "1px solid rgba(251,113,133,0.15)",
-          background: "rgba(251,113,133,0.03)",
-        }}>
-          <p style={{ fontFamily: "var(--font-bebas)", fontSize: 48, letterSpacing: "0.06em", color: "rgba(251,113,133,0.25)" }}>!</p>
-          <p style={{ fontFamily: "var(--font-bebas)", fontSize: 22, letterSpacing: "0.1em", color: "#f0e8d8", margin: "8px 0" }}>
-            Section Failed to Load
-          </p>
-          <p style={{ fontSize: 11, letterSpacing: "0.12em", color: "rgba(240,232,216,0.35)", maxWidth: 320, lineHeight: 1.7, marginBottom: 24 }}>
-            An unexpected error occurred. Refresh the page or return home.
-          </p>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button
-              onClick={() => this.setState({ hasError: false })}
-              style={{ padding: "8px 20px", border: "1px solid rgba(251,113,133,0.5)", color: "#fb7185", background: "none", cursor: "pointer", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "var(--font-dm-mono)" }}
-            >
-              Try Again
-            </button>
-            <Link
-              href="/"
-              style={{ display: "inline-flex", alignItems: "center", padding: "8px 20px", border: "1px solid rgba(240,232,216,0.14)", color: "rgba(240,232,216,0.5)", textDecoration: "none", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "var(--font-dm-mono)" }}
-            >
-              Home
-            </Link>
+        <div className="lx-wrap">
+          <div className="lx-empty" style={{ margin: "64px auto", maxWidth: 520 }}>
+            <h2 className="lx-subhead">Section Failed to Load</h2>
+            <p>An unexpected error occurred. Refresh the page or return home.</p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button
+                onClick={() => this.setState({ hasError: false })}
+                className="lx-btn lx-btn-solid lx-btn-sm"
+              >
+                Try Again
+              </button>
+              <Link href="/" className="lx-btn lx-btn-ghost lx-btn-sm">
+                Home
+              </Link>
+            </div>
           </div>
         </div>
       );

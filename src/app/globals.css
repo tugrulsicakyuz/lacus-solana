@@ -177,8 +177,6 @@ sup { font-size: 10px; color: var(--ink-3); }
 .lx-rowno { font-family: var(--font-plex-mono); font-size: 11px; color: var(--ink-3); }
 .lx-sym { font-weight: 600; }
 .lx-issuer { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
-.lx-up { color: var(--accent); }
-.lx-down { color: var(--down); }
 .lx-stamp { font-family: var(--font-plex-mono); font-size: 11px; letter-spacing: 0.05em; color: var(--ink-2); }
 .lx-stamp.open { color: var(--accent); }
 
@@ -191,12 +189,6 @@ sup { font-size: 10px; color: var(--ink-3); }
 }
 .lx-chip.on { color: var(--ink); border-color: var(--ink); }
 .lx-chip:hover { color: var(--ink); }
-.lx-searchbox {
-  margin-left: auto; font-size: 12.5px; color: var(--ink); border: 1px solid var(--line-2);
-  padding: 6px 14px; min-width: 200px; background: var(--paper); font-family: var(--font-inter), sans-serif;
-}
-.lx-searchbox::placeholder { color: var(--ink-3); }
-.lx-searchbox:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 
 /* istatistik / hesap kartları */
 .lx-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 40px; }
@@ -217,13 +209,6 @@ sup { font-size: 10px; color: var(--ink-3); }
 
 /* ledger satırları */
 .lx-statement { margin-top: 52px; }
-.lx-upcoming { margin-top: 52px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
-.lx-ledger-row { display: flex; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; align-items: baseline; }
-.lx-ledger-row .date { font-family: var(--font-plex-mono); font-size: 11.5px; color: var(--ink-3); width: 92px; flex: none; }
-.lx-ledger-row .amt { margin-left: auto; }
-.lx-ledger-row .note { color: var(--ink-3); font-size: 12px; }
-.lx-ledger-row .tx { font-family: var(--font-plex-mono); font-size: 10.5px; color: var(--ink-3); text-decoration: none; }
-.lx-ledger-row .tx:hover { color: var(--accent); }
 
 /* adres satırları */
 .lx-addr-row { display: flex; gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; align-items: baseline; }
@@ -398,8 +383,7 @@ sup { font-size: 10px; color: var(--ink-3); }
   .lx-sheet-body { grid-template-columns: 1fr; }
   .lx-sheet-col + .lx-sheet-col { border-left: none; border-top: 1px solid var(--line); }
   .lx-clauses { grid-template-columns: 1fr; gap: 64px; }
-  .lx-iblock, .lx-upcoming { grid-template-columns: 1fr; }
-  .lx-cards { grid-template-columns: 1fr; }
+  .lx-iblock, .lx-cards { grid-template-columns: 1fr; }
   .lx-formgrid { grid-template-columns: 1fr; }
   .lx-sticky { position: static; }
 }
