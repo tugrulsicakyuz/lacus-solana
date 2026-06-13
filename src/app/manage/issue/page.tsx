@@ -8,9 +8,12 @@ import { toast } from 'sonner';
 import { useLacusProgram } from '@/hooks/useLacus';
 import { formatDate } from '@/lib/format';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { buildAndHashAgreement, AGREEMENT_TEMPLATE_VERSION, shortHash, type AgreementTerms } from '@/lib/loan-agreement';
+import { requireKyc } from '@/lib/kyc';
 
 export default function IssueBondPage() {
-  const { connected } = useWallet();
+  const { connected, publicKey } = useWallet();
   const { issueBond } = useLacusProgram();
 
   // Form state: all original fields preserved
@@ -20,15 +23,21 @@ export default function IssueBondPage() {
   const [couponRateBps, setCouponRateBps] = useState(800);
   const [maturityDate, setMaturityDate] = useState('');
   const [maxSupply, setMaxSupply] = useState(1000);
-  const [loanAgreementUrl, setLoanAgreementUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Loan agreement review/sign modal
+  const [showAgreement, setShowAgreement] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [agreement, setAgreement] = useState<
+    { text: string; hashHex: string; hashBytes: Uint8Array; terms: AgreementTerms } | null
+  >(null);
 
   const totalRaise = faceValueSOL * maxSupply;
   const apyDisplay = couponRateBps / 100;
 
-  // ── Original bond issuance logic ──────────────────────────────────────────
-  const handleIssueBond = async () => {
-    if (!connected) { toast.error('Connect your wallet first'); return; }
+  // ── Step 1: validate + build the agreement, then open the review/sign modal ──
+  const openAgreement = async () => {
+    if (!connected || !publicKey) { toast.error('Connect your wallet first'); return; }
     if (!bondName.trim()) { toast.error('Please enter a bond name'); return; }
     if (!bondSymbol.trim() || bondSymbol.length > 8) { toast.error('Bond symbol must be 1-8 characters'); return; }
     if (!maturityDate) { toast.error('Please select a maturity date'); return; }
@@ -42,22 +51,60 @@ export default function IssueBondPage() {
     const maturityTimestamp = Math.floor(new Date(maturityDate).getTime() / 1000);
     if (maturityTimestamp <= Math.floor(Date.now() / 1000)) { toast.error('Maturity date must be in the future'); return; }
 
+    const terms: AgreementTerms = {
+      issuer: publicKey.toBase58(),
+      name: bondName.trim(),
+      symbol: bondSymbol.trim(),
+      faceValueLamports: Math.round(faceValueSOL * 1_000_000_000),
+      couponRateBps,
+      maturityTimestamp,
+      maxSupply,
+    };
+
+    try {
+      const built = await buildAndHashAgreement(terms);
+      setAgreement({ ...built, terms });
+      setAccepted(false);
+      setShowAgreement(true);
+    } catch (err) {
+      toast.error('Could not prepare the agreement', { description: err instanceof Error ? err.message : String(err) });
+    }
+  };
+
+  // ── Step 2: KYC gate, issue on chain with the real hash, store the text ──────
+  const confirmAndPublish = async () => {
+    if (!agreement || !publicKey) return;
+
+    const kyc = await requireKyc(publicKey);
+    if (!kyc.ok) {
+      toast.error('KYC required', { description: `Your wallet is not approved (status: ${kyc.status}).` });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const hashSource = loanAgreementUrl.trim() || 'lacus-bond';
-      const msgBuffer = new TextEncoder().encode(hashSource);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer as BufferSource);
-      const loanAgreementHash = new Uint8Array(hashBuffer);
-
       const result = await issueBond({
-        name: bondName,
-        symbol: bondSymbol,
-        faceValue: Math.round(faceValueSOL * 1_000_000_000),
-        couponRateBps,
-        maturityTimestamp,
-        maxSupply,
-        loanAgreementHash,
+        name: agreement.terms.name,
+        symbol: agreement.terms.symbol,
+        faceValue: agreement.terms.faceValueLamports,
+        couponRateBps: agreement.terms.couponRateBps,
+        maturityTimestamp: agreement.terms.maturityTimestamp,
+        maxSupply: agreement.terms.maxSupply,
+        loanAgreementHash: agreement.hashBytes,
       });
+
+      // Zincire yalnızca hash gitti; sözleşme metnini Supabase'e kaydet.
+      const { error: agErr } = await supabase.from('agreements').upsert({
+        bond_id: result.bondId,
+        template_version: AGREEMENT_TEMPLATE_VERSION,
+        terms_json: agreement.terms,
+        agreement_text: agreement.text,
+        sha256_hex: agreement.hashHex,
+        issuer_wallet: publicKey.toBase58(),
+      });
+      if (agErr) {
+        toast.warning('Bond issued, but the agreement copy was not saved', { description: agErr.message });
+      }
 
       toast.success('Bond issued on Solana!', {
         description: `Bond ID: ${result.bondId} | TX: ${result.tx.slice(0, 8)}...`,
@@ -68,7 +115,8 @@ export default function IssueBondPage() {
       });
 
       setBondName(''); setBondSymbol(''); setFaceValueSOL(0.1);
-      setCouponRateBps(800); setMaxSupply(1000); setLoanAgreementUrl(''); setMaturityDate('');
+      setCouponRateBps(800); setMaxSupply(1000); setMaturityDate('');
+      setShowAgreement(false); setAgreement(null); setAccepted(false);
     } catch (err) {
       console.error('issueBond error:', err);
       const description = err instanceof Error ? err.message : String(err);
@@ -166,16 +214,13 @@ export default function IssueBondPage() {
                 onChange={e => setMaturityDate(e.target.value)}
               />
             </label>
-            <label className="lx-field full">
-              <span>Loan agreement URL (optional)</span>
-              <input
-                type="text"
-                placeholder="https://..."
-                value={loanAgreementUrl}
-                onChange={e => setLoanAgreementUrl(e.target.value)}
-              />
-              <em className="help">Hashed with SHA-256 and stored immutably on Solana</em>
-            </label>
+            <div className="lx-field full">
+              <span>Loan agreement</span>
+              <em className="help" style={{ marginTop: 4 }}>
+                Generated from the terms above using a fixed template. You review and sign it before
+                publishing. Its SHA-256 hash is written on chain; the full text is stored off chain.
+              </em>
+            </div>
           </div>
 
           {!connected ? (
@@ -185,13 +230,8 @@ export default function IssueBondPage() {
             </div>
           ) : (
             <div className="iss-actions">
-              <button className="lx-btn lx-btn-solid" onClick={handleIssueBond} disabled={isLoading}>
-                {isLoading ? (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} />
-                    Deploying on Solana...
-                  </span>
-                ) : 'Sign and publish'}
+              <button className="lx-btn lx-btn-solid" onClick={openAgreement} disabled={isLoading}>
+                Review &amp; publish
               </button>
               <span className="lx-fn" style={{ marginTop: 0 }}>
                 Issuance is permissionless. Your offering goes live the moment you sign, and the
@@ -231,6 +271,38 @@ export default function IssueBondPage() {
         </div>
       </div>
       <div style={{ paddingBottom: 96 }} />
+
+      {showAgreement && agreement && (
+        <div
+          onClick={() => !isLoading && setShowAgreement(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: 560, background: '#fff', color: '#111', borderRadius: 12, padding: '20px 22px', maxHeight: '85vh', overflow: 'auto' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <strong style={{ fontSize: 18 }}>Review and publish</strong>
+              <button onClick={() => setShowAgreement(false)} disabled={isLoading} aria-label="Close" style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>×</button>
+            </div>
+            <p className="lx-fn" style={{ marginTop: 0 }}>{agreement.terms.name} · {agreement.terms.symbol}</p>
+            <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: 13, lineHeight: 1.6, border: '1px solid rgba(0,0,0,0.12)', borderRadius: 8, padding: '12px 14px', maxHeight: 260, overflow: 'auto', margin: '8px 0' }}>{agreement.text}</pre>
+            <p className="lx-fn" style={{ marginTop: 0, fontFamily: 'monospace' }}>on-chain hash · {shortHash(agreement.hashHex)}</p>
+            <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, margin: '10px 0' }}>
+              <input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} style={{ marginTop: 2 }} />
+              <span>I agree to these terms and want to publish this offering.</span>
+            </label>
+            <button className="lx-btn lx-btn-solid lx-btn-block" onClick={confirmAndPublish} disabled={!accepted || isLoading}>
+              {isLoading ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                  <Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} />
+                  Publishing…
+                </span>
+              ) : 'Sign and publish'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

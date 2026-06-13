@@ -9,6 +9,8 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useLacusProgram } from "@/hooks/useLacus";
+import { buildAgreementText, hashAgreementText, shortHash, type AgreementTerms } from "@/lib/loan-agreement";
+import { requireKyc } from "@/lib/kyc";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface OnChainBond {
@@ -42,9 +44,15 @@ interface CombinedBond extends OnChainBond {
 // ── Main content ──────────────────────────────────────────────────────────────
 function PrimaryContent() {
   const searchParams = useSearchParams();
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, signMessage } = useWallet();
   const { connection } = useConnection();
   const { fetchAllBonds, buyBond } = useLacusProgram();
+
+  // Loan agreement accept/sign modal
+  const [showAgreement, setShowAgreement] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [isSigning, setIsSigning] = useState(false);
+  const [pending, setPending] = useState<{ qty: number; text: string; hashHex: string } | null>(null);
 
   const [bonds, setBonds]               = useState<CombinedBond[]>([]);
   const [loading, setLoading]           = useState(true);
@@ -110,7 +118,7 @@ function PrimaryContent() {
 
   useEffect(() => { setPayAmount(""); setReceiveAmt(""); }, [selected]);
 
-  // ── Buy (original logic preserved exactly)
+  // ── Step 1: validate + KYC gate, then load the agreement and open the modal
   const handleBuy = async () => {
     if (!connected || !publicKey) { toast.error("Wallet not connected"); return; }
     if (!selected) { toast.error("No bond selected"); return; }
@@ -121,11 +129,74 @@ function PrimaryContent() {
     const qty = Math.floor(sol / fv);
     if (qty === 0) { toast.error(`Minimum: ${fv} SOL per token`); return; }
     if (qty * selected.faceValue > solBalance * 1e9) { toast.error(`Insufficient SOL. Need ${(qty * fv).toFixed(4)} SOL`); return; }
+
+    // KYC gate (no-op while disabled)
+    const kyc = await requireKyc(publicKey);
+    if (!kyc.ok) { toast.error("KYC required", { description: `Your wallet is not approved (status: ${kyc.status}).` }); return; }
+
+    // Load the issuer's published agreement; fall back to rebuilding it from on-chain terms.
+    try {
+      const { data: ag } = await supabase
+        .from("agreements")
+        .select("agreement_text, sha256_hex")
+        .eq("bond_id", selected.bondId)
+        .maybeSingle();
+
+      let text: string;
+      let hashHex: string;
+      if (ag?.agreement_text && ag?.sha256_hex) {
+        text = ag.agreement_text;
+        hashHex = ag.sha256_hex;
+      } else {
+        const terms: AgreementTerms = {
+          issuer: selected.issuer.toString(),
+          name: selected.name,
+          symbol: selected.symbol,
+          faceValueLamports: selected.faceValue,
+          couponRateBps: selected.couponRateBps,
+          maturityTimestamp: selected.maturityTimestamp,
+          maxSupply: selected.maxSupply,
+        };
+        text = buildAgreementText(terms);
+        hashHex = (await hashAgreementText(text)).hashHex;
+      }
+      setPending({ qty, text, hashHex });
+      setAccepted(false);
+      setShowAgreement(true);
+    } catch (e) {
+      toast.error("Could not load the loan agreement", { description: e instanceof Error ? e.message : undefined });
+    }
+  };
+
+  // ── Step 2: sign the agreement (free), record acceptance, then buy on chain
+  const confirmAndBuy = async () => {
+    if (!pending || !selected || !publicKey) return;
+    if (!signMessage) { toast.error("Your wallet does not support message signing"); return; }
+
+    setIsSigning(true);
+    try {
+      const sig = await signMessage(new TextEncoder().encode(pending.hashHex));
+      const sigB64 = btoa(String.fromCharCode(...sig));
+      const { error: accErr } = await supabase
+        .from("agreement_acceptances")
+        .upsert(
+          { bond_id: selected.bondId, investor_wallet: publicKey.toBase58(), sha256_hex: pending.hashHex, signature: sigB64 },
+          { onConflict: "bond_id,investor_wallet" }
+        );
+      if (accErr) toast.warning("Could not record acceptance, continuing", { description: accErr.message });
+    } catch (e) {
+      toast.error("Agreement not signed", { description: e instanceof Error ? e.message : undefined });
+      setIsSigning(false);
+      return;
+    }
+    setIsSigning(false);
+
     setIsProcessing(true);
     try {
-      const tx = await buyBond(selected.bondId, qty);
+      const tx = await buyBond(selected.bondId, pending.qty);
       toast.success("Purchase complete!", { description: `TX: ${tx.slice(0,8)}...`, action: { label: "View", onClick: () => window.open(`https://explorer.solana.com/tx/${tx}?cluster=devnet`, "_blank") } });
       setPayAmount(""); setReceiveAmt("");
+      setShowAgreement(false); setPending(null); setAccepted(false);
       await fetchBalance(); setRefreshKey(k => k + 1);
     } catch (e) { toast.error(e instanceof Error ? e.message : "Purchase failed"); }
     finally { setIsProcessing(false); }
@@ -285,6 +356,40 @@ function PrimaryContent() {
           )}
         </div>
       </div>
+
+      {showAgreement && pending && selected && (
+        <div
+          onClick={() => !isSigning && !isProcessing && setShowAgreement(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 50 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ width: "100%", maxWidth: 560, background: "#fff", color: "#111", borderRadius: 12, padding: "20px 22px", maxHeight: "85vh", overflow: "auto" }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <strong style={{ fontSize: 18 }}>Loan agreement</strong>
+              <button onClick={() => setShowAgreement(false)} disabled={isSigning || isProcessing} aria-label="Close" style={{ border: "none", background: "none", cursor: "pointer", fontSize: 20, lineHeight: 1 }}>×</button>
+            </div>
+            <p className="lx-fn" style={{ marginTop: 0 }}>{selected.symbol} · you are buying {pending.qty} {pending.qty === 1 ? "unit" : "units"}</p>
+            <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: 13, lineHeight: 1.6, border: "1px solid rgba(0,0,0,0.12)", borderRadius: 8, padding: "12px 14px", maxHeight: 240, overflow: "auto", margin: "8px 0" }}>{pending.text}</pre>
+            <p className="lx-fn" style={{ marginTop: 0, fontFamily: "monospace" }}>on-chain hash · {shortHash(pending.hashHex)}</p>
+            <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 13, margin: "10px 0" }}>
+              <input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} style={{ marginTop: 2 }} />
+              <span>I have read and agree to this loan agreement.</span>
+            </label>
+            <button className="lx-btn lx-btn-solid lx-btn-block" onClick={confirmAndBuy} disabled={!accepted || isSigning || isProcessing}>
+              {isSigning
+                ? <span style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}><Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} />Waiting for signature…</span>
+                : isProcessing
+                ? <span style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}><Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} />Processing…</span>
+                : "Sign agreement, then buy"}
+            </button>
+            <p className="lx-fn" style={{ marginTop: 8 }}>
+              Two wallet approvals: sign the agreement (free), then confirm the purchase ({(pending.qty * (selected.faceValue / 1e9)).toFixed(4)} SOL).
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

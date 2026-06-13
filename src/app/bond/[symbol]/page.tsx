@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { supabase } from "@/lib/supabase";
+import { getLacusProgramReadOnly, getBondStatePDA } from "@/lib/lacus-program";
+import { hashAgreementText, bytesToHex, shortHash } from "@/lib/loan-agreement";
 
 /* ── Types ── */
 interface Bond {
@@ -69,6 +71,11 @@ function BondDetailContent() {
   const [marketData, setMarketData] = useState({ volume24h: 0, totalLiquidity: 0, holderCount: 0 });
   const [userHolding, setUserHolding] = useState<{ balance: number; unclaimed_yield: number } | null>(null);
   const [documents, setDocuments] = useState<BondDocument[]>([]);
+  const [agreementCheck, setAgreementCheck] = useState<{
+    status: "loading" | "verified" | "mismatch" | "none" | "error";
+    onchainHex?: string;
+    text?: string;
+  }>({ status: "loading" });
 
   /* fetch bond */
   useEffect(() => {
@@ -142,6 +149,44 @@ function BondDetailContent() {
       if (data) setDocuments(data as BondDocument[]);
     }
     fetchDocs();
+  }, [bond]);
+
+  /* verify loan agreement integrity: hash(stored text) === on-chain loan_agreement_hash */
+  useEffect(() => {
+    if (!bond) return;
+    let cancelled = false;
+    (async () => {
+      setAgreementCheck({ status: "loading" });
+      try {
+        const program = getLacusProgramReadOnly();
+        const [pda] = getBondStatePDA(bond.id);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const onchain = await (program.account as any).bondState.fetch(pda);
+        const onchainHex = bytesToHex(onchain.loanAgreementHash as number[]);
+
+        const { data: ag } = await supabase
+          .from("agreements")
+          .select("agreement_text")
+          .eq("bond_id", bond.id)
+          .maybeSingle();
+
+        if (!ag?.agreement_text) {
+          if (!cancelled) setAgreementCheck({ status: "none", onchainHex });
+          return;
+        }
+        const computed = (await hashAgreementText(ag.agreement_text)).hashHex;
+        if (!cancelled) {
+          setAgreementCheck({
+            status: computed === onchainHex ? "verified" : "mismatch",
+            onchainHex,
+            text: ag.agreement_text,
+          });
+        }
+      } catch {
+        if (!cancelled) setAgreementCheck({ status: "error" });
+      }
+    })();
+    return () => { cancelled = true; };
   }, [bond]);
 
   const getDocumentUrl = (path: string) => {
@@ -250,6 +295,39 @@ function BondDetailContent() {
             ) : (
               <p className="lx-fn">Contract address not yet assigned. This bond is pending deployment.</p>
             )}
+          </div>
+
+          {/* Loan agreement */}
+          <div className="lx-subsection">
+            <h3 className="lx-subhead">Loan agreement</h3>
+            <div className="lx-drule"></div>
+            <div style={{ paddingTop: 14 }}>
+              {agreementCheck.status === "loading" && <p className="lx-fn">Checking integrity…</p>}
+              {agreementCheck.status === "verified" && (
+                <p className="lx-fn" style={{ color: "#1d9e75" }}>
+                  ✓ Integrity verified — on-chain hash {shortHash(agreementCheck.onchainHex ?? "")} matches the stored agreement.
+                </p>
+              )}
+              {agreementCheck.status === "mismatch" && (
+                <p className="lx-fn" style={{ color: "#c0392b" }}>
+                  ⚠ Hash mismatch — the stored agreement does not match the on-chain hash {shortHash(agreementCheck.onchainHex ?? "")}.
+                </p>
+              )}
+              {agreementCheck.status === "none" && (
+                <p className="lx-fn">
+                  No structured agreement is on file for this bond (issued before the agreement feature, or not stored off chain).
+                </p>
+              )}
+              {agreementCheck.status === "error" && (
+                <p className="lx-fn">Could not read the on-chain hash for this bond.</p>
+              )}
+              {agreementCheck.text && (
+                <details style={{ marginTop: 8 }}>
+                  <summary className="lx-readmore" style={{ cursor: "pointer" }}>View agreement text</summary>
+                  <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>{agreementCheck.text}</pre>
+                </details>
+              )}
+            </div>
           </div>
 
           {/* Documents */}
