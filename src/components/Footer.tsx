@@ -37,7 +37,7 @@ export default function Footer() {
             <Link href="/about" className="lc-footer-link">About</Link>
             <Link href="/whitepaper" className="lc-footer-link">Whitepaper</Link>
             <Link href="/pitch" className="lc-footer-link">Pitch deck</Link>
-            <a href="https://github.com/lacus-fi" target="_blank" rel="noopener noreferrer" className="lc-footer-link">GitHub</a>
+            <a href="https://github.com/tugrulsicakyuz/lacus-solana" target="_blank" rel="noopener noreferrer" className="lc-footer-link">GitHub</a>
           </div>
         </div>
 

@@ -160,7 +160,7 @@ export default function LaunchpadPage() {
                     <div className="fig num">{bond.tokensSold.toLocaleString("en-US")} of {bond.maxSupply.toLocaleString("en-US")} units</div>
                   </div>
                   <div className="lx-sheet-cta">
-                    <Link href={`/primary?bond=${bond.bondId}`} className="lx-btn lx-btn-solid lx-btn-sm lx-btn-block">Buy units</Link>
+                    <Link href={`/primary?bond=${bond.symbol}`} className="lx-btn lx-btn-solid lx-btn-sm lx-btn-block">Buy units</Link>
                   </div>
                 </div>
               </div>

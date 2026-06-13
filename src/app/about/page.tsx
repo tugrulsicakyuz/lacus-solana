@@ -87,8 +87,8 @@ export default function AboutPage() {
           </div>
           <div className="lx-addr-row">
             <span className="k">Source code</span>
-            <code>github.com/lacus-fi</code>
-            <a href="https://github.com/lacus-fi" target="_blank" rel="noopener noreferrer">GITHUB ↗</a>
+            <code>github.com/tugrulsicakyuz/lacus-solana</code>
+            <a href="https://github.com/tugrulsicakyuz/lacus-solana" target="_blank" rel="noopener noreferrer">GITHUB ↗</a>
           </div>
         </div>
       </section>
