@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { formatDate } from "@/lib/format";
 
 const LINKS = [
   { href: "/launchpad", label: "Launchpad" },
@@ -21,11 +22,7 @@ export default function Navbar() {
     setMounted(true);
   }, []);
 
-  const today = new Date().toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const today = formatDate(Date.now() / 1000);
 
   return (
     <header className="lc-header">

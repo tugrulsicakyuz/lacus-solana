@@ -3,10 +3,10 @@
 export const formatSOL = (lamports: number) => (lamports / 1e9).toFixed(4);
 
 export const formatDate = (timestamp: number) =>
-  new Date(timestamp * 1000).toLocaleDateString("en-US", {
-    year: "numeric",
+  new Date(timestamp * 1000).toLocaleDateString("en-GB", {
+    day: "2-digit",
     month: "short",
-    day: "numeric",
+    year: "numeric",
   });
 
 export const timestampToMonths = (timestamp: number) => {

@@ -6,6 +6,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { toast } from 'sonner';
 import { useLacusProgram } from '@/hooks/useLacus';
+import { formatDate } from '@/lib/format';
 import { Loader2 } from 'lucide-react';
 
 export default function IssueBondPage() {
@@ -80,7 +81,7 @@ export default function IssueBondPage() {
   // ─────────────────────────────────────────────────────────────────────────
 
   const maturityDisplay = maturityDate
-    ? new Date(maturityDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
+    ? formatDate(new Date(maturityDate).getTime() / 1000).toUpperCase()
     : '··· ····';
 
   return (

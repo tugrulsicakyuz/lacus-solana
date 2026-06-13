@@ -36,10 +36,10 @@ function getBondStatus(bond: { filled_percentage: number; maturityTimestamp: num
   return "live";
 }
 
-const fmtAmount = (n: number) =>
-  n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(2)}M`
-  : n >= 1_000 ? `$${(n / 1_000).toFixed(1)}K`
-  : `$${n.toFixed(2)}`;
+const fmtSOL = (n: number) =>
+  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(2)}M SOL`
+  : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K SOL`
+  : `${n.toFixed(4)} SOL`;
 
 export default function LaunchpadPage() {
   const [activeFilter, setActiveFilter] = useState<"all" | "live" | "ended">("all");
@@ -64,7 +64,7 @@ export default function LaunchpadPage() {
             filled_percentage: b.filled_percentage || 0, faceValue: 0, couponRateBps: 0,
             maxSupply: 0, tokensSold: 0, maturityTimestamp: 0,
             description: b.description, logo_url: b.logo_url,
-            status: getBondStatus({ filled_percentage: b.filled_percentage || 0, maturityTimestamp: 0 }),
+            status: (b.filled_percentage || 0) >= 100 ? "ended" : "live", // fallback'te vade bilinmiyor; sadece doluluga bak
           }));
           setBonds(fallback);
           return;
@@ -136,22 +136,24 @@ export default function LaunchpadPage() {
                 {bond.description && <span className="series">{bond.description.toUpperCase()}</span>}
                 {bond.status === "live" ? (
                   <span className="st num">● OPEN · {bond.filled_percentage.toFixed(0)}% SOLD</span>
-                ) : (
+                ) : bond.filled_percentage >= 100 ? (
                   <span className="st dim">SOLD OUT</span>
+                ) : (
+                  <span className="st dim">MATURED</span>
                 )}
               </div>
               <div className="lx-sheet-body">
                 <div className="lx-sheet-col">
                   <dl>
-                    <dt>Face value</dt><dd className="num">${bond.price_per_token.toFixed(2)} / unit</dd>
-                    <dt>Issue size</dt><dd className="num">{fmtAmount(bond.total_issue_size)}</dd>
+                    <dt>Face value</dt><dd className="num">{bond.price_per_token.toFixed(4)} SOL / unit</dd>
+                    <dt>Issue size</dt><dd className="num">{fmtSOL(bond.total_issue_size)}</dd>
                     <dt>Units</dt><dd className="num">{bond.maxSupply.toLocaleString("en-US")}</dd>
                   </dl>
                 </div>
                 <div className="lx-sheet-col">
                   <dl>
                     <dt>Coupon</dt><dd className="num">{bond.apy.toFixed(2)}% p.a.</dd>
-                    <dt>Settlement</dt><dd>USDC</dd>
+                    <dt>Settlement</dt><dd>SOL</dd>
                     <dt>Maturity</dt><dd className="num">{bond.maturity_date || "--"}</dd>
                   </dl>
                 </div>
@@ -162,7 +164,11 @@ export default function LaunchpadPage() {
                     <div className="fig num">{bond.tokensSold.toLocaleString("en-US")} of {bond.maxSupply.toLocaleString("en-US")} units</div>
                   </div>
                   <div className="lx-sheet-cta">
-                    <Link href={`/primary?bond=${bond.symbol}`} className="lx-btn lx-btn-solid lx-btn-sm lx-btn-block">Buy units</Link>
+                    {bond.status === "live" ? (
+                      <Link href={`/primary?bond=${bond.symbol}`} className="lx-btn lx-btn-solid lx-btn-sm lx-btn-block">Buy units</Link>
+                    ) : (
+                      <Link href={`/primary?bond=${bond.symbol}`} className="lx-btn lx-btn-ghost lx-btn-sm lx-btn-block">View</Link>
+                    )}
                   </div>
                 </div>
               </div>
