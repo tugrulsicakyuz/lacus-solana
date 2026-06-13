@@ -1,4 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
+import { LACUS_PROGRAM_ID_STRING } from './program-id';
 
 /**
  * Solana network configuration driven by environment variables
@@ -12,6 +13,4 @@ export const SOLANA_NETWORK = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet
 export const SOLANA_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
 
 // Lacus program ID (deployed on Solana devnet)
-export const LACUS_PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_LACUS_PROGRAM_ID || '87fieWCffnauPhnHHM5TFqtRPNTcvup3VGUiW6Vae3PQ'
-);
+export const LACUS_PROGRAM_ID = new PublicKey(LACUS_PROGRAM_ID_STRING);

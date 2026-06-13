@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { LACUS_PROGRAM_ID_STRING } from "@/config/program-id";
 
-const programId =
-  process.env.NEXT_PUBLIC_LACUS_PROGRAM_ID ?? "87fieWCffnauPhnHHM5TFqtRPNTcvup3VGUiW6Vae3PQ";
+const programId = LACUS_PROGRAM_ID_STRING;
 const programShort = `${programId.slice(0, 6)}…${programId.slice(-4)}`;
 
 export default function Footer() {

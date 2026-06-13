@@ -1,7 +1,7 @@
 "use client";
 
-const PROGRAM_ID =
-  process.env.NEXT_PUBLIC_LACUS_PROGRAM_ID ?? "87fieWCffnauPhnHHM5TFqtRPNTcvup3VGUiW6Vae3PQ";
+import { LACUS_PROGRAM_ID_STRING } from "@/config/program-id";
+
 const USDC_DEVNET = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 
 export default function AboutPage() {
@@ -77,8 +77,8 @@ export default function AboutPage() {
         <div className="ab-addrs">
           <div className="lx-addr-row">
             <span className="k">Program</span>
-            <code className="num">{PROGRAM_ID}</code>
-            <a href={`https://explorer.solana.com/address/${PROGRAM_ID}?cluster=devnet`} target="_blank" rel="noopener noreferrer">EXPLORER ↗</a>
+            <code className="num">{LACUS_PROGRAM_ID_STRING}</code>
+            <a href={`https://explorer.solana.com/address/${LACUS_PROGRAM_ID_STRING}?cluster=devnet`} target="_blank" rel="noopener noreferrer">EXPLORER ↗</a>
           </div>
           <div className="lx-addr-row">
             <span className="k">USDC mint · devnet</span>
