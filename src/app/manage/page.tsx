@@ -91,6 +91,7 @@ export default function ManagePage() {
         setBonds(mergedBonds);
       } catch (err) {
         console.error("Failed to fetch bonds:", err);
+        toast.error("Failed to load bonds", { description: err instanceof Error ? err.message : undefined });
       } finally {
         setLoading(false);
       }

@@ -47,7 +47,7 @@ export function useLacusProgram() {
       console.error('fetchAllBonds error:', e);
       const errorMessage = e instanceof Error ? e.message : 'Unknown error';
       setError(`Failed to fetch bonds: ${errorMessage}`);
-      return [];
+      throw new Error(`Failed to fetch bonds: ${errorMessage}`);
     }
   }, [program]);
 
@@ -71,7 +71,7 @@ export function useLacusProgram() {
       console.error('fetchMyBonds error:', e);
       const errorMessage = e instanceof Error ? e.message : 'Unknown error';
       setError(`Failed to fetch your bonds: ${errorMessage}`);
-      return [];
+      throw new Error(`Failed to fetch your bonds: ${errorMessage}`);
     }
   }, [program, wallet]);
 
@@ -133,7 +133,7 @@ export function useLacusProgram() {
       console.error('fetchPortfolioBonds error:', e);
       const errorMessage = e instanceof Error ? e.message : 'Unknown error';
       setError(`Failed to fetch portfolio bonds: ${errorMessage}`);
-      return [];
+      throw new Error(`Failed to fetch portfolio bonds: ${errorMessage}`);
     }
   }, [program, wallet, connection]);
 

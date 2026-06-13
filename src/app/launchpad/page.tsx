@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import { formatDate, timestampToMonths } from "@/lib/format";
 import { useLacusProgram } from '@/hooks/useLacus';
 import type { BondState } from '@/types/lacus';
@@ -93,6 +94,7 @@ export default function LaunchpadPage() {
         setBonds(merged);
       } catch (err) {
         console.error('Failed to fetch bonds:', err);
+        toast.error('Failed to load bonds', { description: err instanceof Error ? err.message : undefined });
       } finally {
         setLoading(false);
       }

@@ -37,6 +37,7 @@ export default function Dashboard() {
       setIssuedBonds(issuedData);
     } catch (error) {
       console.error('Failed to fetch portfolio data:', error);
+      toast.error('Failed to load portfolio', { description: error instanceof Error ? error.message : undefined });
     } finally {
       setLoading(false);
     }
