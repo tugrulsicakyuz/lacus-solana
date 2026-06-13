@@ -136,6 +136,8 @@ function PrimaryContent() {
   const apy     = selected ? selected.couponRateBps / 100 : 0;
   const fill    = selected ? Math.min((selected.tokensSold / selected.maxSupply) * 100, 100) : 0;
   const soldOut = selected ? selected.tokensSold >= selected.maxSupply : false;
+  const matured = selected ? selected.isMatured : false;
+  const closed = soldOut || matured; // her ikisinde de yeni alım yapılamaz
 
   return (
     <div className="lx-wrap">
@@ -241,6 +243,8 @@ function PrimaryContent() {
                   </div>
                 ) : soldOut ? (
                   <p className="lx-fn" style={{ marginTop: 0 }}>This offering is fully sold</p>
+                ) : matured ? (
+                  <p className="lx-fn" style={{ marginTop: 0 }}>This bond has matured and is closed to new subscriptions</p>
                 ) : (
                   <>
                     <label className="lx-field" style={{ margin: "14px 0" }}>
@@ -263,7 +267,7 @@ function PrimaryContent() {
                   </>
                 )}
               </div>
-              {connected && !soldOut && (
+              {connected && !closed && (
                 <div className="lx-ticket-foot">
                   <button
                     className="lx-btn lx-btn-solid lx-btn-block"

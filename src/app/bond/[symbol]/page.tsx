@@ -295,8 +295,14 @@ function BondDetailContent() {
               </div>
             </div>
             <div className="lx-ticket-foot" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <Link href={`/primary?bond=${bond.symbol}`} className="lx-btn lx-btn-solid lx-btn-block">Buy units</Link>
-              <Link href={`/secondary?bond=${bond.symbol}`} className="lx-btn lx-btn-ghost lx-btn-block">Secondary market</Link>
+              {isSoldOut ? (
+                <Link href={`/secondary?bond=${bond.symbol}`} className="lx-btn lx-btn-solid lx-btn-block">Trade on secondary</Link>
+              ) : (
+                <>
+                  <Link href={`/primary?bond=${bond.symbol}`} className="lx-btn lx-btn-solid lx-btn-block">Buy units</Link>
+                  <Link href={`/secondary?bond=${bond.symbol}`} className="lx-btn lx-btn-ghost lx-btn-block">Secondary market</Link>
+                </>
+              )}
             </div>
             <div className="lx-finefoot">SOLANA DEVNET · TEST INSTRUMENTS</div>
           </div>
