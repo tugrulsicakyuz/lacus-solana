@@ -38,13 +38,14 @@ const DOC_LABELS: Record<string, string> = {
 };
 
 /* ── Helpers ── */
+// Kontrat native SOL ile çalışıyor (system_program::transfer); tüm tutarlar SOL.
 function fmtCurrency(n: number): string {
-  return n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+  return `${n.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} SOL`;
 }
 
 function fmtCurrencyCompact(n: number): string {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M SOL`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K SOL`;
   return fmtCurrency(n);
 }
 

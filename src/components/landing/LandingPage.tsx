@@ -65,7 +65,8 @@ export default function LandingPage() {
           </div>
           <p className="lx-fn">
             <sup>1</sup> Counted per holder per payment date, across all issues since protocol
-            launch. A late payment would show here, permanently.
+            launch. A late payment would show here, permanently. Figures on this page are an
+            illustrative sample, not live protocol data; see the live markets for real figures.
           </p>
         </div>
       </div>
@@ -120,7 +121,7 @@ export default function LandingPage() {
             <div className="lx-sec-head">
               <span className="lx-sec-no">§ 4</span>
               <h2>Current offering</h2>
-              <span className="sub">Open for subscription until 28 Jun 2026</span>
+              <span className="sub">Open for subscription until 28 Jun 2026 · illustrative sample</span>
               <Link className="more" href="/launchpad">All offerings →</Link>
             </div>
             <div className="lx-sheet reveal">
@@ -203,7 +204,7 @@ export default function LandingPage() {
           <div className="lx-sec-head">
             <span className="lx-sec-no">§ 5</span>
             <h2>Markets</h2>
-            <span className="sub">Live issues at a glance</span>
+            <span className="sub">Live issues at a glance · illustrative sample</span>
             <Link className="more" href="/primary">Primary market →</Link>
           </div>
           <div className="lx-scroll" style={{ marginTop: "8px" }}>
@@ -253,7 +254,7 @@ export default function LandingPage() {
             <div className="lx-sec-head">
               <span className="lx-sec-no">§ 6</span>
               <h2>Payment record</h2>
-              <span className="sub">Every coupon, on the record</span>
+              <span className="sub">Every coupon, on the record · illustrative sample</span>
             </div>
             <div className="lc-payrecord">
               <div>
