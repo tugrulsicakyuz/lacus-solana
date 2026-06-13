@@ -53,7 +53,14 @@ export default function LaunchpadPage() {
     async function fetchBonds() {
       setLoading(true);
       try {
-        const onChainBonds = await fetchAllBonds();
+        // On-chain hata olursa supabase fallback'ine düş (sayfayı boş bırakma);
+        // sadece her iki kaynak da çökerse aşağıdaki catch toast gösterir.
+        let onChainBonds: BondState[] = [];
+        try {
+          onChainBonds = await fetchAllBonds();
+        } catch (chainErr) {
+          console.warn('On-chain fetch failed, falling back to Supabase:', chainErr);
+        }
         if (!onChainBonds || onChainBonds.length === 0) {
           const { data } = await supabase.from("bonds").select("*").eq("documents_complete", true).order("id", { ascending: true });
           const fallback: Bond[] = (data || []).map((b: any) => ({
