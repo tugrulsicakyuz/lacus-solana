@@ -20,9 +20,10 @@ interface OnChainBond {
   faceValue: number;
   couponRateBps: number;
   maturityTimestamp: number;
+  saleDeadline: number;
   maxSupply: number;
   tokensSold: number;
-  isMatured: boolean;
+  funded: boolean;
 }
 interface BondMetadata {
   id: number;
@@ -124,11 +125,12 @@ function PrimaryContent() {
     if (!selected) { toast.error("No bond selected"); return; }
     const sol = parseFloat(payAmount);
     if (!payAmount || isNaN(sol) || sol <= 0) { toast.error("Enter a valid amount"); return; }
-    if (selected.tokensSold >= selected.maxSupply) { toast.error("Bond fully sold"); return; }
-    const fv = selected.faceValue / 1e9;
+    if (Number(selected.tokensSold) >= Number(selected.maxSupply)) { toast.error("Bond fully sold"); return; }
+    if (selected.funded || Math.floor(Date.now() / 1000) >= Number(selected.saleDeadline)) { toast.error("Subscription is closed for this offering"); return; }
+    const fv = Number(selected.faceValue) / 1e9;
     const qty = Math.floor(sol / fv);
     if (qty === 0) { toast.error(`Minimum: ${fv} SOL per token`); return; }
-    if (qty * selected.faceValue > solBalance * 1e9) { toast.error(`Insufficient SOL. Need ${(qty * fv).toFixed(4)} SOL`); return; }
+    if (qty * Number(selected.faceValue) > solBalance * 1e9) { toast.error(`Insufficient SOL. Need ${(qty * fv).toFixed(4)} SOL`); return; }
 
     // KYC gate (no-op while disabled)
     const kyc = await requireKyc(publicKey);
@@ -152,10 +154,10 @@ function PrimaryContent() {
           issuer: selected.issuer.toString(),
           name: selected.name,
           symbol: selected.symbol,
-          faceValueLamports: selected.faceValue,
+          faceValueLamports: Number(selected.faceValue),
           couponRateBps: selected.couponRateBps,
-          maturityTimestamp: selected.maturityTimestamp,
-          maxSupply: selected.maxSupply,
+          maturityTimestamp: Number(selected.maturityTimestamp),
+          maxSupply: Number(selected.maxSupply),
         };
         text = buildAgreementText(terms);
         hashHex = (await hashAgreementText(text)).hashHex;
@@ -203,12 +205,13 @@ function PrimaryContent() {
   };
 
   // ── Derived values
-  const fv      = selected ? selected.faceValue / 1e9 : 0;
+  const nowSec  = Math.floor(Date.now() / 1000);
+  const fv      = selected ? Number(selected.faceValue) / 1e9 : 0;
   const apy     = selected ? selected.couponRateBps / 100 : 0;
-  const fill    = selected ? Math.min((selected.tokensSold / selected.maxSupply) * 100, 100) : 0;
-  const soldOut = selected ? selected.tokensSold >= selected.maxSupply : false;
-  const matured = selected ? selected.isMatured : false;
-  const closed = soldOut || matured; // her ikisinde de yeni alım yapılamaz
+  const fill    = selected ? Math.min((Number(selected.tokensSold) / Number(selected.maxSupply)) * 100, 100) : 0;
+  const soldOut = selected ? Number(selected.tokensSold) >= Number(selected.maxSupply) : false;
+  const saleClosed = selected ? (selected.funded || nowSec >= Number(selected.saleDeadline)) : false;
+  const closed = soldOut || saleClosed; // yeni alım yapılamaz
 
   return (
     <div className="lx-wrap">
@@ -249,11 +252,12 @@ function PrimaryContent() {
                 </thead>
                 <tbody>
                   {bonds.map((bond, i) => {
-                    const fvSol  = bond.faceValue / 1e9;
+                    const fvSol  = Number(bond.faceValue) / 1e9;
                     const bApy   = bond.couponRateBps / 100;
-                    const bFill  = Math.min((bond.tokensSold / bond.maxSupply) * 100, 100);
+                    const bFill  = Math.min((Number(bond.tokensSold) / Number(bond.maxSupply)) * 100, 100);
                     const isSel  = selected?.bondId === bond.bondId;
-                    const isSold = bond.tokensSold >= bond.maxSupply;
+                    const isSold = Number(bond.tokensSold) >= Number(bond.maxSupply);
+                    const bClosed = bond.funded || nowSec >= Number(bond.saleDeadline);
                     return (
                       <tr
                         key={bond.bondId}
@@ -272,8 +276,8 @@ function PrimaryContent() {
                         <td className="r">
                           {isSold
                             ? <span className="lx-stamp">SOLD OUT</span>
-                            : bond.isMatured
-                            ? <span className="lx-stamp">MATURED</span>
+                            : bClosed
+                            ? <span className="lx-stamp">CLOSED</span>
                             : <span className="lx-stamp open">● OPEN</span>}
                         </td>
                       </tr>
@@ -314,8 +318,8 @@ function PrimaryContent() {
                   </div>
                 ) : soldOut ? (
                   <p className="lx-fn" style={{ marginTop: 0 }}>This offering is fully sold</p>
-                ) : matured ? (
-                  <p className="lx-fn" style={{ marginTop: 0 }}>This bond has matured and is closed to new subscriptions</p>
+                ) : saleClosed ? (
+                  <p className="lx-fn" style={{ marginTop: 0 }}>Subscription is closed for this offering</p>
                 ) : (
                   <>
                     <label className="lx-field" style={{ margin: "14px 0" }}>
@@ -333,7 +337,7 @@ function PrimaryContent() {
                       />
                     </label>
                     <div className="lx-trow"><span>You&apos;ll receive</span><span className="v num">{receiveAmt || "0"} × {selected.symbol}</span></div>
-                    <div className="lx-trow"><span>Remaining</span><span className="v num">{(selected.maxSupply - selected.tokensSold).toLocaleString()} units</span></div>
+                    <div className="lx-trow"><span>Remaining</span><span className="v num">{(Number(selected.maxSupply) - Number(selected.tokensSold)).toLocaleString()} units</span></div>
                     <div className="lx-trow total"><span>Total</span><span className="v num">{payAmount || "0"} SOL</span></div>
                   </>
                 )}
@@ -385,7 +389,7 @@ function PrimaryContent() {
                 : "Sign agreement, then buy"}
             </button>
             <p className="lx-fn" style={{ marginTop: 8 }}>
-              Two wallet approvals: sign the agreement (free), then confirm the purchase ({(pending.qty * (selected.faceValue / 1e9)).toFixed(4)} SOL).
+              Two wallet approvals: sign the agreement (free), then confirm the purchase ({(pending.qty * (Number(selected.faceValue) / 1e9)).toFixed(4)} SOL).
             </p>
           </div>
         </div>

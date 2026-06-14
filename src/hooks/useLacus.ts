@@ -1,19 +1,37 @@
 'use client';
 import { useAnchorWallet, useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 import { BN } from '@coral-xyz/anchor';
 import { useCallback, useState, useMemo } from 'react';
-import { getLacusProgram, getLacusProgramReadOnly, getFactoryStatePDA, getBondStatePDA, getBondMintPDA, getInvestorPositionPDA } from '@/lib/lacus-program';
+import {
+  getLacusProgram,
+  getLacusProgramReadOnly,
+  getFactoryStatePDA,
+  getBondStatePDA,
+  getEscrowVaultPDA,
+  getYieldVaultPDA,
+  getPrincipalVaultPDA,
+  getInvestorPositionPDA,
+} from '@/lib/lacus-program';
 import type { BondState, FactoryState } from '@/types/lacus';
 
-// Eski struct'tan bozuk deserialize olan hesapları ele
+// Eski/bozuk struct'tan deserialize olan hesapları ele
 const isValidBond = (bond: BondState) =>
   !!bond.name && bond.name.trim().length > 0 &&
   !!bond.symbol && bond.symbol.trim().length > 0 &&
   Number(bond.faceValue) > 0 &&
   Number(bond.maxSupply) > 0 &&
   Number(bond.maturityTimestamp) > 1700000000; // Kasım 2023 sonrası
+
+export interface PortfolioHolding {
+  bond: BondState;
+  units: number;
+  contribution: number;     // lamport
+  yieldClaimed: number;     // lamport
+  claimableYield: number;   // lamport
+  redeemed: boolean;
+  refunded: boolean;
+}
 
 export function useLacusProgram() {
   const wallet = useAnchorWallet();
@@ -34,114 +52,91 @@ export function useLacusProgram() {
 
   const fetchAllBonds = useCallback(async () => {
     const readProgram = program ?? getLacusProgramReadOnly();
-
     try {
       setError(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const bonds = await (readProgram.account as any).bondState.all();
-      const validBonds = bonds
+      return bonds
         .map((b: { account: BondState }) => b.account)
         .filter(isValidBond);
-      return validBonds;
     } catch (e) {
       console.error('fetchAllBonds error:', e);
-      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-      setError(`Failed to fetch bonds: ${errorMessage}`);
-      throw new Error(`Failed to fetch bonds: ${errorMessage}`);
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      setError(`Failed to fetch bonds: ${msg}`);
+      throw new Error(`Failed to fetch bonds: ${msg}`);
     }
   }, [program]);
 
   const fetchMyBonds = useCallback(async () => {
-    if (!program || !wallet) {
-      setError('Wallet not connected');
-      return [];
-    }
-    
+    if (!program || !wallet) { setError('Wallet not connected'); return []; }
     try {
       setError(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const allBonds = await (program.account as any).bondState.all();
-      const myBonds = allBonds
+      return allBonds
         .map((b: { account: BondState }) => b.account)
         .filter((bond: BondState) =>
           isValidBond(bond) && bond.issuer.toString() === wallet.publicKey.toString()
         );
-      return myBonds;
     } catch (e) {
       console.error('fetchMyBonds error:', e);
-      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-      setError(`Failed to fetch your bonds: ${errorMessage}`);
-      throw new Error(`Failed to fetch your bonds: ${errorMessage}`);
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      setError(`Failed to fetch your bonds: ${msg}`);
+      throw new Error(`Failed to fetch your bonds: ${msg}`);
     }
   }, [program, wallet]);
 
-  const fetchPortfolioBonds = useCallback(async () => {
-    if (!program || !wallet) {
-      setError('Wallet not connected');
-      return [];
-    }
-    
+  // Portföy artık token bakiyesinden değil, InvestorPosition kayıtlarından gelir.
+  const fetchPortfolioBonds = useCallback(async (): Promise<PortfolioHolding[]> => {
+    if (!program || !wallet) { setError('Wallet not connected'); return []; }
     try {
       setError(null);
+      // Bu cüzdana ait tüm pozisyonlar (offset 8 = discriminator sonrası investor: Pubkey)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const allBonds = await (program.account as any).bondState.all();
-      const validBonds = allBonds
-        .map((b: { account: BondState; publicKey: PublicKey }) => ({
-          bond: b.account,
-          bondStatePDA: b.publicKey,
-        }))
-        .filter(({ bond }: { bond: BondState }) => isValidBond(bond));
+      const positions = await (program.account as any).investorPosition.all([
+        { memcmp: { offset: 8, bytes: wallet.publicKey.toBase58() } },
+      ]);
 
-      // Check token balances and investor positions in parallel
-      const balanceChecks = validBonds.map(async ({ bond, bondStatePDA }: { bond: BondState; bondStatePDA: PublicKey }) => {
+      const holdings: PortfolioHolding[] = [];
+      for (const p of positions) {
+        const pos = p.account;
+        const units = Number(pos.units);
+        if (units <= 0) continue; // refund edilmiş / boş pozisyon
+        let bond: BondState;
         try {
-          const [bondMintPDA] = getBondMintPDA(bondStatePDA);
-          const ata = await getAssociatedTokenAddress(bondMintPDA, wallet.publicKey);
-          const balance = await connection.getTokenAccountBalance(ata);
-          const amount = Number(balance.value.amount);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          bond = (await (program.account as any).bondState.fetch(pos.bondState)) as BondState;
+        } catch { continue; }
+        if (!isValidBond(bond)) continue;
 
-          // Fetch investor position to get lastYieldSnapshot for claimable yield check
-          let lastYieldSnapshot = 0;
-          if (amount > 0) {
-            try {
-              const [investorPositionPDA] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const position = await (program!.account as any).investorPosition.fetch(investorPositionPDA);
-              lastYieldSnapshot = Number(position.lastYieldSnapshot);
-            } catch {
-              // Position account not created yet — snapshot is 0, yield may be claimable
-              lastYieldSnapshot = 0;
-            }
-          }
+        const tokensSold = Number(bond.tokensSold);
+        const entitled = tokensSold > 0
+          ? Math.floor((Number(bond.totalYieldDeposited) * units) / tokensSold)
+          : 0;
+        const yieldClaimed = Number(pos.yieldClaimed);
+        const claimableYield = Math.max(0, entitled - yieldClaimed);
 
-          return { bond, balance: amount, lastYieldSnapshot };
-        } catch {
-          // ATA doesn't exist or other error - user doesn't hold this bond
-          return { bond, balance: 0, lastYieldSnapshot: 0 };
-        }
-      });
-
-      const results = await Promise.allSettled(balanceChecks);
-      const holdings = results
-        .filter((r): r is PromiseFulfilledResult<{ bond: BondState; balance: number; lastYieldSnapshot: number }> =>
-          r.status === 'fulfilled' && r.value.balance > 0
-        )
-        .map(r => r.value);
-
+        holdings.push({
+          bond,
+          units,
+          contribution: Number(pos.contribution),
+          yieldClaimed,
+          claimableYield,
+          redeemed: !!pos.redeemed,
+          refunded: !!pos.refunded,
+        });
+      }
       return holdings;
     } catch (e) {
       console.error('fetchPortfolioBonds error:', e);
-      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-      setError(`Failed to fetch portfolio bonds: ${errorMessage}`);
-      throw new Error(`Failed to fetch portfolio bonds: ${errorMessage}`);
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      setError(`Failed to fetch portfolio: ${msg}`);
+      throw new Error(`Failed to fetch portfolio: ${msg}`);
     }
-  }, [program, wallet, connection]);
+  }, [program, wallet]);
 
   const fetchBond = useCallback(async (bondId: number) => {
-    if (!program) {
-      throw new Error('Wallet not connected');
-    }
-    
+    if (!program) throw new Error('Wallet not connected');
     const [bondStatePDA] = getBondStatePDA(bondId);
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -152,46 +147,31 @@ export function useLacusProgram() {
     }
   }, [program]);
 
+  // ── Issuer: ihraç ──────────────────────────────────────────────────────────
   const issueBond = useCallback(async (params: {
     name: string;
     symbol: string;
-    faceValue: number;
+    faceValue: number;          // lamport
     couponRateBps: number;
-    maturityTimestamp: number;
+    saleDeadline: number;       // unix saniye
+    maturityTimestamp: number;  // unix saniye
+    fundingGoal: number;        // lamport
     maxSupply: number;
     loanAgreementHash: Uint8Array;
   }) => {
     if (!program || !wallet) throw new Error('Wallet not connected');
 
-    // Validation: Required fields
-    if (!params.name || params.name.trim() === '') {
-      throw new Error('Bond name is required');
+    if (!params.name?.trim()) throw new Error('Bond name is required');
+    if (!params.symbol?.trim()) throw new Error('Bond symbol is required');
+    if (params.faceValue <= 0) throw new Error('Face value must be greater than 0');
+    if (params.maxSupply <= 0) throw new Error('Supply must be greater than 0');
+    if (params.fundingGoal <= 0) throw new Error('Funding goal must be greater than 0');
+    if (params.fundingGoal > params.faceValue * params.maxSupply) {
+      throw new Error('Funding goal cannot exceed max raise (face value × supply)');
     }
-    if (!params.symbol || params.symbol.trim() === '') {
-      throw new Error('Bond symbol is required');
-    }
-    if (!params.maturityTimestamp || params.maturityTimestamp <= 0) {
-      throw new Error('Maturity date is required');
-    }
-    if (!params.couponRateBps || params.couponRateBps <= 0) {
-      throw new Error('Coupon rate must be greater than 0');
-    }
-
-    // Validation: Supply limits
-    const MIN_SUPPLY = 100;
-    const MAX_SUPPLY = 1_000_000;
-    
-    if (params.maxSupply < MIN_SUPPLY) {
-      throw new Error(`Minimum supply is ${MIN_SUPPLY.toLocaleString()} tokens`);
-    }
-    if (params.maxSupply > MAX_SUPPLY) {
-      throw new Error(`Maximum supply is ${MAX_SUPPLY.toLocaleString()} tokens`);
-    }
-
-    // Validation: Face value
-    if (params.faceValue <= 0) {
-      throw new Error('Face value must be greater than 0');
-    }
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (params.saleDeadline <= nowSec) throw new Error('Subscription close date must be in the future');
+    if (params.maturityTimestamp <= params.saleDeadline) throw new Error('Maturity must be after the subscription close date');
 
     const [factoryStatePDA] = getFactoryStatePDA();
     let factoryState: FactoryState;
@@ -204,9 +184,6 @@ export function useLacusProgram() {
 
     const bondId = factoryState.bondCount.toNumber();
     const [bondStatePDA] = getBondStatePDA(bondId);
-    const [bondMintPDA] = getBondMintPDA(bondStatePDA);
-    const bondTokenVault = await getAssociatedTokenAddress(bondMintPDA, bondStatePDA, true);
-    const hashArray = Array.from(params.loanAgreementHash);
 
     const tx = await program.methods
       .issueBond({
@@ -214,18 +191,16 @@ export function useLacusProgram() {
         symbol: params.symbol,
         faceValue: new BN(params.faceValue),
         couponRateBps: params.couponRateBps,
+        saleDeadline: new BN(params.saleDeadline),
         maturityTimestamp: new BN(params.maturityTimestamp),
+        fundingGoal: new BN(params.fundingGoal),
         maxSupply: new BN(params.maxSupply),
-        loanAgreementHash: hashArray,
+        loanAgreementHash: Array.from(params.loanAgreementHash),
       })
       .accounts({
+        issuer: wallet.publicKey,
         factoryState: factoryStatePDA,
         bondState: bondStatePDA,
-        bondMint: bondMintPDA,
-        bondTokenVault,
-        issuer: wallet.publicKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
       .transaction();
@@ -234,106 +209,166 @@ export function useLacusProgram() {
     return { tx: sig, bondId };
   }, [program, wallet, sendAndConfirm]);
 
-  const buyBond = useCallback(async (bondId: number, amount: number) => {
+  // ── Lender: satın alma → escrow ─────────────────────────────────────────────
+  const buyBond = useCallback(async (bondId: number, units: number) => {
     if (!program || !wallet) throw new Error('Wallet not connected');
-
     const [bondStatePDA] = getBondStatePDA(bondId);
-    const [factoryStatePDA] = getFactoryStatePDA();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bondState = (await (program.account as any).bondState.fetch(bondStatePDA)) as BondState;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const factoryState = (await (program.account as any).factoryState.fetch(factoryStatePDA)) as FactoryState;
-    const [bondMintPDA] = getBondMintPDA(bondStatePDA);
-    const [investorPositionPDA] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
-
-    const buyerBondAta = await getAssociatedTokenAddress(bondMintPDA, wallet.publicKey);
+    const [escrowVault] = getEscrowVaultPDA(bondId);
+    const [investorPosition] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
 
     const tx = await program.methods
-      .buyBond(new BN(amount))
+      .buyBond(new BN(units))
       .accounts({
         bondState: bondStatePDA,
-        factoryState: factoryStatePDA,
+        escrowVault,
         buyer: wallet.publicKey,
-        buyerBondAta,
-        issuer: new PublicKey(bondState.issuer),
-        feeRecipient: new PublicKey(factoryState.authority),
-        bondTokenVault: bondState.bondTokenVault,
-        bondMint: bondMintPDA,
-        investorPosition: investorPositionPDA,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        investorPosition,
         systemProgram: SystemProgram.programId,
       })
       .transaction();
 
-    const sig = await sendAndConfirm(tx);
-    return sig;
+    return sendAndConfirm(tx);
   }, [program, wallet, sendAndConfirm]);
 
+  // ── Issuer: funding başarılıysa escrow'u çek (issuer + %1 fee) ───────────────
+  const withdrawEscrow = useCallback(async (bondId: number) => {
+    if (!program || !wallet) throw new Error('Wallet not connected');
+    const [bondStatePDA] = getBondStatePDA(bondId);
+    const [factoryStatePDA] = getFactoryStatePDA();
+    const [escrowVault] = getEscrowVaultPDA(bondId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const factoryState = (await (program.account as any).factoryState.fetch(factoryStatePDA)) as FactoryState;
+
+    const tx = await program.methods
+      .withdrawEscrow()
+      .accounts({
+        bondState: bondStatePDA,
+        factoryState: factoryStatePDA,
+        escrowVault,
+        issuer: wallet.publicKey,
+        feeRecipient: new PublicKey(factoryState.authority),
+        systemProgram: SystemProgram.programId,
+      })
+      .transaction();
+
+    return sendAndConfirm(tx);
+  }, [program, wallet, sendAndConfirm]);
+
+  // ── Lender: funding başarısız/abandoned → katkı iadesi ──────────────────────
+  const refund = useCallback(async (bondId: number) => {
+    if (!program || !wallet) throw new Error('Wallet not connected');
+    const [bondStatePDA] = getBondStatePDA(bondId);
+    const [escrowVault] = getEscrowVaultPDA(bondId);
+    const [investorPosition] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
+
+    const tx = await program.methods
+      .refund()
+      .accounts({
+        bondState: bondStatePDA,
+        escrowVault,
+        investor: wallet.publicKey,
+        investorPosition,
+        systemProgram: SystemProgram.programId,
+      })
+      .transaction();
+
+    return sendAndConfirm(tx);
+  }, [program, wallet, sendAndConfirm]);
+
+  // ── Issuer: kupon yatır → yield vault ───────────────────────────────────────
   const depositYield = useCallback(async (bondId: number, amountLamports: number) => {
     if (!program || !wallet) throw new Error('Wallet not connected');
-
     const [bondStatePDA] = getBondStatePDA(bondId);
+    const [yieldVault] = getYieldVaultPDA(bondId);
 
     const tx = await program.methods
       .depositYield(new BN(amountLamports))
       .accounts({
         bondState: bondStatePDA,
+        yieldVault,
         issuer: wallet.publicKey,
         systemProgram: SystemProgram.programId,
       })
       .transaction();
 
-    const sig = await sendAndConfirm(tx);
-    return sig;
+    return sendAndConfirm(tx);
   }, [program, wallet, sendAndConfirm]);
 
+  // ── Issuer: anapara yatır → principal vault ─────────────────────────────────
+  const depositPrincipal = useCallback(async (bondId: number, amountLamports: number) => {
+    if (!program || !wallet) throw new Error('Wallet not connected');
+    const [bondStatePDA] = getBondStatePDA(bondId);
+    const [principalVault] = getPrincipalVaultPDA(bondId);
+
+    const tx = await program.methods
+      .depositPrincipal(new BN(amountLamports))
+      .accounts({
+        bondState: bondStatePDA,
+        principalVault,
+        issuer: wallet.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .transaction();
+
+    return sendAndConfirm(tx);
+  }, [program, wallet, sendAndConfirm]);
+
+  // ── Lender: kupon talebi ────────────────────────────────────────────────────
   const claimYield = useCallback(async (bondId: number) => {
     if (!program || !wallet) throw new Error('Wallet not connected');
-
     const [bondStatePDA] = getBondStatePDA(bondId);
-    const [investorPositionPDA] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
-    const [bondMintPDA] = getBondMintPDA(bondStatePDA);
-    const investorBondAta = await getAssociatedTokenAddress(bondMintPDA, wallet.publicKey);
+    const [yieldVault] = getYieldVaultPDA(bondId);
+    const [investorPosition] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
 
     const tx = await program.methods
       .claimYield()
       .accounts({
         bondState: bondStatePDA,
-        investorPosition: investorPositionPDA,
+        yieldVault,
         investor: wallet.publicKey,
-        investorBondAta,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        investorPosition,
         systemProgram: SystemProgram.programId,
       })
       .transaction();
 
-    const sig = await sendAndConfirm(tx);
-    return sig;
+    return sendAndConfirm(tx);
   }, [program, wallet, sendAndConfirm]);
 
+  // ── Lender: vade sonrası anapara itfası ─────────────────────────────────────
   const redeemBond = useCallback(async (bondId: number) => {
     if (!program || !wallet) throw new Error('Wallet not connected');
-
     const [bondStatePDA] = getBondStatePDA(bondId);
-    const [bondMintPDA] = getBondMintPDA(bondStatePDA);
-    const investorBondAta = await getAssociatedTokenAddress(bondMintPDA, wallet.publicKey);
+    const [principalVault] = getPrincipalVaultPDA(bondId);
+    const [investorPosition] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
 
     const tx = await program.methods
       .redeemBond()
       .accounts({
         bondState: bondStatePDA,
+        principalVault,
         investor: wallet.publicKey,
-        investorBondAta,
-        bondMint: bondMintPDA,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        investorPosition,
         systemProgram: SystemProgram.programId,
       })
       .transaction();
 
-    const sig = await sendAndConfirm(tx);
-    return sig;
+    return sendAndConfirm(tx);
   }, [program, wallet, sendAndConfirm]);
 
-  return { program, fetchAllBonds, fetchMyBonds, fetchPortfolioBonds, fetchBond, issueBond, buyBond, depositYield, claimYield, redeemBond, error };
+  return {
+    program,
+    fetchAllBonds,
+    fetchMyBonds,
+    fetchPortfolioBonds,
+    fetchBond,
+    issueBond,
+    buyBond,
+    withdrawEscrow,
+    refund,
+    depositYield,
+    depositPrincipal,
+    claimYield,
+    redeemBond,
+    error,
+  };
 }

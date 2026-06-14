@@ -23,6 +23,8 @@ export default function IssueBondPage() {
   const [couponRateBps, setCouponRateBps] = useState(800);
   const [maturityDate, setMaturityDate] = useState('');
   const [maxSupply, setMaxSupply] = useState(1000);
+  const [saleDeadlineDate, setSaleDeadlineDate] = useState('');
+  const [fundingGoalSOL, setFundingGoalSOL] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   // Loan agreement review/sign modal
@@ -49,7 +51,13 @@ export default function IssueBondPage() {
     if (faceValueSOL <= 0) { toast.error('Invalid face value', { description: 'Face value must be greater than 0 SOL' }); return; }
 
     const maturityTimestamp = Math.floor(new Date(maturityDate).getTime() / 1000);
-    if (maturityTimestamp <= Math.floor(Date.now() / 1000)) { toast.error('Maturity date must be in the future'); return; }
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (maturityTimestamp <= nowSec) { toast.error('Maturity date must be in the future'); return; }
+    if (!saleDeadlineDate) { toast.error('Please select a subscription close date'); return; }
+    const saleDeadline = Math.floor(new Date(saleDeadlineDate).getTime() / 1000);
+    if (saleDeadline <= nowSec) { toast.error('Subscription close date must be in the future'); return; }
+    if (maturityTimestamp <= saleDeadline) { toast.error('Maturity must be after the subscription close date'); return; }
+    if (fundingGoalSOL < 0 || fundingGoalSOL > faceValueSOL * maxSupply) { toast.error('Funding goal must be between 0 and the max raise'); return; }
 
     const terms: AgreementTerms = {
       issuer: publicKey.toBase58(),
@@ -88,7 +96,11 @@ export default function IssueBondPage() {
         symbol: agreement.terms.symbol,
         faceValue: agreement.terms.faceValueLamports,
         couponRateBps: agreement.terms.couponRateBps,
+        saleDeadline: Math.floor(new Date(saleDeadlineDate).getTime() / 1000),
         maturityTimestamp: agreement.terms.maturityTimestamp,
+        fundingGoal: fundingGoalSOL > 0
+          ? Math.round(fundingGoalSOL * 1_000_000_000)
+          : Math.round(faceValueSOL * maxSupply * 1_000_000_000),
         maxSupply: agreement.terms.maxSupply,
         loanAgreementHash: agreement.hashBytes,
       });
@@ -116,6 +128,7 @@ export default function IssueBondPage() {
 
       setBondName(''); setBondSymbol(''); setFaceValueSOL(0.1);
       setCouponRateBps(800); setMaxSupply(1000); setMaturityDate('');
+      setSaleDeadlineDate(''); setFundingGoalSOL(0);
       setShowAgreement(false); setAgreement(null); setAccepted(false);
     } catch (err) {
       console.error('issueBond error:', err);
@@ -213,6 +226,29 @@ export default function IssueBondPage() {
                 value={maturityDate}
                 onChange={e => setMaturityDate(e.target.value)}
               />
+            </label>
+            <label className="lx-field">
+              <span>Subscription closes</span>
+              <input
+                className="num"
+                type="date"
+                value={saleDeadlineDate}
+                onChange={e => setSaleDeadlineDate(e.target.value)}
+              />
+              <em className="help">Funding window end · must be before maturity</em>
+            </label>
+            <label className="lx-field">
+              <span>Funding goal · SOL</span>
+              <input
+                className="num"
+                type="number"
+                placeholder={(faceValueSOL * maxSupply).toFixed(4)}
+                min="0"
+                step="0.01"
+                value={fundingGoalSOL || ''}
+                onChange={e => setFundingGoalSOL(parseFloat(e.target.value) || 0)}
+              />
+              <em className="help num">Blank = full ({(faceValueSOL * maxSupply).toFixed(4)} SOL). If unmet by close, lenders are refunded.</em>
             </label>
             <div className="lx-field full">
               <span>Loan agreement</span>

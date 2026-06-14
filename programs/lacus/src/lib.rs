@@ -1,296 +1,478 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token::{self, Burn, Mint, MintTo, Token, TokenAccount, Transfer},
-};
+use anchor_lang::system_program;
 
-declare_id!("87fieWCffnauPhnHHM5TFqtRPNTcvup3VGUiW6Vae3PQ");
+declare_id!("BdRJSxsqbQZ12xuM9dcEQXuQ9R8AHvfTfMq6EppmEUoH");
+
+// ---------------------------------------------------------------------------
+// Lacus — P2P tokenize tahvil / kredi protokolu (guvenli yeniden yazim)
+//
+// Tasarim ozeti (denetim bulgularina karsi):
+//  * Escrow modeli: lender SOL'u escrow PDA'sinda tutulur; funding_goal'a
+//    ulasilirsa issuer ceker (%1 platform fee), ulasilmazsa lender refund alir.
+//  * Getiri ve anapara AYRI vault PDA'larinda tutulur (commingling yok).
+//  * Token yok / non-transferable: muhasebe InvestorPosition kaydi uzerinden
+//    yapilir; tokens balansina hic bakilmaz -> getiri cift-talebi imkansiz.
+//  * Tum para/oran hesaplari checked_* veya u128 ara hesap ile yapilir.
+//  * Itfa ancak anapara TAM fonlandiginda acilir (kismi-fon ile token yakma yok).
+//
+//  NOT: Issuer'in geri odememe (default) riski on-chain cozulemez; bu risk
+//  loan_agreement_hash ile temsil edilen yasal katmana aittir. Bu kontrat
+//  yalnizca para hareketinin MEKANIGINI guvene alir.
+// ---------------------------------------------------------------------------
+
+const PLATFORM_FEE_BPS: u64 = 100; // %1
+const BPS_DENOMINATOR: u64 = 10_000;
+// Issuer funding_goal'a ulasildigi halde escrow'u cekmezse, lender'lar
+// bu sure sonunda paralarini geri alabilir (no-show issuer korumasi).
+const ABANDON_GRACE: i64 = 7 * 24 * 60 * 60; // 7 gun
+// Vade + bu sure sonra issuer artik (dust + sahipsiz kalan) bakiyeyi tahsil edebilir.
+const RESIDUAL_GRACE: i64 = 180 * 24 * 60 * 60; // 180 gun
+
+#[inline]
+fn mul_div(a: u64, b: u64, denom: u64) -> Result<u64> {
+    let result = (a as u128)
+        .checked_mul(b as u128)
+        .ok_or(LacusError::MathOverflow)?
+        .checked_div(denom as u128)
+        .ok_or(LacusError::MathOverflow)?;
+    u64::try_from(result).map_err(|_| error!(LacusError::MathOverflow))
+}
 
 #[program]
 pub mod lacus {
     use super::*;
 
-    pub fn initialize_factory(ctx: Context<InitializeFactory>, authority: Pubkey) -> Result<()> {
+    /// Factory'yi baslatir. authority = cagiran (signer). `init` kullanildigi
+    /// icin iki kez cagrilamaz (re-init / ele gecirme yok). Authority sonradan
+    /// set_authority ile degistirilebilir.
+    pub fn initialize_factory(ctx: Context<InitializeFactory>) -> Result<()> {
         let factory = &mut ctx.accounts.factory_state;
-        factory.authority = authority;
+        factory.authority = ctx.accounts.authority.key();
         factory.bond_count = 0;
         factory.bump = ctx.bumps.factory_state;
         Ok(())
     }
 
+    /// Platform authority'sini (ve dolayisiyla fee alicisini) degistirir.
+    pub fn set_authority(ctx: Context<SetAuthority>, new_authority: Pubkey) -> Result<()> {
+        require!(new_authority != Pubkey::default(), LacusError::InvalidParams);
+        ctx.accounts.factory_state.authority = new_authority;
+        Ok(())
+    }
+
+    /// Yeni bir tahvil ihrac eder. Henuz para hareketi yok; sadece sale
+    /// penceresi acilir. Token mint edilmez.
     pub fn issue_bond(ctx: Context<IssueBond>, params: IssueBondParams) -> Result<()> {
-        msg!("LACUS_SOL_V2: issuer={}", ctx.accounts.issuer.key());
         let clock = Clock::get()?;
-        
+
+        require!(!params.name.is_empty() && params.name.len() <= 64, LacusError::InvalidParams);
+        require!(!params.symbol.is_empty() && params.symbol.len() <= 8, LacusError::InvalidParams);
+        require!(params.face_value > 0, LacusError::InvalidParams);
+        require!(params.max_supply > 0, LacusError::InvalidParams);
+        require!(params.funding_goal > 0, LacusError::InvalidParams);
+
+        // funding_goal, maksimum toplanabilecek tutari asamaz.
+        let max_raise = (params.max_supply as u128)
+            .checked_mul(params.face_value as u128)
+            .ok_or(LacusError::MathOverflow)?;
+        require!((params.funding_goal as u128) <= max_raise, LacusError::InvalidParams);
+
+        require!(params.sale_deadline > clock.unix_timestamp, LacusError::InvalidParams);
         require!(
-            params.maturity_timestamp > clock.unix_timestamp,
-            LacusError::InvalidMaturityDate
+            params.maturity_timestamp > params.sale_deadline,
+            LacusError::InvalidParams
         );
-        require!(params.max_supply > 0, LacusError::InvalidAmount);
-        require!(!params.name.is_empty(), LacusError::InvalidAmount);
-        require!(!params.symbol.is_empty(), LacusError::InvalidAmount);
         require!(
             params.loan_agreement_hash != [0u8; 32],
             LacusError::InvalidLoanAgreementHash
         );
 
         let factory = &mut ctx.accounts.factory_state;
-        let bond_state = &mut ctx.accounts.bond_state;
-        
-        bond_state.bond_id = factory.bond_count;
-        bond_state.issuer = ctx.accounts.issuer.key();
-        bond_state.name = params.name;
-        bond_state.symbol = params.symbol;
-        bond_state.face_value = params.face_value;
-        bond_state.coupon_rate_bps = params.coupon_rate_bps;
-        bond_state.maturity_timestamp = params.maturity_timestamp;
-        bond_state.max_supply = params.max_supply;
-        bond_state.tokens_sold = 0;
-        bond_state.total_yield_deposited = 0;
-        bond_state.total_principal_deposited = 0;
-        bond_state.is_matured = false;
-        bond_state.principal_deposited = false;
-        bond_state.loan_agreement_hash = params.loan_agreement_hash;
-        bond_state.bond_mint = ctx.accounts.bond_mint.key();
-        bond_state.bond_token_vault = ctx.accounts.bond_token_vault.key();
-        bond_state.bump = ctx.bumps.bond_state;
+        let bond_id = factory.bond_count;
+        factory.bond_count = factory.bond_count.checked_add(1).ok_or(LacusError::MathOverflow)?;
 
-        factory.bond_count += 1;
-
-        let bond_id_bytes = bond_state.bond_id.to_le_bytes();
-        let seeds = &[
-            b"bond",
-            bond_id_bytes.as_ref(),
-            &[bond_state.bump],
-        ];
-        let signer = &[&seeds[..]];
-
-        token::mint_to(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                MintTo {
-                    mint: ctx.accounts.bond_mint.to_account_info(),
-                    to: ctx.accounts.bond_token_vault.to_account_info(),
-                    authority: ctx.accounts.bond_state.to_account_info(),
-                },
-                signer,
-            ),
-            params.max_supply,
-        )?;
+        let bond = &mut ctx.accounts.bond_state;
+        bond.bond_id = bond_id;
+        bond.issuer = ctx.accounts.issuer.key();
+        bond.name = params.name;
+        bond.symbol = params.symbol;
+        bond.face_value = params.face_value;
+        bond.coupon_rate_bps = params.coupon_rate_bps;
+        bond.sale_deadline = params.sale_deadline;
+        bond.maturity_timestamp = params.maturity_timestamp;
+        bond.funding_goal = params.funding_goal;
+        bond.max_supply = params.max_supply;
+        bond.tokens_sold = 0;
+        bond.total_raised = 0;
+        bond.total_yield_deposited = 0;
+        bond.total_principal_deposited = 0;
+        bond.funded = false;
+        bond.principal_funded = false;
+        bond.loan_agreement_hash = params.loan_agreement_hash;
+        bond.bump = ctx.bumps.bond_state;
 
         Ok(())
     }
 
-    pub fn buy_bond(ctx: Context<BuyBond>, amount: u64) -> Result<()> {
+    /// Lender, `units` adet birim satin alir. Odenen SOL escrow vault'una gider
+    /// (issuer'a DEGIL). Pozisyon kaydi olusturulur/guncellenir.
+    pub fn buy_bond(ctx: Context<BuyBond>, units: u64) -> Result<()> {
         let clock = Clock::get()?;
-        if clock.unix_timestamp >= ctx.accounts.bond_state.maturity_timestamp {
-            ctx.accounts.bond_state.is_matured = true;
+        require!(units > 0, LacusError::InvalidParams);
+
+        {
+            let bond = &ctx.accounts.bond_state;
+            require!(!bond.funded, LacusError::FundingClosed);
+            require!(clock.unix_timestamp < bond.sale_deadline, LacusError::FundingClosed);
         }
 
-        require!(!ctx.accounts.bond_state.is_matured, LacusError::BondAlreadyMatured);
-        require!(
-            ctx.accounts.bond_state.tokens_sold + amount <= ctx.accounts.bond_state.max_supply,
-            LacusError::SupplyExceeded
-        );
+        let face_value = ctx.accounts.bond_state.face_value;
+        let max_supply = ctx.accounts.bond_state.max_supply;
+        let new_sold = ctx
+            .accounts
+            .bond_state
+            .tokens_sold
+            .checked_add(units)
+            .ok_or(LacusError::MathOverflow)?;
+        require!(new_sold <= max_supply, LacusError::SupplyExceeded);
 
-        let total_cost = ctx.accounts.bond_state.face_value
-            .checked_mul(amount)
-            .ok_or(LacusError::InvalidAmount)?;
+        let cost = (units as u128)
+            .checked_mul(face_value as u128)
+            .ok_or(LacusError::MathOverflow)?;
+        let cost = u64::try_from(cost).map_err(|_| error!(LacusError::MathOverflow))?;
 
-        let platform_fee = total_cost
-            .checked_mul(50)
-            .ok_or(LacusError::InvalidAmount)?
-            .checked_div(10_000)
-            .ok_or(LacusError::InvalidAmount)?;
-
-        let issuer_amount = total_cost
-            .checked_sub(platform_fee)
-            .ok_or(LacusError::InvalidAmount)?;
-
-        anchor_lang::system_program::transfer(
+        // Lender -> escrow vault
+        system_program::transfer(
             CpiContext::new(
                 ctx.accounts.system_program.to_account_info(),
-                anchor_lang::system_program::Transfer {
+                system_program::Transfer {
                     from: ctx.accounts.buyer.to_account_info(),
+                    to: ctx.accounts.escrow_vault.to_account_info(),
+                },
+            ),
+            cost,
+        )?;
+
+        // Pozisyon
+        let position = &mut ctx.accounts.investor_position;
+        if position.investor == Pubkey::default() {
+            position.investor = ctx.accounts.buyer.key();
+            position.bond_state = ctx.accounts.bond_state.key();
+            position.yield_claimed = 0;
+            position.redeemed = false;
+            position.refunded = false;
+            position.bump = ctx.bumps.investor_position;
+        }
+        require!(!position.refunded, LacusError::AlreadyRefunded);
+        position.units = position.units.checked_add(units).ok_or(LacusError::MathOverflow)?;
+        position.contribution = position
+            .contribution
+            .checked_add(cost)
+            .ok_or(LacusError::MathOverflow)?;
+
+        let bond = &mut ctx.accounts.bond_state;
+        bond.tokens_sold = new_sold;
+        bond.total_raised = bond.total_raised.checked_add(cost).ok_or(LacusError::MathOverflow)?;
+
+        Ok(())
+    }
+
+    /// Funding basariliysa (goal'a ulasildi + pencere kapandi) issuer escrow'u
+    /// ceker. Toplanan tutarin %1'i platform authority'sine, kalani issuer'a.
+    pub fn withdraw_escrow(ctx: Context<WithdrawEscrow>) -> Result<()> {
+        let clock = Clock::get()?;
+        let (bond_id, escrow_bump, total, to_issuer, fee);
+        {
+            let bond = &ctx.accounts.bond_state;
+            require!(!bond.funded, LacusError::AlreadyFunded);
+            require!(bond.total_raised >= bond.funding_goal, LacusError::GoalNotReached);
+            require!(
+                clock.unix_timestamp >= bond.sale_deadline || bond.tokens_sold >= bond.max_supply,
+                LacusError::FundingOpen
+            );
+            bond_id = bond.bond_id;
+            total = bond.total_raised;
+            fee = mul_div(total, PLATFORM_FEE_BPS, BPS_DENOMINATOR)?;
+            to_issuer = total.checked_sub(fee).ok_or(LacusError::MathOverflow)?;
+        }
+        escrow_bump = ctx.bumps.escrow_vault;
+
+        let id_bytes = bond_id.to_le_bytes();
+        let seeds: &[&[u8]] = &[b"escrow", id_bytes.as_ref(), &[escrow_bump]];
+        let signer_seeds: &[&[&[u8]]] = &[seeds];
+
+        if fee > 0 {
+            system_program::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.escrow_vault.to_account_info(),
+                        to: ctx.accounts.fee_recipient.to_account_info(),
+                    },
+                    signer_seeds,
+                ),
+                fee,
+            )?;
+        }
+        system_program::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.escrow_vault.to_account_info(),
                     to: ctx.accounts.issuer.to_account_info(),
                 },
+                signer_seeds,
             ),
-            issuer_amount,
+            to_issuer,
         )?;
 
-        anchor_lang::system_program::transfer(
-            CpiContext::new(
-                ctx.accounts.system_program.to_account_info(),
-                anchor_lang::system_program::Transfer {
-                    from: ctx.accounts.buyer.to_account_info(),
-                    to: ctx.accounts.fee_recipient.to_account_info(),
-                },
-            ),
-            platform_fee,
-        )?;
+        ctx.accounts.bond_state.funded = true;
+        Ok(())
+    }
 
-        let bond_id_bytes = ctx.accounts.bond_state.bond_id.to_le_bytes();
-        let bump = ctx.accounts.bond_state.bump;
-        let seeds = &[
-            b"bond",
-            bond_id_bytes.as_ref(),
-            &[bump],
-        ];
-        let signer = &[&seeds[..]];
+    /// Funding basarisizsa (vade gecti + goal'a ulasilmadi) ya da issuer
+    /// ABANDON_GRACE icinde escrow'u cekmediyse, lender katkisini geri alir.
+    pub fn refund(ctx: Context<Refund>) -> Result<()> {
+        let clock = Clock::get()?;
+        let (bond_id, escrow_bump, amount, units);
+        {
+            let bond = &ctx.accounts.bond_state;
+            require!(!bond.funded, LacusError::AlreadyFunded);
+            let failed =
+                clock.unix_timestamp >= bond.sale_deadline && bond.total_raised < bond.funding_goal;
+            let abandoned = clock.unix_timestamp >= bond.sale_deadline + ABANDON_GRACE;
+            require!(failed || abandoned, LacusError::RefundNotAvailable);
+            bond_id = bond.bond_id;
 
-        token::transfer(
+            let position = &ctx.accounts.investor_position;
+            require!(!position.refunded, LacusError::AlreadyRefunded);
+            require!(position.units > 0, LacusError::NothingToRefund);
+            amount = position.contribution;
+            units = position.units;
+        }
+        escrow_bump = ctx.bumps.escrow_vault;
+
+        let id_bytes = bond_id.to_le_bytes();
+        let seeds: &[&[u8]] = &[b"escrow", id_bytes.as_ref(), &[escrow_bump]];
+        let signer_seeds: &[&[&[u8]]] = &[seeds];
+
+        system_program::transfer(
             CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.bond_token_vault.to_account_info(),
-                    to: ctx.accounts.buyer_bond_ata.to_account_info(),
-                    authority: ctx.accounts.bond_state.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.escrow_vault.to_account_info(),
+                    to: ctx.accounts.investor.to_account_info(),
                 },
-                signer,
+                signer_seeds,
             ),
             amount,
         )?;
 
-        ctx.accounts.bond_state.tokens_sold += amount;
+        let position = &mut ctx.accounts.investor_position;
+        position.refunded = true;
+        position.units = 0;
+        position.contribution = 0;
 
-        // Set snapshot to current yield so buyer can't claim yield from before their purchase
-        let investor_position = &mut ctx.accounts.investor_position;
-        if investor_position.investor == Pubkey::default() {
-            investor_position.investor = ctx.accounts.buyer.key();
-            investor_position.bond_state = ctx.accounts.bond_state.key();
-            investor_position.last_yield_snapshot = ctx.accounts.bond_state.total_yield_deposited;
-            investor_position.bump = ctx.bumps.investor_position;
-        }
+        let bond = &mut ctx.accounts.bond_state;
+        bond.total_raised = bond.total_raised.checked_sub(amount).ok_or(LacusError::MathOverflow)?;
+        bond.tokens_sold = bond.tokens_sold.checked_sub(units).ok_or(LacusError::MathOverflow)?;
 
         Ok(())
     }
 
+    /// Issuer kupon (getiri) yatirir -> yield vault. Yalnizca funding sonrasi.
     pub fn deposit_yield(ctx: Context<DepositYield>, amount: u64) -> Result<()> {
-        require!(amount > 0, LacusError::InvalidAmount);
+        require!(amount > 0, LacusError::InvalidParams);
+        require!(ctx.accounts.bond_state.funded, LacusError::NotFunded);
 
-        anchor_lang::system_program::transfer(
+        system_program::transfer(
             CpiContext::new(
                 ctx.accounts.system_program.to_account_info(),
-                anchor_lang::system_program::Transfer {
+                system_program::Transfer {
                     from: ctx.accounts.issuer.to_account_info(),
-                    to: ctx.accounts.bond_state.to_account_info(),
+                    to: ctx.accounts.yield_vault.to_account_info(),
                 },
             ),
             amount,
         )?;
 
-        let bond_state = &mut ctx.accounts.bond_state;
-        bond_state.total_yield_deposited += amount;
-
+        let bond = &mut ctx.accounts.bond_state;
+        bond.total_yield_deposited = bond
+            .total_yield_deposited
+            .checked_add(amount)
+            .ok_or(LacusError::MathOverflow)?;
         Ok(())
     }
 
+    /// Issuer anapara yatirir -> principal vault. Toplam >= toplanan tutara
+    /// ulasinca itfa acilir (principal_funded). Yalnizca funding sonrasi.
     pub fn deposit_principal(ctx: Context<DepositPrincipal>, amount: u64) -> Result<()> {
-        require!(amount > 0, LacusError::InvalidAmount);
+        require!(amount > 0, LacusError::InvalidParams);
+        require!(ctx.accounts.bond_state.funded, LacusError::NotFunded);
 
-        anchor_lang::system_program::transfer(
+        system_program::transfer(
             CpiContext::new(
                 ctx.accounts.system_program.to_account_info(),
-                anchor_lang::system_program::Transfer {
+                system_program::Transfer {
                     from: ctx.accounts.issuer.to_account_info(),
-                    to: ctx.accounts.bond_state.to_account_info(),
+                    to: ctx.accounts.principal_vault.to_account_info(),
                 },
             ),
             amount,
         )?;
 
-        let bond_state = &mut ctx.accounts.bond_state;
-        bond_state.total_principal_deposited += amount;
-        bond_state.principal_deposited = true;
-
-        Ok(())
-    }
-
-    pub fn claim_yield(ctx: Context<ClaimYield>) -> Result<()> {
-        let bond_state = &ctx.accounts.bond_state;
-        let investor_position = &mut ctx.accounts.investor_position;
-
-        require!(bond_state.tokens_sold > 0, LacusError::InvalidAmount);
-
-        if investor_position.investor == Pubkey::default() {
-            investor_position.investor = ctx.accounts.investor.key();
-            investor_position.bond_state = bond_state.key();
-            investor_position.last_yield_snapshot = 0;
-            investor_position.bump = ctx.bumps.investor_position;
+        let bond = &mut ctx.accounts.bond_state;
+        bond.total_principal_deposited = bond
+            .total_principal_deposited
+            .checked_add(amount)
+            .ok_or(LacusError::MathOverflow)?;
+        if bond.total_principal_deposited >= bond.total_raised {
+            bond.principal_funded = true;
         }
-
-        let deposited_since = bond_state.total_yield_deposited
-            .checked_sub(investor_position.last_yield_snapshot)
-            .ok_or(LacusError::InvalidAmount)?;
-
-        let investor_balance = ctx.accounts.investor_bond_ata.amount;
-        require!(investor_balance > 0, LacusError::InvalidAmount);
-
-        let claimable = deposited_since
-            .checked_mul(investor_balance)
-            .ok_or(LacusError::InvalidAmount)?
-            .checked_div(bond_state.tokens_sold)
-            .ok_or(LacusError::InvalidAmount)?;
-
-        require!(claimable > 0, LacusError::NothingToClaim);
-
-        let bond_lamports = ctx.accounts.bond_state.to_account_info().lamports();
-        require!(bond_lamports >= claimable, LacusError::InvalidAmount);
-
-        **ctx.accounts.bond_state.to_account_info().try_borrow_mut_lamports()? -= claimable;
-        **ctx.accounts.investor.to_account_info().try_borrow_mut_lamports()? += claimable;
-
-        investor_position.last_yield_snapshot = bond_state.total_yield_deposited;
-
         Ok(())
     }
 
+    /// Lender, hak ettigi kupon payini talep eder. Pay, pozisyondaki SABIT
+    /// birim sayisina gore hesaplanir (token balansina bakilmaz). yield_claimed
+    /// monotonik artar -> cift talep imkansiz, anaparaya dokunmaz (ayri vault).
+    pub fn claim_yield(ctx: Context<ClaimYield>) -> Result<()> {
+        let (bond_id, yield_bump, claimable, entitled);
+        {
+            let bond = &ctx.accounts.bond_state;
+            require!(bond.funded, LacusError::NotFunded);
+            require!(bond.tokens_sold > 0, LacusError::NothingToClaim);
+
+            let position = &ctx.accounts.investor_position;
+            require!(!position.refunded, LacusError::AlreadyRefunded);
+            require!(position.units > 0, LacusError::NothingToClaim);
+
+            entitled = mul_div(bond.total_yield_deposited, position.units, bond.tokens_sold)?;
+            claimable = entitled
+                .checked_sub(position.yield_claimed)
+                .ok_or(LacusError::MathOverflow)?;
+            require!(claimable > 0, LacusError::NothingToClaim);
+            bond_id = bond.bond_id;
+        }
+        yield_bump = ctx.bumps.yield_vault;
+
+        let id_bytes = bond_id.to_le_bytes();
+        let seeds: &[&[u8]] = &[b"yield", id_bytes.as_ref(), &[yield_bump]];
+        let signer_seeds: &[&[&[u8]]] = &[seeds];
+
+        system_program::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.yield_vault.to_account_info(),
+                    to: ctx.accounts.investor.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            claimable,
+        )?;
+
+        ctx.accounts.investor_position.yield_claimed = entitled;
+        Ok(())
+    }
+
+    /// Vade sonrasi ve anapara TAM fonlandiysa lender anaparasini (par = katki)
+    /// principal vault'tan geri alir. Her pozisyon yalnizca bir kez itfa edilir.
     pub fn redeem_bond(ctx: Context<RedeemBond>) -> Result<()> {
         let clock = Clock::get()?;
-        let bond_state = &mut ctx.accounts.bond_state;
+        let (bond_id, principal_bump, amount);
+        {
+            let bond = &ctx.accounts.bond_state;
+            require!(clock.unix_timestamp >= bond.maturity_timestamp, LacusError::NotMatured);
+            require!(bond.principal_funded, LacusError::PrincipalNotFunded);
 
-        if clock.unix_timestamp >= bond_state.maturity_timestamp {
-            bond_state.is_matured = true;
+            let position = &ctx.accounts.investor_position;
+            require!(!position.refunded, LacusError::AlreadyRefunded);
+            require!(!position.redeemed, LacusError::AlreadyRedeemed);
+            require!(position.units > 0, LacusError::NothingToRedeem);
+            amount = position.contribution;
+            bond_id = bond.bond_id;
         }
+        principal_bump = ctx.bumps.principal_vault;
 
-        require!(bond_state.is_matured, LacusError::BondNotMatured);
-        require!(
-            bond_state.principal_deposited,
-            LacusError::PrincipalNotDeposited
-        );
+        let id_bytes = bond_id.to_le_bytes();
+        let seeds: &[&[u8]] = &[b"principal", id_bytes.as_ref(), &[principal_bump]];
+        let signer_seeds: &[&[&[u8]]] = &[seeds];
 
-        let investor_balance = ctx.accounts.investor_bond_ata.amount;
-        require!(investor_balance > 0, LacusError::InvalidAmount);
-
-        require!(bond_state.tokens_sold > 0, LacusError::InvalidAmount);
-
-        let principal_amount = bond_state.total_principal_deposited
-            .checked_mul(investor_balance)
-            .ok_or(LacusError::InvalidAmount)?
-            .checked_div(bond_state.tokens_sold)
-            .ok_or(LacusError::InvalidAmount)?;
-
-        let bond_lamports = ctx.accounts.bond_state.to_account_info().lamports();
-        require!(bond_lamports >= principal_amount, LacusError::InvalidAmount);
-
-        token::burn(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                Burn {
-                    mint: ctx.accounts.bond_mint.to_account_info(),
-                    from: ctx.accounts.investor_bond_ata.to_account_info(),
-                    authority: ctx.accounts.investor.to_account_info(),
+        system_program::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.principal_vault.to_account_info(),
+                    to: ctx.accounts.investor.to_account_info(),
                 },
+                signer_seeds,
             ),
-            investor_balance,
+            amount,
         )?;
 
-        **ctx.accounts.bond_state.to_account_info().try_borrow_mut_lamports()? -= principal_amount;
-        **ctx.accounts.investor.to_account_info().try_borrow_mut_lamports()? += principal_amount;
+        ctx.accounts.investor_position.redeemed = true;
+        Ok(())
+    }
 
+    /// Vade + RESIDUAL_GRACE sonrasi issuer, yield/principal vault'larinda kalan
+    /// (yuvarlamadan artan dust + zamaninda itfa edilmemis sahipsiz) bakiyeyi
+    /// tahsil eder. Escrow vault'a DOKUNMAZ (orasi lender'larindir).
+    pub fn reclaim_residual(ctx: Context<ReclaimResidual>) -> Result<()> {
+        let clock = Clock::get()?;
+        let (bond_id, yield_bump, principal_bump);
+        {
+            let bond = &ctx.accounts.bond_state;
+            require!(
+                clock.unix_timestamp >= bond.maturity_timestamp + RESIDUAL_GRACE,
+                LacusError::TooEarly
+            );
+            bond_id = bond.bond_id;
+        }
+        yield_bump = ctx.bumps.yield_vault;
+        principal_bump = ctx.bumps.principal_vault;
+
+        let id_bytes = bond_id.to_le_bytes();
+
+        let y = ctx.accounts.yield_vault.lamports();
+        if y > 0 {
+            let seeds: &[&[u8]] = &[b"yield", id_bytes.as_ref(), &[yield_bump]];
+            let signer_seeds: &[&[&[u8]]] = &[seeds];
+            system_program::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.yield_vault.to_account_info(),
+                        to: ctx.accounts.issuer.to_account_info(),
+                    },
+                    signer_seeds,
+                ),
+                y,
+            )?;
+        }
+
+        let p = ctx.accounts.principal_vault.lamports();
+        if p > 0 {
+            let seeds: &[&[u8]] = &[b"principal", id_bytes.as_ref(), &[principal_bump]];
+            let signer_seeds: &[&[&[u8]]] = &[seeds];
+            system_program::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.principal_vault.to_account_info(),
+                        to: ctx.accounts.issuer.to_account_info(),
+                    },
+                    signer_seeds,
+                ),
+                p,
+            )?;
+        }
         Ok(())
     }
 }
+
+// ---------------------------------------------------------------------------
+// Params
+// ---------------------------------------------------------------------------
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct IssueBondParams {
@@ -298,10 +480,16 @@ pub struct IssueBondParams {
     pub symbol: String,
     pub face_value: u64,
     pub coupon_rate_bps: u16,
+    pub sale_deadline: i64,
     pub maturity_timestamp: i64,
+    pub funding_goal: u64,
     pub max_supply: u64,
     pub loan_agreement_hash: [u8; 32],
 }
+
+// ---------------------------------------------------------------------------
+// Accounts
+// ---------------------------------------------------------------------------
 
 #[derive(Accounts)]
 pub struct InitializeFactory<'info> {
@@ -319,22 +507,31 @@ pub struct InitializeFactory<'info> {
 }
 
 #[derive(Accounts)]
+pub struct SetAuthority<'info> {
+    #[account(
+        mut,
+        seeds = [b"factory"],
+        bump = factory_state.bump,
+        constraint = factory_state.authority == authority.key() @ LacusError::NotAuthorized
+    )]
+    pub factory_state: Account<'info, FactoryState>,
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
 pub struct IssueBond<'info> {
     #[account(mut)]
     pub issuer: Signer<'info>,
     #[account(mut, seeds = [b"factory"], bump = factory_state.bump)]
     pub factory_state: Account<'info, FactoryState>,
-    #[account(init, payer = issuer, space = 8 + BondState::INIT_SPACE,
-              seeds = [b"bond", factory_state.bond_count.to_le_bytes().as_ref()], bump)]
+    #[account(
+        init,
+        payer = issuer,
+        space = 8 + BondState::INIT_SPACE,
+        seeds = [b"bond", factory_state.bond_count.to_le_bytes().as_ref()],
+        bump
+    )]
     pub bond_state: Account<'info, BondState>,
-    #[account(init, payer = issuer, mint::decimals = 0, mint::authority = bond_state,
-              seeds = [b"mint", bond_state.key().as_ref()], bump)]
-    pub bond_mint: Account<'info, Mint>,
-    #[account(init, payer = issuer, associated_token::mint = bond_mint,
-              associated_token::authority = bond_state)]
-    pub bond_token_vault: Account<'info, TokenAccount>,
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 
@@ -346,33 +543,14 @@ pub struct BuyBond<'info> {
         bump = bond_state.bump
     )]
     pub bond_state: Account<'info, BondState>,
-    #[account(seeds = [b"factory"], bump = factory_state.bump)]
-    pub factory_state: Account<'info, FactoryState>,
+    #[account(
+        mut,
+        seeds = [b"escrow", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub escrow_vault: SystemAccount<'info>,
     #[account(mut)]
     pub buyer: Signer<'info>,
-    #[account(
-        init_if_needed,
-        payer = buyer,
-        associated_token::mint = bond_mint,
-        associated_token::authority = buyer
-    )]
-    pub buyer_bond_ata: Account<'info, TokenAccount>,
-    /// CHECK: issuer receives SOL payment
-    #[account(mut, constraint = issuer.key() == bond_state.issuer @ LacusError::NotAuthorized)]
-    pub issuer: AccountInfo<'info>,
-    /// CHECK: platform fee recipient, verified against factory authority
-    #[account(mut, constraint = fee_recipient.key() == factory_state.authority @ LacusError::NotAuthorized)]
-    pub fee_recipient: AccountInfo<'info>,
-    #[account(
-        mut,
-        constraint = bond_token_vault.key() == bond_state.bond_token_vault
-    )]
-    pub bond_token_vault: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        constraint = bond_mint.key() == bond_state.bond_mint
-    )]
-    pub bond_mint: Account<'info, Mint>,
     #[account(
         init_if_needed,
         payer = buyer,
@@ -381,8 +559,62 @@ pub struct BuyBond<'info> {
         bump
     )]
     pub investor_position: Account<'info, InvestorPosition>,
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct WithdrawEscrow<'info> {
+    #[account(
+        mut,
+        seeds = [b"bond", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump = bond_state.bump
+    )]
+    pub bond_state: Account<'info, BondState>,
+    #[account(seeds = [b"factory"], bump = factory_state.bump)]
+    pub factory_state: Account<'info, FactoryState>,
+    #[account(
+        mut,
+        seeds = [b"escrow", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub escrow_vault: SystemAccount<'info>,
+    #[account(
+        mut,
+        constraint = issuer.key() == bond_state.issuer @ LacusError::NotAuthorized
+    )]
+    pub issuer: Signer<'info>,
+    /// CHECK: platform fee alicisi; factory authority'sine kilitli.
+    #[account(
+        mut,
+        constraint = fee_recipient.key() == factory_state.authority @ LacusError::NotAuthorized
+    )]
+    pub fee_recipient: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct Refund<'info> {
+    #[account(
+        mut,
+        seeds = [b"bond", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump = bond_state.bump
+    )]
+    pub bond_state: Account<'info, BondState>,
+    #[account(
+        mut,
+        seeds = [b"escrow", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub escrow_vault: SystemAccount<'info>,
+    #[account(mut)]
+    pub investor: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [b"position", bond_state.key().as_ref(), investor.key().as_ref()],
+        bump = investor_position.bump,
+        constraint = investor_position.investor == investor.key() @ LacusError::NotAuthorized
+    )]
+    pub investor_position: Account<'info, InvestorPosition>,
     pub system_program: Program<'info, System>,
 }
 
@@ -395,6 +627,12 @@ pub struct DepositYield<'info> {
         constraint = bond_state.issuer == issuer.key() @ LacusError::NotAuthorized
     )]
     pub bond_state: Account<'info, BondState>,
+    #[account(
+        mut,
+        seeds = [b"yield", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub yield_vault: SystemAccount<'info>,
     #[account(mut)]
     pub issuer: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -409,6 +647,12 @@ pub struct DepositPrincipal<'info> {
         constraint = bond_state.issuer == issuer.key() @ LacusError::NotAuthorized
     )]
     pub bond_state: Account<'info, BondState>,
+    #[account(
+        mut,
+        seeds = [b"principal", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub principal_vault: SystemAccount<'info>,
     #[account(mut)]
     pub issuer: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -417,54 +661,81 @@ pub struct DepositPrincipal<'info> {
 #[derive(Accounts)]
 pub struct ClaimYield<'info> {
     #[account(
-        mut,
         seeds = [b"bond", bond_state.bond_id.to_le_bytes().as_ref()],
         bump = bond_state.bump
     )]
     pub bond_state: Account<'info, BondState>,
     #[account(
-        init_if_needed,
-        payer = investor,
-        space = 8 + InvestorPosition::INIT_SPACE,
-        seeds = [b"position", bond_state.key().as_ref(), investor.key().as_ref()],
+        mut,
+        seeds = [b"yield", bond_state.bond_id.to_le_bytes().as_ref()],
         bump
     )]
-    pub investor_position: Account<'info, InvestorPosition>,
+    pub yield_vault: SystemAccount<'info>,
     #[account(mut)]
     pub investor: Signer<'info>,
     #[account(
-        associated_token::mint = bond_state.bond_mint,
-        associated_token::authority = investor
+        mut,
+        seeds = [b"position", bond_state.key().as_ref(), investor.key().as_ref()],
+        bump = investor_position.bump,
+        constraint = investor_position.investor == investor.key() @ LacusError::NotAuthorized
     )]
-    pub investor_bond_ata: Account<'info, TokenAccount>,
-    pub token_program: Program<'info, Token>,
+    pub investor_position: Account<'info, InvestorPosition>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct RedeemBond<'info> {
     #[account(
-        mut,
         seeds = [b"bond", bond_state.bond_id.to_le_bytes().as_ref()],
         bump = bond_state.bump
     )]
     pub bond_state: Account<'info, BondState>,
+    #[account(
+        mut,
+        seeds = [b"principal", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub principal_vault: SystemAccount<'info>,
     #[account(mut)]
     pub investor: Signer<'info>,
     #[account(
         mut,
-        associated_token::mint = bond_state.bond_mint,
-        associated_token::authority = investor
+        seeds = [b"position", bond_state.key().as_ref(), investor.key().as_ref()],
+        bump = investor_position.bump,
+        constraint = investor_position.investor == investor.key() @ LacusError::NotAuthorized
     )]
-    pub investor_bond_ata: Account<'info, TokenAccount>,
-    #[account(
-        mut,
-        constraint = bond_mint.key() == bond_state.bond_mint
-    )]
-    pub bond_mint: Account<'info, Mint>,
-    pub token_program: Program<'info, Token>,
+    pub investor_position: Account<'info, InvestorPosition>,
     pub system_program: Program<'info, System>,
 }
+
+#[derive(Accounts)]
+pub struct ReclaimResidual<'info> {
+    #[account(
+        seeds = [b"bond", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump = bond_state.bump,
+        constraint = bond_state.issuer == issuer.key() @ LacusError::NotAuthorized
+    )]
+    pub bond_state: Account<'info, BondState>,
+    #[account(
+        mut,
+        seeds = [b"yield", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub yield_vault: SystemAccount<'info>,
+    #[account(
+        mut,
+        seeds = [b"principal", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub principal_vault: SystemAccount<'info>,
+    #[account(mut)]
+    pub issuer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
 
 #[account]
 #[derive(InitSpace)]
@@ -485,16 +756,17 @@ pub struct BondState {
     pub symbol: String,
     pub face_value: u64,
     pub coupon_rate_bps: u16,
+    pub sale_deadline: i64,
     pub maturity_timestamp: i64,
+    pub funding_goal: u64,
     pub max_supply: u64,
     pub tokens_sold: u64,
+    pub total_raised: u64,
     pub total_yield_deposited: u64,
     pub total_principal_deposited: u64,
-    pub is_matured: bool,
-    pub principal_deposited: bool,
+    pub funded: bool,
+    pub principal_funded: bool,
     pub loan_agreement_hash: [u8; 32],
-    pub bond_mint: Pubkey,
-    pub bond_token_vault: Pubkey,
     pub bump: u8,
 }
 
@@ -503,28 +775,56 @@ pub struct BondState {
 pub struct InvestorPosition {
     pub investor: Pubkey,
     pub bond_state: Pubkey,
-    pub last_yield_snapshot: u64,
+    pub units: u64,
+    pub contribution: u64,
+    pub yield_claimed: u64,
+    pub redeemed: bool,
+    pub refunded: bool,
     pub bump: u8,
 }
+
+// ---------------------------------------------------------------------------
+// Errors
+// ---------------------------------------------------------------------------
 
 #[error_code]
 pub enum LacusError {
     #[msg("Not authorized to perform this action")]
     NotAuthorized,
-    #[msg("Bond has already matured")]
-    BondAlreadyMatured,
-    #[msg("Bond has not matured yet")]
-    BondNotMatured,
-    #[msg("Principal has not been deposited")]
-    PrincipalNotDeposited,
-    #[msg("Bond supply exceeded")]
-    SupplyExceeded,
+    #[msg("Invalid parameters")]
+    InvalidParams,
     #[msg("Invalid loan agreement hash")]
     InvalidLoanAgreementHash,
-    #[msg("Invalid maturity date")]
-    InvalidMaturityDate,
+    #[msg("Arithmetic overflow")]
+    MathOverflow,
+    #[msg("Bond supply exceeded")]
+    SupplyExceeded,
+    #[msg("Funding window is closed")]
+    FundingClosed,
+    #[msg("Funding window is still open")]
+    FundingOpen,
+    #[msg("Funding goal not reached")]
+    GoalNotReached,
+    #[msg("Bond is already funded")]
+    AlreadyFunded,
+    #[msg("Bond is not funded yet")]
+    NotFunded,
+    #[msg("Refund is not available")]
+    RefundNotAvailable,
+    #[msg("Position already refunded")]
+    AlreadyRefunded,
+    #[msg("Nothing to refund")]
+    NothingToRefund,
+    #[msg("Principal not fully funded")]
+    PrincipalNotFunded,
+    #[msg("Bond has not matured yet")]
+    NotMatured,
+    #[msg("Position already redeemed")]
+    AlreadyRedeemed,
+    #[msg("Nothing to redeem")]
+    NothingToRedeem,
     #[msg("Nothing to claim")]
     NothingToClaim,
-    #[msg("Invalid amount")]
-    InvalidAmount,
+    #[msg("Too early")]
+    TooEarly,
 }

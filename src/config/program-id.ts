@@ -2,4 +2,4 @@
 // Hafif (statik) sayfalar PublicKey'e ihtiyaç duymadan bu sabiti kullanır;
 // PublicKey gerekiyorsa src/config/solana.ts'teki LACUS_PROGRAM_ID kullanılır.
 export const LACUS_PROGRAM_ID_STRING =
-  process.env.NEXT_PUBLIC_LACUS_PROGRAM_ID ?? '87fieWCffnauPhnHHM5TFqtRPNTcvup3VGUiW6Vae3PQ';
+  process.env.NEXT_PUBLIC_LACUS_PROGRAM_ID ?? 'BdRJSxsqbQZ12xuM9dcEQXuQ9R8AHvfTfMq6EppmEUoH';

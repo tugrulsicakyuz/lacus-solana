@@ -1,50 +1,47 @@
+// Factory'yi baslatir. authority = bu makinedeki CLI cuzdani (~/.config/solana/id.json).
+// Yeni kontratta initialize_factory parametre almaz; authority = signer olur.
+// Fee aliciyi sonradan degistirmek icin: program.methods.setAuthority(yeniPubkey).
 const anchor = require('@coral-xyz/anchor');
-const { AnchorProvider, Program, setProvider } = anchor;
 const { Connection, Keypair, PublicKey, SystemProgram } = require('@solana/web3.js');
-const bs58 = require('bs58');
-const IDL = require('./src/lib/lacus-idl.json');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
-const FAUCET_SECRET = '57QZjzV2WQUueLLEYVVtdw8Xor5uhZcujXRkdhNmmW8bb9xAWk6VKyRneJsXHLsDFWcRYVagZpv1a2nD7BejzDiw';
+const idl = require(path.join(__dirname, '..', 'src', 'lib', 'lacus-idl.json'));
 
-async function main() {
-  const decode = typeof bs58.decode === 'function' ? bs58.decode : bs58.default.decode;
-  const kp = Keypair.fromSecretKey(decode(FAUCET_SECRET));
-  const conn = new Connection('https://api.devnet.solana.com', 'confirmed');
-  const wallet = {
-    publicKey: kp.publicKey,
-    signTransaction: async (tx) => { tx.sign(kp); return tx; },
-    signAllTransactions: async (txs) => { txs.forEach(t => t.sign(kp)); return txs; },
-  };
-  const provider = new AnchorProvider(conn, wallet, { commitment: 'confirmed' });
-  setProvider(provider);
-  const program = new Program(IDL, provider);
-  const PROGRAM_ID = new PublicKey(IDL.address);
-  const [factoryPDA] = PublicKey.findProgramAddressSync([Buffer.from('factory')], PROGRAM_ID);
-  console.log('Program ID:', IDL.address);
-  console.log('Factory PDA:', factoryPDA.toBase58());
+(async () => {
+  const secret = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.config', 'solana', 'id.json'), 'utf8'));
+  const kp = Keypair.fromSecretKey(new Uint8Array(secret));
+  const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+  const wallet = new anchor.Wallet(kp);
+  const provider = new anchor.AnchorProvider(connection, wallet, { commitment: 'confirmed' });
+  anchor.setProvider(provider);
+  const program = new anchor.Program(idl, provider);
 
-  const existing = await conn.getAccountInfo(factoryPDA);
-  if (existing && existing.owner.toBase58() === PROGRAM_ID.toBase58()) {
-    console.log('Factory already initialized. bond_count:', 
-      (await program.account.factoryState.fetch(factoryPDA)).bondCount.toNumber());
-    process.exit(0);
+  console.log('programId :', program.programId.toBase58());
+  console.log('wallet    :', wallet.publicKey.toBase58());
+
+  const [factoryPda] = PublicKey.findProgramAddressSync([Buffer.from('factory')], program.programId);
+  console.log('factoryPDA:', factoryPda.toBase58());
+
+  const existing = await connection.getAccountInfo(factoryPda);
+  if (existing) {
+    const f = await program.account.factoryState.fetch(factoryPda);
+    console.log('ALREADY INITIALIZED -> authority:', f.authority.toBase58(), 'bond_count:', f.bondCount.toString());
+    return;
   }
 
-  console.log('Initializing factory...');
   const sig = await program.methods
-    .initializeFactory(kp.publicKey)
+    .initializeFactory()
     .accounts({
-      factoryState: factoryPDA,
-      authority: kp.publicKey,
+      factoryState: factoryPda,
+      authority: wallet.publicKey,
       systemProgram: SystemProgram.programId,
     })
-    .signers([kp])
     .rpc();
-  console.log('SUCCESS! sig:', sig);
-  process.exit(0);
-}
+  console.log('initialize_factory sig:', sig);
 
-main().catch(e => {
-  console.error('FATAL:', e.message);
-  process.exit(1);
-});
+  const f = await program.account.factoryState.fetch(factoryPda);
+  console.log('authority :', f.authority.toBase58());
+  console.log('bond_count:', f.bondCount.toString());
+})().catch((e) => { console.error('ERR:', e.message || e); process.exit(1); });

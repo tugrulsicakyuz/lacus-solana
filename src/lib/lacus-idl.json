@@ -1,5 +1,5 @@
 {
-  "address": "87fieWCffnauPhnHHM5TFqtRPNTcvup3VGUiW6Vae3PQ",
+  "address": "BdRJSxsqbQZ12xuM9dcEQXuQ9R8AHvfTfMq6EppmEUoH",
   "metadata": {
     "name": "lacus",
     "version": "0.1.0",
@@ -9,6 +9,10 @@
   "instructions": [
     {
       "name": "buy_bond",
+      "docs": [
+        "Lender, `units` adet birim satin alir. Odenen SOL escrow vault'una gider",
+        "(issuer'a DEGIL). Pozisyon kaydi olusturulur/guncellenir."
+      ],
       "discriminator": [
         213,
         80,
@@ -43,20 +47,25 @@
           }
         },
         {
-          "name": "factory_state",
+          "name": "escrow_vault",
+          "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  102,
-                  97,
+                  101,
+                  115,
                   99,
-                  116,
-                  111,
                   114,
-                  121
+                  111,
+                  119
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
               }
             ]
           }
@@ -65,112 +74,6 @@
           "name": "buyer",
           "writable": true,
           "signer": true
-        },
-        {
-          "name": "buyer_bond_ata",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "buyer"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "bond_mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "issuer",
-          "writable": true
-        },
-        {
-          "name": "fee_recipient",
-          "writable": true
-        },
-        {
-          "name": "bond_token_vault",
-          "writable": true
-        },
-        {
-          "name": "bond_mint",
-          "writable": true
         },
         {
           "name": "investor_position",
@@ -202,27 +105,24 @@
           }
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "associated_token_program",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-        },
-        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "amount",
+          "name": "units",
           "type": "u64"
         }
       ]
     },
     {
       "name": "claim_yield",
+      "docs": [
+        "Lender, hak ettigi kupon payini talep eder. Pay, pozisyondaki SABIT",
+        "birim sayisina gore hesaplanir (token balansina bakilmaz). yield_claimed",
+        "monotonik artar -> cift talep imkansiz, anaparaya dokunmaz (ayri vault)."
+      ],
       "discriminator": [
         49,
         74,
@@ -236,7 +136,6 @@
       "accounts": [
         {
           "name": "bond_state",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -257,6 +156,34 @@
           }
         },
         {
+          "name": "yield_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  121,
+                  105,
+                  101,
+                  108,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "investor",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "investor_position",
           "writable": true,
           "pda": {
@@ -286,105 +213,6 @@
           }
         },
         {
-          "name": "investor",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "investor_bond_ata",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "investor"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "bond_state.bond_mint",
-                "account": "BondState"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -393,6 +221,10 @@
     },
     {
       "name": "deposit_principal",
+      "docs": [
+        "Issuer anapara yatirir -> principal vault. Toplam >= toplanan tutara",
+        "ulasinca itfa acilir (principal_funded). Yalnizca funding sonrasi."
+      ],
       "discriminator": [
         228,
         244,
@@ -427,6 +259,33 @@
           }
         },
         {
+          "name": "principal_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  105,
+                  110,
+                  99,
+                  105,
+                  112,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
           "name": "issuer",
           "writable": true,
           "signer": true
@@ -445,6 +304,9 @@
     },
     {
       "name": "deposit_yield",
+      "docs": [
+        "Issuer kupon (getiri) yatirir -> yield vault. Yalnizca funding sonrasi."
+      ],
       "discriminator": [
         204,
         126,
@@ -479,6 +341,29 @@
           }
         },
         {
+          "name": "yield_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  121,
+                  105,
+                  101,
+                  108,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
           "name": "issuer",
           "writable": true,
           "signer": true
@@ -497,6 +382,11 @@
     },
     {
       "name": "initialize_factory",
+      "docs": [
+        "Factory'yi baslatir. authority = cagiran (signer). `init` kullanildigi",
+        "icin iki kez cagrilamaz (re-init / ele gecirme yok). Authority sonradan",
+        "set_authority ile degistirilebilir."
+      ],
       "discriminator": [
         179,
         64,
@@ -538,15 +428,14 @@
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "authority",
-          "type": "pubkey"
-        }
-      ]
+      "args": []
     },
     {
       "name": "issue_bond",
+      "docs": [
+        "Yeni bir tahvil ihrac eder. Henuz para hareketi yok; sadece sale",
+        "penceresi acilir. Token mint edilmez."
+      ],
       "discriminator": [
         89,
         175,
@@ -606,125 +495,6 @@
           }
         },
         {
-          "name": "bond_mint",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  105,
-                  110,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "bond_state"
-              }
-            ]
-          }
-        },
-        {
-          "name": "bond_token_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "bond_state"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "bond_mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "associated_token_program",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-        },
-        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -741,7 +511,112 @@
       ]
     },
     {
+      "name": "reclaim_residual",
+      "docs": [
+        "Vade + RESIDUAL_GRACE sonrasi issuer, yield/principal vault'larinda kalan",
+        "(yuvarlamadan artan dust + zamaninda itfa edilmemis sahipsiz) bakiyeyi",
+        "tahsil eder. Escrow vault'a DOKUNMAZ (orasi lender'larindir)."
+      ],
+      "discriminator": [
+        235,
+        204,
+        165,
+        51,
+        175,
+        31,
+        150,
+        206
+      ],
+      "accounts": [
+        {
+          "name": "bond_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "yield_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  121,
+                  105,
+                  101,
+                  108,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "principal_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  105,
+                  110,
+                  99,
+                  105,
+                  112,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "issuer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "redeem_bond",
+      "docs": [
+        "Vade sonrasi ve anapara TAM fonlandiysa lender anaparasini (par = katki)",
+        "principal vault'tan geri alir. Her pozisyon yalnizca bir kez itfa edilir."
+      ],
       "discriminator": [
         237,
         148,
@@ -751,6 +626,112 @@
         181,
         75,
         170
+      ],
+      "accounts": [
+        {
+          "name": "bond_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "principal_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  105,
+                  110,
+                  99,
+                  105,
+                  112,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "investor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "investor_position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state"
+              },
+              {
+                "kind": "account",
+                "path": "investor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "refund",
+      "docs": [
+        "Funding basarisizsa (vade gecti + goal'a ulasilmadi) ya da issuer",
+        "ABANDON_GRACE icinde escrow'u cekmediyse, lender katkisini geri alir."
+      ],
+      "discriminator": [
+        2,
+        96,
+        183,
+        251,
+        63,
+        208,
+        46,
+        46
       ],
       "accounts": [
         {
@@ -776,108 +757,208 @@
           }
         },
         {
+          "name": "escrow_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
           "name": "investor",
           "writable": true,
           "signer": true
         },
         {
-          "name": "investor_bond_ata",
+          "name": "investor_position",
           "writable": true,
           "pda": {
             "seeds": [
               {
-                "kind": "account",
-                "path": "investor"
-              },
-              {
                 "kind": "const",
                 "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
                 ]
               },
               {
                 "kind": "account",
-                "path": "bond_state.bond_mint",
-                "account": "BondState"
+                "path": "bond_state"
+              },
+              {
+                "kind": "account",
+                "path": "investor"
               }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
+            ]
           }
         },
         {
-          "name": "bond_mint",
-          "writable": true
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_authority",
+      "docs": [
+        "Platform authority'sini (ve dolayisiyla fee alicisini) degistirir."
+      ],
+      "discriminator": [
+        133,
+        250,
+        37,
+        21,
+        110,
+        163,
+        26,
+        121
+      ],
+      "accounts": [
+        {
+          "name": "factory_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  99,
+                  116,
+                  111,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_authority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "withdraw_escrow",
+      "docs": [
+        "Funding basariliysa (goal'a ulasildi + pencere kapandi) issuer escrow'u",
+        "ceker. Toplanan tutarin %1'i platform authority'sine, kalani issuer'a."
+      ],
+      "discriminator": [
+        81,
+        84,
+        226,
+        128,
+        245,
+        47,
+        96,
+        104
+      ],
+      "accounts": [
+        {
+          "name": "bond_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "factory_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  99,
+                  116,
+                  111,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "issuer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "fee_recipient",
+          "writable": true
         },
         {
           "name": "system_program",
@@ -936,18 +1017,18 @@
     },
     {
       "code": 6001,
-      "name": "BondAlreadyMatured",
-      "msg": "Bond has already matured"
+      "name": "InvalidParams",
+      "msg": "Invalid parameters"
     },
     {
       "code": 6002,
-      "name": "BondNotMatured",
-      "msg": "Bond has not matured yet"
+      "name": "InvalidLoanAgreementHash",
+      "msg": "Invalid loan agreement hash"
     },
     {
       "code": 6003,
-      "name": "PrincipalNotDeposited",
-      "msg": "Principal has not been deposited"
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow"
     },
     {
       "code": 6004,
@@ -956,23 +1037,73 @@
     },
     {
       "code": 6005,
-      "name": "InvalidLoanAgreementHash",
-      "msg": "Invalid loan agreement hash"
+      "name": "FundingClosed",
+      "msg": "Funding window is closed"
     },
     {
       "code": 6006,
-      "name": "InvalidMaturityDate",
-      "msg": "Invalid maturity date"
+      "name": "FundingOpen",
+      "msg": "Funding window is still open"
     },
     {
       "code": 6007,
+      "name": "GoalNotReached",
+      "msg": "Funding goal not reached"
+    },
+    {
+      "code": 6008,
+      "name": "AlreadyFunded",
+      "msg": "Bond is already funded"
+    },
+    {
+      "code": 6009,
+      "name": "NotFunded",
+      "msg": "Bond is not funded yet"
+    },
+    {
+      "code": 6010,
+      "name": "RefundNotAvailable",
+      "msg": "Refund is not available"
+    },
+    {
+      "code": 6011,
+      "name": "AlreadyRefunded",
+      "msg": "Position already refunded"
+    },
+    {
+      "code": 6012,
+      "name": "NothingToRefund",
+      "msg": "Nothing to refund"
+    },
+    {
+      "code": 6013,
+      "name": "PrincipalNotFunded",
+      "msg": "Principal not fully funded"
+    },
+    {
+      "code": 6014,
+      "name": "NotMatured",
+      "msg": "Bond has not matured yet"
+    },
+    {
+      "code": 6015,
+      "name": "AlreadyRedeemed",
+      "msg": "Position already redeemed"
+    },
+    {
+      "code": 6016,
+      "name": "NothingToRedeem",
+      "msg": "Nothing to redeem"
+    },
+    {
+      "code": 6017,
       "name": "NothingToClaim",
       "msg": "Nothing to claim"
     },
     {
-      "code": 6008,
-      "name": "InvalidAmount",
-      "msg": "Invalid amount"
+      "code": 6018,
+      "name": "TooEarly",
+      "msg": "Too early"
     }
   ],
   "types": [
@@ -1006,8 +1137,16 @@
             "type": "u16"
           },
           {
+            "name": "sale_deadline",
+            "type": "i64"
+          },
+          {
             "name": "maturity_timestamp",
             "type": "i64"
+          },
+          {
+            "name": "funding_goal",
+            "type": "u64"
           },
           {
             "name": "max_supply",
@@ -1015,6 +1154,10 @@
           },
           {
             "name": "tokens_sold",
+            "type": "u64"
+          },
+          {
+            "name": "total_raised",
             "type": "u64"
           },
           {
@@ -1026,11 +1169,11 @@
             "type": "u64"
           },
           {
-            "name": "is_matured",
+            "name": "funded",
             "type": "bool"
           },
           {
-            "name": "principal_deposited",
+            "name": "principal_funded",
             "type": "bool"
           },
           {
@@ -1041,14 +1184,6 @@
                 32
               ]
             }
-          },
-          {
-            "name": "bond_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "bond_token_vault",
-            "type": "pubkey"
           },
           {
             "name": "bump",
@@ -1091,8 +1226,24 @@
             "type": "pubkey"
           },
           {
-            "name": "last_yield_snapshot",
+            "name": "units",
             "type": "u64"
+          },
+          {
+            "name": "contribution",
+            "type": "u64"
+          },
+          {
+            "name": "yield_claimed",
+            "type": "u64"
+          },
+          {
+            "name": "redeemed",
+            "type": "bool"
+          },
+          {
+            "name": "refunded",
+            "type": "bool"
           },
           {
             "name": "bump",
@@ -1123,8 +1274,16 @@
             "type": "u16"
           },
           {
+            "name": "sale_deadline",
+            "type": "i64"
+          },
+          {
             "name": "maturity_timestamp",
             "type": "i64"
+          },
+          {
+            "name": "funding_goal",
+            "type": "u64"
           },
           {
             "name": "max_supply",

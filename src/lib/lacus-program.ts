@@ -25,6 +25,12 @@ export function getLacusProgramReadOnly() {
   return new Program(IDL as any, provider);
 }
 
+function bondIdSeed(bondId: number) {
+  const buf = Buffer.alloc(8);
+  buf.writeBigUInt64LE(BigInt(bondId));
+  return buf;
+}
+
 export function getFactoryStatePDA() {
   return PublicKey.findProgramAddressSync(
     [Buffer.from('factory')],
@@ -33,17 +39,32 @@ export function getFactoryStatePDA() {
 }
 
 export function getBondStatePDA(bondId: number) {
-  const bondIdBuffer = Buffer.alloc(8);
-  bondIdBuffer.writeBigUInt64LE(BigInt(bondId));
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('bond'), bondIdBuffer],
+    [Buffer.from('bond'), bondIdSeed(bondId)],
     LACUS_PROGRAM_ID
   );
 }
 
-export function getBondMintPDA(bondStatePubkey: PublicKey) {
+/** Escrow vault — lender katkıları (funding sırasında) burada tutulur. */
+export function getEscrowVaultPDA(bondId: number) {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('mint'), bondStatePubkey.toBuffer()],
+    [Buffer.from('escrow'), bondIdSeed(bondId)],
+    LACUS_PROGRAM_ID
+  );
+}
+
+/** Yield vault — issuer'ın yatırdığı kuponlar. */
+export function getYieldVaultPDA(bondId: number) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('yield'), bondIdSeed(bondId)],
+    LACUS_PROGRAM_ID
+  );
+}
+
+/** Principal vault — issuer'ın yatırdığı itfa anaparası. */
+export function getPrincipalVaultPDA(bondId: number) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('principal'), bondIdSeed(bondId)],
     LACUS_PROGRAM_ID
   );
 }
