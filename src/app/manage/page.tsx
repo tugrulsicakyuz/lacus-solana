@@ -12,7 +12,7 @@ import { toast } from "sonner";
 interface Bond {
   id: number; issuer_name: string; symbol: string; apy: number; price_per_token: number;
   maturity_months: number; contract_address?: string; total_issue_size: number;
-  bondId?: number; issuer?: string; source?: 'onchain' | 'supabase';
+  bondId?: number; issuer?: string; source?: 'onchain' | 'supabase'; funded?: boolean;
 }
 
 export default function ManagePage() {
@@ -71,6 +71,7 @@ export default function ManagePage() {
               maturity_months: maturityMonths,
               total_issue_size: totalRaise,
               contract_address: bond.issuer.toString(),
+              funded: bond.funded,
               source: 'onchain',
             });
           });
@@ -184,24 +185,34 @@ export default function ManagePage() {
                       <td className="r num">{bond.total_issue_size.toFixed(4)} SOL</td>
                       <td className="r">
                         {bond.source === 'onchain' ? (
-                          <div className="mgmt-deposit-row">
-                            <input
-                              type="number"
-                              placeholder="SOL"
-                              value={yieldAmounts[bond.bondId!] || ''}
-                              onChange={(e) => setYieldAmounts(prev => ({ ...prev, [bond.bondId!]: e.target.value }))}
-                              className="lx-input-sm num"
-                            />
-                            <button
-                              onClick={() => handleDepositYield(bond.bondId!, parseFloat(yieldAmounts[bond.bondId!] || '0'))}
-                              disabled={depositingYield === bond.bondId}
+                          bond.funded ? (
+                            <div className="mgmt-deposit-row">
+                              <input
+                                type="number"
+                                placeholder="SOL"
+                                value={yieldAmounts[bond.bondId!] || ''}
+                                onChange={(e) => setYieldAmounts(prev => ({ ...prev, [bond.bondId!]: e.target.value }))}
+                                className="lx-input-sm num"
+                              />
+                              <button
+                                onClick={() => handleDepositYield(bond.bondId!, parseFloat(yieldAmounts[bond.bondId!] || '0'))}
+                                disabled={depositingYield === bond.bondId}
+                                className="lx-btn lx-btn-ghost lx-btn-sm"
+                              >
+                                {depositingYield === bond.bondId
+                                  ? <Loader2 size={11} className="animate-spin" />
+                                  : 'PAY'}
+                              </button>
+                            </div>
+                          ) : (
+                            <Link
+                              href="/dashboard"
                               className="lx-btn lx-btn-ghost lx-btn-sm"
+                              title="Yield/principal yatirmadan once escrow'u cekip tahvili funded yapmalisin (Dashboard > Bonds issued > Withdraw escrow)"
                             >
-                              {depositingYield === bond.bondId
-                                ? <Loader2 size={11} className="animate-spin" />
-                                : 'PAY'}
-                            </button>
-                          </div>
+                              Fund in Dashboard →
+                            </Link>
+                          )
                         ) : (
                           <span className="num" style={{ color: "var(--ink-3)" }}>--</span>
                         )}
