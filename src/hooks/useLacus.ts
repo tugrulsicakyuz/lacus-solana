@@ -23,6 +23,22 @@ const isValidBond = (bond: BondState) =>
   Number(bond.maxSupply) > 0 &&
   Number(bond.maturityTimestamp) > 1700000000; // Kasım 2023 sonrası
 
+// Solana/Anchor hata mesajını insanca çıkar (wallet'ın jenerik "Unexpected error"u yerine)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function describeSolanaError(e: any): string {
+  if (!e) return 'Unknown error';
+  if (e.error?.errorMessage) {
+    const code = e.error?.errorCode?.code ? `${e.error.errorCode.code}: ` : '';
+    return `${code}${e.error.errorMessage}`;
+  }
+  const logs: string[] | undefined = e.logs || e.transactionLogs;
+  if (Array.isArray(logs) && logs.length) {
+    const hit = logs.find((l) => /error|failed|insufficient|custom program error/i.test(l));
+    if (hit) return hit;
+  }
+  return e.message || String(e);
+}
+
 export interface PortfolioHolding {
   bond: BondState;
   units: number;
@@ -42,12 +58,36 @@ export function useLacusProgram() {
   const program = useMemo(() => wallet ? getLacusProgram(wallet) : null, [wallet]);
 
   const sendAndConfirm = useCallback(async (tx: Transaction) => {
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-    tx.recentBlockhash = blockhash;
-    tx.feePayer = wallet!.publicKey;
-    const sig = await sendTransaction(tx, connection);
-    await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
-    return sig;
+    try {
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+      tx.recentBlockhash = blockhash;
+      tx.feePayer = wallet!.publicKey;
+
+      // Tanı: göndermeden önce simüle et, gerçek program log'larını yakala
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sim = await connection.simulateTransaction(tx as any);
+        if (sim?.value?.err) {
+          console.error('[Lacus] simulate failed:', JSON.stringify(sim.value.err));
+          console.error('[Lacus] program logs:\n' + (sim.value.logs || []).join('\n'));
+        }
+      } catch (simErr) {
+        console.warn('[Lacus] simulate threw (devam ediliyor):', simErr);
+      }
+
+      const sig = await sendTransaction(tx, connection);
+      await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
+      return sig;
+    } catch (e: unknown) {
+      console.error('[Lacus] tx failed:', e);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const any = e as any;
+      if (any?.logs) console.error('[Lacus] error logs:\n' + any.logs.join('\n'));
+      if (typeof any?.getLogs === 'function') {
+        try { console.error('[Lacus] getLogs():', await any.getLogs(connection)); } catch { /* yoksay */ }
+      }
+      throw new Error(describeSolanaError(any));
+    }
   }, [connection, sendTransaction, wallet]);
 
   const fetchAllBonds = useCallback(async () => {
@@ -184,6 +224,16 @@ export function useLacusProgram() {
 
     const bondId = factoryState.bondCount.toNumber();
     const [bondStatePDA] = getBondStatePDA(bondId);
+
+    console.info('[Lacus] issueBond →', {
+      programId: program.programId.toBase58(),
+      bondId,
+      faceValue: params.faceValue,
+      maxSupply: params.maxSupply,
+      fundingGoal: params.fundingGoal,
+      saleDeadline: params.saleDeadline,
+      maturityTimestamp: params.maturityTimestamp,
+    });
 
     const tx = await program.methods
       .issueBond({
