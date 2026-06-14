@@ -3,11 +3,11 @@
 import Link from "next/link";
 
 const features = [
-  { n: "001", title: "Peer-to-peer", sub: "Direct Trading", desc: "List your bond tokens at your price. No intermediary, no custody, no counterparty risk." },
+  { n: "001", title: "Peer-to-peer", sub: "Direct Trading", desc: "List your position at your price. No intermediary, no custody, no counterparty risk." },
   { n: "002", title: "Instant settlement", sub: "T+0", desc: "Settlement between two wallets, one transaction. No clearing house, no T+2 delay." },
   { n: "003", title: "Transparent", sub: "Fully On-Chain", desc: "Every bid, every ask, every fill: on-chain and auditable. Unlike a CDO, nothing is hidden." },
-  { n: "004", title: "Verified", sub: "Lacus Instruments Only", desc: "Terms, maturity, coupon and issuer verified on-chain. No unvetted instruments enter the book." },
-  { n: "005", title: "Non-custodial", sub: "Your Keys, Your Tokens", desc: "No bridge, no wrapped asset. SPL tokens trade directly from your wallet throughout." },
+  { n: "004", title: "Verifiable", sub: "Open On-Chain", desc: "Terms, maturity, coupon and issuer are recorded on-chain for anyone to check. Issuance is permissionless, so you do your own due diligence." },
+  { n: "005", title: "Non-custodial", sub: "Your Keys, Your Funds", desc: "No bridge, no wrapped asset, no custody. Positions settle directly between wallets through program-owned escrow." },
   { n: "006", title: "Continuous", sub: "Always Open", desc: "No trading hours. No gates. A permanent, always-on market for structured on-chain credit." },
 ];
 
@@ -86,8 +86,8 @@ export default function SecondaryMarket() {
           <div>
             <h2>Earn yield now.</h2>
             <p>
-              While secondary trading is being built, the primary market is live. Browse verified
-              issuers, pick your yield, and buy directly, no intermediary.
+              While secondary trading is being built, the primary market is live. Browse live
+              issues, pick your yield, and lend directly, no intermediary.
             </p>
           </div>
           <Link href="/primary" className="lx-btn">Go to Primary Market</Link>

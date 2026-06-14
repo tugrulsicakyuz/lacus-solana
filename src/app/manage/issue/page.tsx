@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { useLacusProgram } from '@/hooks/useLacus';
 import { formatDate } from '@/lib/format';
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { retryUpsert } from '@/lib/supabase-retry';
 import { buildAndHashAgreement, AGREEMENT_TEMPLATE_VERSION, shortHash, type AgreementTerms } from '@/lib/loan-agreement';
 import { requireKyc } from '@/lib/kyc';
 
@@ -103,17 +103,17 @@ export default function IssueBondPage() {
         loanAgreementHash: agreement.hashBytes,
       });
 
-      // Zincire yalnızca hash gitti; sözleşme metnini Supabase'e kaydet.
-      const { error: agErr } = await supabase.from('agreements').upsert({
+      // Zincire yalnızca hash gitti; sözleşme metnini Supabase'e kaydet (transient hatada retry).
+      const agRes = await retryUpsert('agreements', {
         bond_id: result.bondId,
         template_version: AGREEMENT_TEMPLATE_VERSION,
         terms_json: agreement.terms,
         agreement_text: agreement.text,
         sha256_hex: agreement.hashHex,
         issuer_wallet: publicKey.toBase58(),
-      });
-      if (agErr) {
-        toast.warning('Bond issued, but the agreement copy was not saved', { description: agErr.message });
+      }, 3, 'bond_id');
+      if (!agRes.success) {
+        toast.warning('Bond issued, but the agreement copy was not saved', { description: agRes.error });
       }
 
       toast.success('Bond issued on Solana!', {
@@ -300,7 +300,7 @@ export default function IssueBondPage() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ width: '100%', maxWidth: 560, background: '#fff', color: '#111', borderRadius: 12, padding: '20px 22px', maxHeight: '85vh', overflow: 'auto' }}
+            style={{ width: '100%', maxWidth: 560, background: 'var(--paper)', color: 'var(--ink)', borderRadius: 12, padding: '20px 22px', maxHeight: '85vh', overflow: 'auto' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <strong style={{ fontSize: 18 }}>Review and publish</strong>

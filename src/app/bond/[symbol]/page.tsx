@@ -6,20 +6,33 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { supabase } from "@/lib/supabase";
-import { getLacusProgramReadOnly, getBondStatePDA } from "@/lib/lacus-program";
-import { hashAgreementText, bytesToHex, shortHash } from "@/lib/loan-agreement";
+import {
+  getLacusProgramReadOnly,
+  getBondStatePDA,
+  getInvestorPositionPDA,
+} from "@/lib/lacus-program";
+import { LACUS_PROGRAM_ID_STRING } from "@/config/program-id";
+import { hashAgreementText, shortHash, bytesToHex } from "@/lib/loan-agreement";
+import { formatSOL, formatSOLCompact, formatDate, timestampToMonths, maturityLabel } from "@/lib/format";
 
 /* ── Types ── */
-interface Bond {
-  id: number;
-  issuer_name: string;
+// Zincirden okunan tahvil (number'a indirgenmiş) + Supabase metadata.
+interface BondView {
+  bondId: number;
+  issuer: string;
   symbol: string;
-  apy: number;
-  maturity_months: number;
-  total_issue_size: number;
-  price_per_token: number;
-  filled_percentage: number;
-  contract_address?: string;
+  name: string;
+  issuerName: string;
+  description?: string;
+  faceValueLamports: number;
+  couponRateBps: number;
+  maturityTimestamp: number;
+  saleDeadline: number;
+  maxSupply: number;
+  tokensSold: number;
+  totalRaised: number;
+  funded: boolean;
+  loanAgreementHash: number[];
 }
 
 interface BondDocument {
@@ -28,6 +41,13 @@ interface BondDocument {
   file_name: string;
   file_path: string;
   created_at: string;
+}
+
+interface Position {
+  units: number;
+  contribution: number; // lamport
+  redeemed: boolean;
+  refunded: boolean;
 }
 
 const DOC_LABELS: Record<string, string> = {
@@ -39,37 +59,17 @@ const DOC_LABELS: Record<string, string> = {
   fund_usage_plan:           "Fund Usage Plan",
 };
 
-/* ── Helpers ── */
-// Kontrat native SOL ile çalışıyor (system_program::transfer); tüm tutarlar SOL.
-function fmtCurrency(n: number): string {
-  return `${n.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} SOL`;
-}
-
-function fmtCurrencyCompact(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M SOL`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K SOL`;
-  return fmtCurrency(n);
-}
-
-function maturityLabel(months: number): string {
-  if (months < 12) return `${months}Mo`;
-  const years = Math.floor(months / 12);
-  const rem = months % 12;
-  return rem === 0 ? `${years}Y` : `${years}Y ${rem}Mo`;
-}
-
 /* ── Page ── */
 function BondDetailContent() {
   const params = useParams();
   const symbol = (params?.symbol as string ?? "").toUpperCase();
   const { publicKey } = useWallet();
-  const address = publicKey?.toBase58() ?? null;
 
-  const [bond, setBond] = useState<Bond | null>(null);
+  const [bond, setBond] = useState<BondView | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [marketData, setMarketData] = useState({ volume24h: 0, totalLiquidity: 0, holderCount: 0 });
-  const [userHolding, setUserHolding] = useState<{ balance: number; unclaimed_yield: number } | null>(null);
+  const [holderCount, setHolderCount] = useState(0);
+  const [position, setPosition] = useState<Position | null>(null);
   const [documents, setDocuments] = useState<BondDocument[]>([]);
   const [agreementCheck, setAgreementCheck] = useState<{
     status: "loading" | "verified" | "mismatch" | "none" | "error";
@@ -77,67 +77,100 @@ function BondDetailContent() {
     text?: string;
   }>({ status: "loading" });
 
-  /* fetch bond */
+  /* fetch bond (on-chain primary) + metadata (Supabase optional) + holder count */
   useEffect(() => {
     if (!symbol) return;
-    async function fetchBond() {
-      const { data, error } = await supabase
-        .from("bonds")
-        .select("*")
-        .eq("symbol", symbol)
-        .maybeSingle();
+    let cancelled = false;
 
-      if (error || !data) {
-        setNotFound(true);
-      } else {
-        setBond(data as Bond);
+    async function fetchBond() {
+      try {
+        const program = getLacusProgramReadOnly();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const all = await (program.account as any).bondState.all();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const hit = all.find((b: any) => (b.account.symbol || "").toUpperCase() === symbol);
+
+        if (!hit) {
+          if (!cancelled) { setNotFound(true); setLoading(false); }
+          return;
+        }
+
+        const acc = hit.account;
+        const bondId = Number(acc.bondId);
+
+        // İsteğe bağlı Supabase metadata (issuer adı / açıklama).
+        const { data: meta } = await supabase
+          .from("bonds")
+          .select("issuer_name, description")
+          .eq("symbol", acc.symbol)
+          .maybeSingle();
+
+        const view: BondView = {
+          bondId,
+          issuer: acc.issuer.toString(),
+          symbol: acc.symbol,
+          name: acc.name,
+          issuerName: meta?.issuer_name || acc.name || `${acc.issuer.toString().slice(0, 6)}…${acc.issuer.toString().slice(-4)}`,
+          description: meta?.description ?? undefined,
+          faceValueLamports: Number(acc.faceValue),
+          couponRateBps: acc.couponRateBps,
+          maturityTimestamp: Number(acc.maturityTimestamp),
+          saleDeadline: Number(acc.saleDeadline),
+          maxSupply: Number(acc.maxSupply),
+          tokensSold: Number(acc.tokensSold),
+          totalRaised: Number(acc.totalRaised),
+          funded: !!acc.funded,
+          loanAgreementHash: acc.loanAgreementHash as number[],
+        };
+        if (!cancelled) { setBond(view); setLoading(false); }
+
+        // Lender sayısı: bu tahvile ait pozisyonlar (bond_state offset 8+32=40).
+        try {
+          const [bondPda] = getBondStatePDA(bondId);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const positions = await (program.account as any).investorPosition.all([
+            { memcmp: { offset: 40, bytes: bondPda.toBase58() } },
+          ]);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const holders = positions.filter((p: any) => Number(p.account.units) > 0).length;
+          if (!cancelled) setHolderCount(holders);
+        } catch { /* yoksay */ }
+      } catch (e) {
+        console.error("fetchBond error:", e);
+        if (!cancelled) { setNotFound(true); setLoading(false); }
       }
-      setLoading(false);
     }
     fetchBond();
+    return () => { cancelled = true; };
   }, [symbol]);
 
-  /* fetch market data */
+  /* fetch this wallet's on-chain position */
   useEffect(() => {
-    if (!bond) return;
-    async function fetchMarket() {
-      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { data: txs } = await supabase
-        .from("transactions")
-        .select("usdc_amount")
-        .eq("bond_symbol", bond!.symbol)
-        .gte("created_at", since);
-      const volume = (txs ?? []).reduce((s, t) => s + (t.usdc_amount || 0), 0);
+    if (!bond || !publicKey) { setPosition(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const program = getLacusProgramReadOnly();
+        const [bondPda] = getBondStatePDA(bond.bondId);
+        const [posPda] = getInvestorPositionPDA(bondPda, publicKey);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pos = await (program.account as any).investorPosition.fetch(posPda);
+        if (!cancelled) {
+          setPosition({
+            units: Number(pos.units),
+            contribution: Number(pos.contribution),
+            redeemed: !!pos.redeemed,
+            refunded: !!pos.refunded,
+          });
+        }
+      } catch {
+        if (!cancelled) setPosition(null); // pozisyon hesabı yok = bu tahvilde holding yok
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [bond, publicKey]);
 
-      const { data: holdings } = await supabase
-        .from("user_holdings")
-        .select("balance")
-        .eq("bond_symbol", bond!.symbol);
-      const totalTokens = (holdings ?? []).reduce((s, h) => s + (h.balance || 0), 0);
-      const liquidity = totalTokens * (bond!.price_per_token || 0);
-      const holderCount = (holdings ?? []).filter((h) => h.balance > 0).length;
-
-      setMarketData({ volume24h: volume, totalLiquidity: liquidity, holderCount });
-    }
-    fetchMarket();
-  }, [bond]);
-
-  /* fetch user holding */
-  useEffect(() => {
-    if (!bond || !address) return;
-    async function fetchHolding() {
-      const { data } = await supabase
-        .from("user_holdings")
-        .select("balance, unclaimed_yield")
-        .eq("wallet_address", address!.toLowerCase())
-        .eq("bond_symbol", bond!.symbol)
-        .maybeSingle();
-      setUserHolding(data ?? null);
-    }
-    fetchHolding();
-  }, [bond, address]);
-
-  /* fetch documents */
+  /* fetch issuer documents (Supabase) */
   useEffect(() => {
     if (!bond) return;
     async function fetchDocs() {
@@ -158,16 +191,11 @@ function BondDetailContent() {
     (async () => {
       setAgreementCheck({ status: "loading" });
       try {
-        const program = getLacusProgramReadOnly();
-        const [pda] = getBondStatePDA(bond.id);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const onchain = await (program.account as any).bondState.fetch(pda);
-        const onchainHex = bytesToHex(onchain.loanAgreementHash as number[]);
-
+        const onchainHex = bytesToHex(bond.loanAgreementHash);
         const { data: ag } = await supabase
           .from("agreements")
           .select("agreement_text")
-          .eq("bond_id", bond.id)
+          .eq("bond_id", bond.bondId)
           .maybeSingle();
 
         if (!ag?.agreement_text) {
@@ -209,7 +237,7 @@ function BondDetailContent() {
         <div className="lx-pagehead">
           <div className="lx-kicker">Bond detail</div>
           <h1>Bond Not Found</h1>
-          <p className="lx-lede">No bond found with symbol &ldquo;{symbol}&rdquo;</p>
+          <p className="lx-lede">No on-chain bond found with symbol &ldquo;{symbol}&rdquo;</p>
         </div>
         <div style={{ marginTop: 28, paddingBottom: 96 }}>
           <Link href="/primary" className="lx-btn lx-btn-ghost">Back to Markets</Link>
@@ -218,11 +246,19 @@ function BondDetailContent() {
     );
   }
 
-  const totalSupply = bond.price_per_token > 0 ? bond.total_issue_size / bond.price_per_token : 0;
-  const soldTokens = totalSupply * (bond.filled_percentage / 100);
-  const remainingTokens = totalSupply - soldTokens;
-  const fillPct = Math.min(bond.filled_percentage, 100);
-  const isSoldOut = bond.filled_percentage >= 100;
+  const faceValueSOL  = bond.faceValueLamports / 1e9;
+  const totalSupply   = bond.maxSupply;
+  const totalValueSOL = faceValueSOL * totalSupply;
+  const remaining     = Math.max(0, bond.maxSupply - bond.tokensSold);
+  const apy           = bond.couponRateBps / 100;
+  const months        = timestampToMonths(bond.maturityTimestamp);
+  const fillPct       = bond.maxSupply > 0 ? Math.min((bond.tokensSold / bond.maxSupply) * 100, 100) : 0;
+  const nowSec        = Math.floor(Date.now() / 1000);
+  const isSoldOut     = bond.tokensSold >= bond.maxSupply;
+  const saleClosed    = bond.funded || nowSec >= bond.saleDeadline;
+  const closed        = isSoldOut || saleClosed;
+  const raisedSOL     = bond.totalRaised / 1e9;
+  const [bondPda]     = getBondStatePDA(bond.bondId);
 
   return (
     <div className="lx-wrap">
@@ -231,18 +267,20 @@ function BondDetailContent() {
         <div className="lx-kicker">
           Bond detail · {isSoldOut
             ? <span style={{ color: "var(--ink-2)" }}>SOLD OUT</span>
+            : saleClosed
+            ? <span style={{ color: "var(--ink-2)" }}>CLOSED</span>
             : <span>● OPEN</span>}
         </div>
-        <h1>{bond.symbol}, {bond.issuer_name}</h1>
+        <h1>{bond.symbol}, {bond.issuerName}</h1>
       </div>
 
       {/* Price strip */}
       <div className="bd-pricestrip">
-        <div><div className="k">Price per unit</div><div className="v num">{fmtCurrency(bond.price_per_token)}</div></div>
-        <div><div className="k">Coupon</div><div className="v num">{bond.apy}%</div></div>
-        <div><div className="k">Maturity</div><div className="v num">{maturityLabel(bond.maturity_months)}</div></div>
-        <div><div className="k">Total issue</div><div className="v num">{fmtCurrencyCompact(bond.total_issue_size)}</div></div>
-        <div><div className="k">Investors</div><div className="v num">{marketData.holderCount > 0 ? marketData.holderCount : "--"}</div></div>
+        <div><div className="k">Face value</div><div className="v num">{formatSOL(bond.faceValueLamports)} SOL</div></div>
+        <div><div className="k">Coupon</div><div className="v num">{apy}%</div></div>
+        <div><div className="k">Maturity</div><div className="v num">{maturityLabel(months)}</div></div>
+        <div><div className="k">Total issue</div><div className="v num">{formatSOLCompact(totalValueSOL)}</div></div>
+        <div><div className="k">Lenders</div><div className="v num">{holderCount > 0 ? holderCount : "--"}</div></div>
       </div>
 
       <div className="bd-grid">
@@ -253,25 +291,26 @@ function BondDetailContent() {
           <div className="lx-drule"></div>
           <div style={{ paddingTop: 18 }}>
             <dl className="lx-dl" style={{ maxWidth: 460 }}>
-              <dt>Issuer</dt><dd>{bond.issuer_name}</dd>
+              <dt>Issuer</dt><dd>{bond.issuerName}</dd>
               <dt>Symbol</dt><dd className="num">{bond.symbol}</dd>
-              <dt>Total supply</dt><dd className="num">{totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} units</dd>
-              <dt>Total value</dt><dd className="num">{fmtCurrencyCompact(bond.total_issue_size)}</dd>
-              <dt>Remaining</dt><dd className="num">{remainingTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} units</dd>
+              <dt>Total supply</dt><dd className="num">{totalSupply.toLocaleString("en-US")} units</dd>
+              <dt>Total value</dt><dd className="num">{formatSOLCompact(totalValueSOL)}</dd>
+              <dt>Remaining</dt><dd className="num">{remaining.toLocaleString("en-US")} units</dd>
               <dt>Network</dt><dd>Solana Devnet</dd>
               <dt>Structure</dt><dd>Bilateral loan agreement, peer to peer</dd>
             </dl>
           </div>
 
-          {/* Market data */}
+          {/* Subscription (on-chain) */}
           <div className="lx-subsection">
-            <h3 className="lx-subhead">Market data</h3>
+            <h3 className="lx-subhead">Subscription</h3>
             <div className="lx-drule"></div>
             <div style={{ paddingTop: 18 }}>
               <dl className="lx-dl" style={{ maxWidth: 460 }}>
-                <dt>24h volume</dt><dd className="num">{marketData.volume24h > 0 ? fmtCurrencyCompact(marketData.volume24h) : "--"}</dd>
-                <dt>Total liquidity</dt><dd className="num">{marketData.totalLiquidity > 0 ? fmtCurrencyCompact(marketData.totalLiquidity) : "--"}</dd>
-                <dt>Investors</dt><dd className="num">{marketData.holderCount > 0 ? `${marketData.holderCount} addresses` : "--"}</dd>
+                <dt>Subscribed</dt><dd className="num">{fillPct.toFixed(1)}%</dd>
+                <dt>Units sold</dt><dd className="num">{bond.tokensSold.toLocaleString("en-US")} / {bond.maxSupply.toLocaleString("en-US")}</dd>
+                <dt>Raised</dt><dd className="num">{formatSOLCompact(raisedSOL)}</dd>
+                <dt>Status</dt><dd>{bond.funded ? "Funded" : saleClosed ? "Closed" : "Raising"}</dd>
               </dl>
             </div>
           </div>
@@ -280,21 +319,39 @@ function BondDetailContent() {
           <div className="lx-subsection">
             <h3 className="lx-subhead">On-chain</h3>
             <div className="lx-drule"></div>
-            {bond.contract_address ? (
-              <div className="lx-addr-row">
-                <span className="k">Contract</span>
-                <code className="num">{bond.contract_address}</code>
-                <a
-                  href={`https://explorer.solana.com/address/${bond.contract_address}?cluster=devnet`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  EXPLORER ↗
-                </a>
-              </div>
-            ) : (
-              <p className="lx-fn">Contract address not yet assigned. This bond is pending deployment.</p>
-            )}
+            <div className="lx-addr-row">
+              <span className="k">Bond account</span>
+              <code className="num">{bondPda.toBase58()}</code>
+              <a
+                href={`https://explorer.solana.com/address/${bondPda.toBase58()}?cluster=devnet`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                EXPLORER ↗
+              </a>
+            </div>
+            <div className="lx-addr-row">
+              <span className="k">Issuer</span>
+              <code className="num">{bond.issuer}</code>
+              <a
+                href={`https://explorer.solana.com/address/${bond.issuer}?cluster=devnet`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                EXPLORER ↗
+              </a>
+            </div>
+            <div className="lx-addr-row">
+              <span className="k">Program</span>
+              <code className="num">{LACUS_PROGRAM_ID_STRING}</code>
+              <a
+                href={`https://explorer.solana.com/address/${LACUS_PROGRAM_ID_STRING}?cluster=devnet`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                EXPLORER ↗
+              </a>
+            </div>
           </div>
 
           {/* Loan agreement */}
@@ -305,12 +362,12 @@ function BondDetailContent() {
               {agreementCheck.status === "loading" && <p className="lx-fn">Checking integrity…</p>}
               {agreementCheck.status === "verified" && (
                 <p className="lx-fn" style={{ color: "#1d9e75" }}>
-                  ✓ Integrity verified — on-chain hash {shortHash(agreementCheck.onchainHex ?? "")} matches the stored agreement.
+                  ✓ Integrity verified · on-chain hash {shortHash(agreementCheck.onchainHex ?? "")} matches the stored agreement.
                 </p>
               )}
               {agreementCheck.status === "mismatch" && (
                 <p className="lx-fn" style={{ color: "#c0392b" }}>
-                  ⚠ Hash mismatch — the stored agreement does not match the on-chain hash {shortHash(agreementCheck.onchainHex ?? "")}.
+                  ⚠ Hash mismatch · the stored agreement does not match the on-chain hash {shortHash(agreementCheck.onchainHex ?? "")}.
                 </p>
               )}
               {agreementCheck.status === "none" && (
@@ -365,41 +422,41 @@ function BondDetailContent() {
             </div>
             <div className="lx-ticket-body">
               <div className="lx-trow"><span>Bond</span><span className="v lx-sym">{bond.symbol}</span></div>
-              <div className="lx-trow"><span>Price per unit</span><span className="v num">{fmtCurrency(bond.price_per_token)}</span></div>
-              <div className="lx-trow"><span>Coupon</span><span className="v num">{bond.apy}%</span></div>
+              <div className="lx-trow"><span>Face value</span><span className="v num">{formatSOL(bond.faceValueLamports)} SOL / unit</span></div>
+              <div className="lx-trow"><span>Coupon</span><span className="v num">{apy}%</span></div>
+              <div className="lx-trow"><span>Maturity</span><span className="v num">{formatDate(bond.maturityTimestamp)}</span></div>
               <div className="lx-submeter" style={{ margin: "14px 0" }}>
-                <div className="cap"><span>Subscribed</span><span className="num">{fillPct}%</span></div>
+                <div className="cap"><span>Subscribed</span><span className="num">{fillPct.toFixed(1)}%</span></div>
                 <div className="bar"><i style={{ width: `${fillPct}%` }}></i></div>
-                <div className="fig num">{soldTokens.toLocaleString("en-US", { maximumFractionDigits: 0 })} of {totalSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} units</div>
+                <div className="fig num">{bond.tokensSold.toLocaleString("en-US")} of {bond.maxSupply.toLocaleString("en-US")} units</div>
               </div>
             </div>
-            <div className="lx-ticket-foot" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {isSoldOut ? (
-                <Link href={`/secondary?bond=${bond.symbol}`} className="lx-btn lx-btn-solid lx-btn-block">Trade on secondary</Link>
+            <div className="lx-ticket-foot">
+              {closed ? (
+                <p className="lx-fn" style={{ marginTop: 0 }}>
+                  {isSoldOut ? "This offering is fully sold." : "Subscription is closed for this offering."}
+                </p>
               ) : (
-                <>
-                  <Link href={`/primary?bond=${bond.symbol}`} className="lx-btn lx-btn-solid lx-btn-block">Buy units</Link>
-                  <Link href={`/secondary?bond=${bond.symbol}`} className="lx-btn lx-btn-ghost lx-btn-block">Secondary market</Link>
-                </>
+                <Link href={`/primary?bond=${bond.symbol}`} className="lx-btn lx-btn-solid lx-btn-block">Buy units</Link>
               )}
             </div>
             <div className="lx-finefoot">SOLANA DEVNET · TEST INSTRUMENTS</div>
           </div>
 
           {/* Your position */}
-          {address && userHolding && userHolding.balance > 0 && (
+          {publicKey && position && position.units > 0 && (
             <div className="bd-position">
               <h3 className="lx-subhead">Your position</h3>
               <div className="lx-drule"></div>
               <dl className="lx-dl" style={{ paddingTop: 14 }}>
-                <dt>Units</dt><dd className="num">{userHolding.balance.toLocaleString("en-US", { maximumFractionDigits: 4 })}</dd>
-                <dt>Value</dt><dd className="num">{fmtCurrency(userHolding.balance * bond.price_per_token)}</dd>
-                <dt>Accrued yield</dt><dd className="num">{fmtCurrency(userHolding.unclaimed_yield ?? 0)}</dd>
+                <dt>Units</dt><dd className="num">{position.units.toLocaleString("en-US")}</dd>
+                <dt>Contribution</dt><dd className="num">{formatSOL(position.contribution)} SOL</dd>
+                <dt>Status</dt><dd>{position.redeemed ? "Redeemed" : position.refunded ? "Refunded" : "Active"}</dd>
               </dl>
               <Link href="/dashboard" className="lx-readmore">View in Dashboard →</Link>
             </div>
           )}
-          {!address && (
+          {!publicKey && (
             <p className="lx-fn">Connect your wallet to view your position in this bond.</p>
           )}
         </div>

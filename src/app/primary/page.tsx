@@ -7,6 +7,7 @@ import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { retryUpsert } from "@/lib/supabase-retry";
 import { toast } from "sonner";
 import { useLacusProgram } from "@/hooks/useLacus";
 import { buildAgreementText, hashAgreementText, shortHash, type AgreementTerms } from "@/lib/loan-agreement";
@@ -179,13 +180,13 @@ function PrimaryContent() {
     try {
       const sig = await signMessage(new TextEncoder().encode(pending.hashHex));
       const sigB64 = btoa(String.fromCharCode(...sig));
-      const { error: accErr } = await supabase
-        .from("agreement_acceptances")
-        .upsert(
-          { bond_id: selected.bondId, investor_wallet: publicKey.toBase58(), sha256_hex: pending.hashHex, signature: sigB64 },
-          { onConflict: "bond_id,investor_wallet" }
-        );
-      if (accErr) toast.warning("Could not record acceptance, continuing", { description: accErr.message });
+      const accRes = await retryUpsert(
+        "agreement_acceptances",
+        { bond_id: selected.bondId, investor_wallet: publicKey.toBase58(), sha256_hex: pending.hashHex, signature: sigB64 },
+        3,
+        "bond_id,investor_wallet"
+      );
+      if (!accRes.success) toast.warning("Could not record acceptance, continuing", { description: accRes.error });
     } catch (e) {
       toast.error("Agreement not signed", { description: e instanceof Error ? e.message : undefined });
       setIsSigning(false);
@@ -368,7 +369,7 @@ function PrimaryContent() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ width: "100%", maxWidth: 560, background: "#fff", color: "#111", borderRadius: 12, padding: "20px 22px", maxHeight: "85vh", overflow: "auto" }}
+            style={{ width: "100%", maxWidth: 560, background: "var(--paper)", color: "var(--ink)", borderRadius: 12, padding: "20px 22px", maxHeight: "85vh", overflow: "auto" }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
               <strong style={{ fontSize: 18 }}>Loan agreement</strong>

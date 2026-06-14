@@ -6,8 +6,8 @@
 // gitmemesi için env override KASTEN kullanılmıyor (sabit hardcode).
 export const LACUS_PROGRAM_ID_STRING = 'BdRJSxsqbQZ12xuM9dcEQXuQ9R8AHvfTfMq6EppmEUoH';
 
-// Tanı: tarayıcı konsolunda aktif program ID'yi göster.
-if (typeof window !== 'undefined') {
+// Tanı: yalnızca development'ta aktif program ID'yi konsola yaz (prod'da sessiz).
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
   // eslint-disable-next-line no-console
   console.info('[Lacus] active program id =', LACUS_PROGRAM_ID_STRING);
 }

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { formatDate, timestampToMonths } from "@/lib/format";
+import { formatDate, timestampToMonths, formatSOLCompact } from "@/lib/format";
 import { useLacusProgram } from '@/hooks/useLacus';
 import type { BondState } from '@/types/lacus';
 
@@ -35,11 +35,6 @@ function getBondStatus(bond: { filled_percentage: number; maturityTimestamp: num
   if (bond.filled_percentage >= 100 || bond.maturityTimestamp < now) return "ended";
   return "live";
 }
-
-const fmtSOL = (n: number) =>
-  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(2)}M SOL`
-  : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K SOL`
-  : `${n.toFixed(4)} SOL`;
 
 export default function LaunchpadPage() {
   const [activeFilter, setActiveFilter] = useState<"all" | "live" | "ended">("all");
@@ -124,7 +119,7 @@ export default function LaunchpadPage() {
       <div className="lx-filters">
         <button className={`lx-chip ${activeFilter === "all" ? "on" : ""}`} onClick={() => setActiveFilter("all")}>All</button>
         <button className={`lx-chip ${activeFilter === "live" ? "on" : ""}`} onClick={() => setActiveFilter("live")}>Open</button>
-        <button className={`lx-chip ${activeFilter === "ended" ? "on" : ""}`} onClick={() => setActiveFilter("ended")}>Matured</button>
+        <button className={`lx-chip ${activeFilter === "ended" ? "on" : ""}`} onClick={() => setActiveFilter("ended")}>Closed</button>
         <div className="lp-count num">{filtered.length} offerings</div>
       </div>
 
@@ -153,7 +148,7 @@ export default function LaunchpadPage() {
                 <div className="lx-sheet-col">
                   <dl>
                     <dt>Face value</dt><dd className="num">{bond.price_per_token.toFixed(4)} SOL / unit</dd>
-                    <dt>Issue size</dt><dd className="num">{fmtSOL(bond.total_issue_size)}</dd>
+                    <dt>Issue size</dt><dd className="num">{formatSOLCompact(bond.total_issue_size)}</dd>
                     <dt>Units</dt><dd className="num">{bond.maxSupply.toLocaleString("en-US")}</dd>
                   </dl>
                 </div>

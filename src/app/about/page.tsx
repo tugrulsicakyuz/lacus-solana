@@ -2,8 +2,6 @@
 
 import { LACUS_PROGRAM_ID_STRING } from "@/config/program-id";
 
-const USDC_DEVNET = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
-
 export default function AboutPage() {
   return (
     <div className="lx-wrap">
@@ -26,7 +24,7 @@ export default function AboutPage() {
         <p>
           Lacus rebuilds that function as software. A bond here is a loan agreement between two
           parties. The terms live in a program account that neither side can change. Payments
-          execute on Solana, wallet to wallet, in USDC. The protocol is non-custodial: we provide
+          execute on Solana, wallet to wallet, in SOL. The protocol is non-custodial: we provide
           the paper and the rails, never the bank account.
         </p>
         <p>
@@ -81,9 +79,9 @@ export default function AboutPage() {
             <a href={`https://explorer.solana.com/address/${LACUS_PROGRAM_ID_STRING}?cluster=devnet`} target="_blank" rel="noopener noreferrer">EXPLORER ↗</a>
           </div>
           <div className="lx-addr-row">
-            <span className="k">USDC mint · devnet</span>
-            <code className="num">{USDC_DEVNET}</code>
-            <a href={`https://explorer.solana.com/address/${USDC_DEVNET}?cluster=devnet`} target="_blank" rel="noopener noreferrer">EXPLORER ↗</a>
+            <span className="k">Settlement</span>
+            <code className="num">Native SOL · Solana devnet</code>
+            <a href="https://explorer.solana.com/?cluster=devnet" target="_blank" rel="noopener noreferrer">EXPLORER ↗</a>
           </div>
           <div className="lx-addr-row">
             <span className="k">Source code</span>

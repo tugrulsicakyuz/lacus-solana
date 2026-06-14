@@ -4,7 +4,7 @@
 // hash üretilsin. Zincire yalnızca bu metnin hash'i gider (loan_agreement_hash);
 // metnin kendisi Supabase'de saklanır.
 
-export const AGREEMENT_TEMPLATE_VERSION = 'lacus-loan-v1';
+export const AGREEMENT_TEMPLATE_VERSION = 'lacus-loan-v2';
 
 // Dikkat: bondId BİLEREK yok. İhraç anında bondId henüz kesinleşmediği için
 // (factory.bond_count tx ile artar) hash'lenen metne bondId konmaz. Sözleşmeyi
@@ -44,7 +44,7 @@ export function buildAgreementText(t: AgreementTerms): string {
     `3. Coupon. The Borrower intends to pay a coupon of ${couponPct}% per annum, payable as yield deposited to the on-chain bond account.`,
     `4. Maturity. The bond matures on ${maturity} (UTC). On or after maturity, and once the Borrower has deposited principal, each Lender may redeem units for a pro-rata share of the deposited principal.`,
     '5. Repayment. The Borrower agrees to deposit coupon and principal to the on-chain bond account. Distribution to Lenders is executed by the Lacus smart contract; Lacus never takes custody of funds.',
-    '6. Transfer. Bond units are SPL tokens and may be transferable; the terms of this Agreement run with the units.',
+    '6. Non-transferable. Units are recorded as a non-transferable position in the Lacus program. They are not SPL tokens and cannot be transferred, sold, or traded. Each Lender\'s rights under this Agreement attach to their recorded position.',
     '7. Electronic acceptance. By signing this Agreement with their Solana wallet, each party consents to transact electronically and adopts the wallet signature as their signature on this exact document.',
     '8. Identity. Each party is responsible for any identity verification (KYC) required by the platform or by law before issuing or purchasing.',
     '',
