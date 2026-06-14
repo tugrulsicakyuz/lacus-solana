@@ -24,7 +24,6 @@ export default function IssueBondPage() {
   const [maturityDate, setMaturityDate] = useState('');
   const [maxSupply, setMaxSupply] = useState(1000);
   const [saleDeadlineDate, setSaleDeadlineDate] = useState('');
-  const [fundingGoalSOL, setFundingGoalSOL] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   // Loan agreement review/sign modal
@@ -57,7 +56,6 @@ export default function IssueBondPage() {
     const saleDeadline = Math.floor(new Date(saleDeadlineDate).getTime() / 1000);
     if (saleDeadline <= nowSec) { toast.error('Subscription close date must be in the future'); return; }
     if (maturityTimestamp <= saleDeadline) { toast.error('Maturity must be after the subscription close date'); return; }
-    if (fundingGoalSOL < 0 || fundingGoalSOL > faceValueSOL * maxSupply) { toast.error('Funding goal must be between 0 and the max raise'); return; }
 
     const terms: AgreementTerms = {
       issuer: publicKey.toBase58(),
@@ -98,9 +96,9 @@ export default function IssueBondPage() {
         couponRateBps: agreement.terms.couponRateBps,
         saleDeadline: Math.floor(new Date(saleDeadlineDate).getTime() / 1000),
         maturityTimestamp: agreement.terms.maturityTimestamp,
-        fundingGoal: fundingGoalSOL > 0
-          ? Math.round(fundingGoalSOL * 1_000_000_000)
-          : Math.round(faceValueSOL * maxSupply * 1_000_000_000),
+        // Funding goal = tam raise (birim fiyat × adet). Ayrı alan yok; kapanışa
+        // kadar tamamı satılmazsa lender'lar iade alır.
+        fundingGoal: agreement.terms.faceValueLamports * agreement.terms.maxSupply,
         maxSupply: agreement.terms.maxSupply,
         loanAgreementHash: agreement.hashBytes,
       });
@@ -128,7 +126,7 @@ export default function IssueBondPage() {
 
       setBondName(''); setBondSymbol(''); setFaceValueSOL(0.1);
       setCouponRateBps(800); setMaxSupply(1000); setMaturityDate('');
-      setSaleDeadlineDate(''); setFundingGoalSOL(0);
+      setSaleDeadlineDate('');
       setShowAgreement(false); setAgreement(null); setAccepted(false);
     } catch (err) {
       console.error('issueBond error:', err);
@@ -235,20 +233,7 @@ export default function IssueBondPage() {
                 value={saleDeadlineDate}
                 onChange={e => setSaleDeadlineDate(e.target.value)}
               />
-              <em className="help">Funding window end · must be before maturity</em>
-            </label>
-            <label className="lx-field">
-              <span>Funding goal · SOL</span>
-              <input
-                className="num"
-                type="number"
-                placeholder={(faceValueSOL * maxSupply).toFixed(4)}
-                min="0"
-                step="0.01"
-                value={fundingGoalSOL || ''}
-                onChange={e => setFundingGoalSOL(parseFloat(e.target.value) || 0)}
-              />
-              <em className="help num">Blank = full ({(faceValueSOL * maxSupply).toFixed(4)} SOL). If unmet by close, lenders are refunded.</em>
+              <em className="help num">Funding window end (before maturity). The full raise ({(faceValueSOL * maxSupply).toFixed(4)} SOL) must fill by this date, or lenders are refunded.</em>
             </label>
             <div className="lx-field full">
               <span>Loan agreement</span>
