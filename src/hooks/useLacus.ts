@@ -123,7 +123,7 @@ export function useLacusProgram() {
     try {
       setError(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const bonds = await withRetry(() => (readProgram.account as any).bondState.all(), 'fetchAllBonds');
+      const bonds = await withRetry<any[]>(() => (readProgram.account as any).bondState.all(), 'fetchAllBonds');
       return bonds
         .map((b: { account: BondState }) => b.account)
         .filter(isValidBond);
@@ -140,7 +140,7 @@ export function useLacusProgram() {
     try {
       setError(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const allBonds = await withRetry(() => (program.account as any).bondState.all(), 'fetchMyBonds');
+      const allBonds = await withRetry<any[]>(() => (program.account as any).bondState.all(), 'fetchMyBonds');
       return allBonds
         .map((b: { account: BondState }) => b.account)
         .filter((bond: BondState) =>
@@ -161,7 +161,7 @@ export function useLacusProgram() {
       setError(null);
       // Bu cüzdana ait tüm pozisyonlar (offset 8 = discriminator sonrası investor: Pubkey)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const positions = await withRetry(() => (program.account as any).investorPosition.all([
+      const positions = await withRetry<any[]>(() => (program.account as any).investorPosition.all([
         { memcmp: { offset: 8, bytes: wallet.publicKey.toBase58() } },
       ]), 'fetchPortfolioBonds');
 
@@ -553,7 +553,7 @@ export function useLacusProgram() {
     const readProgram = program ?? getLacusProgramReadOnly();
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const all = await withRetry(() => (readProgram.account as any).listing.all(), 'fetchListings');
+      const all = await withRetry<any[]>(() => (readProgram.account as any).listing.all(), 'fetchListings');
       L(`fetchListings: ${all.length} raw listing account(s)`,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         all.map((l: any) => ({ pubkey: l.publicKey.toBase58(), seller: l.account.seller.toString(), bondState: l.account.bondState.toString(), units: Number(l.account.units), price: Number(l.account.pricePerUnit), active: l.account.active })));
