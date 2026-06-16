@@ -40,7 +40,9 @@ export default function SecondaryMarket() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [allBonds, allListings] = await Promise.all([fetchAllBonds(), fetchListings()]);
+      // RPC 429'u tetiklememek icin sirayla (paralel burst degil).
+      const allBonds = await fetchAllBonds();
+      const allListings = await fetchListings();
       const byState = new Map<string, { bond: BondState; bondId: number }>();
       allBonds.forEach((b: BondState) => {
         const [pda] = getBondStatePDA(Number(b.bondId));
