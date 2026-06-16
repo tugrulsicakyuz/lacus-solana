@@ -35,7 +35,7 @@ export interface BondState {
   bump: number;
 }
 
-/** Investor position — lender'ın sabit holding kaydı (non-transferable). */
+/** Investor position — lender'ın holding kaydı (devir yalnızca Listing üzerinden). */
 export interface InvestorPosition {
   investor: PublicKey;
   bondState: PublicKey;
@@ -44,6 +44,18 @@ export interface InvestorPosition {
   yieldClaimed: BN;
   redeemed: boolean;
   refunded: boolean;
+  bump: number;
+}
+
+/** Listing — ikincil piyasa ilanı (birimler ilan süresince burada kilitli). */
+export interface Listing {
+  seller: PublicKey;
+  bondState: PublicKey;
+  units: BN;
+  pricePerUnit: BN;
+  contributionShare: BN;
+  yieldClaimedShare: BN;
+  active: boolean;
   bump: number;
 }
 

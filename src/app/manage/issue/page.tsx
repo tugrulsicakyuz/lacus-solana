@@ -9,7 +9,8 @@ import { useLacusProgram } from '@/hooks/useLacus';
 import { formatDate } from '@/lib/format';
 import { Loader2 } from 'lucide-react';
 import { retryUpsert } from '@/lib/supabase-retry';
-import { buildAndHashAgreement, AGREEMENT_TEMPLATE_VERSION, shortHash, type AgreementTerms } from '@/lib/loan-agreement';
+import { buildAndHashAgreement, AGREEMENT_TEMPLATE_VERSION_V4, shortHash, type AgreementTerms } from '@/lib/loan-agreement';
+import { FREQUENCY_OPTIONS, generateCouponSchedule, type CouponFrequencyMonths } from '@/lib/coupon-schedule';
 import { requireKyc } from '@/lib/kyc';
 
 export default function IssueBondPage() {
@@ -21,6 +22,7 @@ export default function IssueBondPage() {
   const [bondSymbol, setBondSymbol] = useState('');
   const [faceValueSOL, setFaceValueSOL] = useState(0.1);
   const [couponRateBps, setCouponRateBps] = useState(800);
+  const [couponFrequencyMonths, setCouponFrequencyMonths] = useState<CouponFrequencyMonths>(6);
   const [maturityDate, setMaturityDate] = useState('');
   const [maxSupply, setMaxSupply] = useState(1000);
   const [saleDeadlineDate, setSaleDeadlineDate] = useState('');
@@ -65,6 +67,8 @@ export default function IssueBondPage() {
       couponRateBps,
       maturityTimestamp,
       maxSupply,
+      couponFrequencyMonths,
+      saleDeadline,
     };
 
     try {
@@ -106,7 +110,7 @@ export default function IssueBondPage() {
       // Zincire yalnızca hash gitti; sözleşme metnini Supabase'e kaydet (transient hatada retry).
       const agRes = await retryUpsert('agreements', {
         bond_id: result.bondId,
-        template_version: AGREEMENT_TEMPLATE_VERSION,
+        template_version: AGREEMENT_TEMPLATE_VERSION_V4,
         terms_json: agreement.terms,
         agreement_text: agreement.text,
         sha256_hex: agreement.hashHex,
@@ -125,7 +129,7 @@ export default function IssueBondPage() {
       });
 
       setBondName(''); setBondSymbol(''); setFaceValueSOL(0.1);
-      setCouponRateBps(800); setMaxSupply(1000); setMaturityDate('');
+      setCouponRateBps(800); setCouponFrequencyMonths(6); setMaxSupply(1000); setMaturityDate('');
       setSaleDeadlineDate('');
       setShowAgreement(false); setAgreement(null); setAccepted(false);
     } catch (err) {
@@ -142,6 +146,25 @@ export default function IssueBondPage() {
   const maturityDisplay = maturityDate
     ? formatDate(new Date(maturityDate).getTime() / 1000).toUpperCase()
     : '··· ····';
+
+  // İhraççı yayınlamadan vaat ettiği kupon takvimini görsün.
+  const previewSchedule = (() => {
+    if (!maturityDate || !saleDeadlineDate) return null;
+    const m = Math.floor(new Date(maturityDate).getTime() / 1000);
+    const s = Math.floor(new Date(saleDeadlineDate).getTime() / 1000);
+    if (!(m > s) || faceValueSOL <= 0 || couponRateBps <= 0) return null;
+    try {
+      return generateCouponSchedule({
+        faceValueLamports: Math.round(faceValueSOL * 1_000_000_000),
+        couponRateBps,
+        maturityTimestamp: m,
+        saleDeadline: s,
+        couponFrequencyMonths,
+      });
+    } catch {
+      return null;
+    }
+  })();
 
   return (
     <div className="lx-wrap">
@@ -217,6 +240,18 @@ export default function IssueBondPage() {
               <em className="help num">{couponRateBps} bps = {apyDisplay}% p.a.</em>
             </label>
             <label className="lx-field">
+              <span>Coupon frequency</span>
+              <select
+                value={couponFrequencyMonths}
+                onChange={e => setCouponFrequencyMonths(Number(e.target.value) as CouponFrequencyMonths)}
+              >
+                {FREQUENCY_OPTIONS.map(f => (
+                  <option key={f.months} value={f.months}>{f.label}</option>
+                ))}
+              </select>
+              <em className="help">How often you promise to pay coupons. Sets the payment schedule.</em>
+            </label>
+            <label className="lx-field">
               <span>Maturity</span>
               <input
                 className="num"
@@ -289,6 +324,32 @@ export default function IssueBondPage() {
             </div>
           </div>
           <p className="lx-fn">Live preview. The certificate updates as you type.</p>
+
+          {previewSchedule && (
+            <div className="iss-schedule">
+              <h3 className="lx-subhead" style={{ paddingBottom: 6 }}>Promised payments</h3>
+              <div className="lx-drule"></div>
+              <table className="lx-table" style={{ marginTop: 10 }}>
+                <thead>
+                  <tr><th>No.</th><th>Date</th><th>Type</th><th className="r">Per unit</th></tr>
+                </thead>
+                <tbody>
+                  {previewSchedule.entries.map((e, i) => (
+                    <tr key={i}>
+                      <td className="lx-rowno">{String(i + 1).padStart(2, '0')}</td>
+                      <td className="num">{formatDate(e.dateUnix)}</td>
+                      <td>{e.type === 'principal' ? 'Principal' : 'Coupon'}</td>
+                      <td className="r num">{(e.perUnitLamports / 1e9).toFixed(4)} SOL</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="lx-fn">
+                {previewSchedule.couponDates.length} coupon{previewSchedule.couponDates.length === 1 ? '' : 's'} plus principal at maturity.
+                These dates and amounts are written into the loan agreement you sign.
+              </p>
+            </div>
+          )}
         </div>
       </div>
       <div style={{ paddingBottom: 96 }} />

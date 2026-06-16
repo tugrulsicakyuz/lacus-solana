@@ -75,3 +75,11 @@ export function getInvestorPositionPDA(bondStatePubkey: PublicKey, investorPubke
     LACUS_PROGRAM_ID
   );
 }
+
+/** Listing — ikincil piyasada satıcı başına tek aktif ilan. */
+export function getListingPDA(bondStatePubkey: PublicKey, sellerPubkey: PublicKey) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('listing'), bondStatePubkey.toBuffer(), sellerPubkey.toBuffer()],
+    LACUS_PROGRAM_ID
+  );
+}

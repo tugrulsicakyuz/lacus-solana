@@ -21,6 +21,7 @@ declare_id!("BdRJSxsqbQZ12xuM9dcEQXuQ9R8AHvfTfMq6EppmEUoH");
 // ---------------------------------------------------------------------------
 
 const PLATFORM_FEE_BPS: u64 = 100; // %1
+const SECONDARY_FEE_BPS: u64 = 25; // %0.25 (ikincil piyasa islem ucreti)
 const BPS_DENOMINATOR: u64 = 10_000;
 // Issuer funding_goal'a ulasildigi halde escrow'u cekmezse, lender'lar
 // bu sure sonunda paralarini geri alabilir (no-show issuer korumasi).
@@ -36,6 +37,32 @@ fn mul_div(a: u64, b: u64, denom: u64) -> Result<u64> {
         .checked_div(denom as u128)
         .ok_or(LacusError::MathOverflow)?;
     u64::try_from(result).map_err(|_| error!(LacusError::MathOverflow))
+}
+
+/// İkincil listeleme pay matematigi (saf fonksiyon -> test edilebilir).
+/// `units` adet birim listelenirken pozisyondan tasinacak paylari hesaplar:
+///  - contribution_share: orantili anapara (par) payi
+///  - claimed_share: orantili daha once claim edilmis kupon
+///  - entitled_for_units: bu birimlere bugune kadar dusen toplam hak
+///  - settle: saticiya simdi odenecek birikmis (claim edilmemis) kupon
+/// Invariant: claim_yield monotonik oldugundan claimed_share <= entitled_for_units,
+/// yani settle asla underflow etmez.
+#[inline]
+fn list_split(
+    contribution: u64,
+    yield_claimed: u64,
+    units: u64,
+    prev_units: u64,
+    total_yield: u64,
+    tokens_sold: u64,
+) -> Result<(u64, u64, u64, u64)> {
+    let contribution_share = mul_div(contribution, units, prev_units)?;
+    let claimed_share = mul_div(yield_claimed, units, prev_units)?;
+    let entitled_for_units = mul_div(total_yield, units, tokens_sold)?;
+    let settle = entitled_for_units
+        .checked_sub(claimed_share)
+        .ok_or(LacusError::MathOverflow)?;
+    Ok((contribution_share, claimed_share, entitled_for_units, settle))
 }
 
 #[program]
@@ -468,6 +495,176 @@ pub mod lacus {
         }
         Ok(())
     }
+
+    // -- Secondary market (P2P): listing + atomik alim -----------------------
+    // Birimler SPL token DEGIL; non-transferable muhasebe korunur. Devir yalnizca
+    // bu talimatlar uzerinden olur: list_units birimleri Listing'e kilitler,
+    // buy_listing atomik olarak SOL'u satici/protokole, birimleri aliciya tasir.
+
+    /// Holder, pozisyonundaki `units` birimi `price_per_unit` (lamport/birim)
+    /// fiyatla listeler. Birimler (oranli contribution + accrued yield ile)
+    /// Listing'e kilitlenir; saticinin o birimlere dusen birikmis kuponu o anda
+    /// saticiya odenir ki alici "temiz" baslasin. Trade penceresi: funded..maturity.
+    pub fn list_units(ctx: Context<ListUnits>, units: u64, price_per_unit: u64) -> Result<()> {
+        let clock = Clock::get()?;
+        require!(units > 0 && price_per_unit > 0, LacusError::InvalidParams);
+
+        let (bond_id, total_yield, tokens_sold, yield_bump);
+        {
+            let bond = &ctx.accounts.bond_state;
+            require!(bond.funded, LacusError::NotFunded);
+            require!(clock.unix_timestamp < bond.maturity_timestamp, LacusError::NotTradeable);
+            bond_id = bond.bond_id;
+            total_yield = bond.total_yield_deposited;
+            tokens_sold = bond.tokens_sold;
+        }
+        yield_bump = ctx.bumps.yield_vault;
+        require!(tokens_sold > 0, LacusError::NotTradeable);
+
+        let prev_units = ctx.accounts.investor_position.units;
+        // Pay matematigi (saf fonksiyon, ayrica unit-test edilir).
+        let (contribution_share, claimed_share, entitled_for_units, settle) = {
+            let position = &ctx.accounts.investor_position;
+            require!(!position.refunded && !position.redeemed, LacusError::NotTradeable);
+            require!(prev_units >= units, LacusError::InsufficientUnits);
+            list_split(position.contribution, position.yield_claimed, units, prev_units, total_yield, tokens_sold)?
+        };
+
+        if settle > 0 {
+            let id_bytes = bond_id.to_le_bytes();
+            let seeds: &[&[u8]] = &[b"yield", id_bytes.as_ref(), &[yield_bump]];
+            let signer_seeds: &[&[&[u8]]] = &[seeds];
+            system_program::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.yield_vault.to_account_info(),
+                        to: ctx.accounts.seller.to_account_info(),
+                    },
+                    signer_seeds,
+                ),
+                settle,
+            )?;
+        }
+
+        // Pozisyondan birimleri (ve paylari) cikar.
+        let position = &mut ctx.accounts.investor_position;
+        position.units = prev_units.checked_sub(units).ok_or(LacusError::MathOverflow)?;
+        position.contribution = position
+            .contribution
+            .checked_sub(contribution_share)
+            .ok_or(LacusError::MathOverflow)?;
+        position.yield_claimed = position
+            .yield_claimed
+            .checked_sub(claimed_share)
+            .ok_or(LacusError::MathOverflow)?;
+
+        // Listing'i doldur. yield_claimed_share = entitled_for_units (guncel seviye)
+        // => alici devraldiginda yalnizca listeleme sonrasi yatan kuponu kazanir.
+        let listing = &mut ctx.accounts.listing;
+        listing.seller = ctx.accounts.seller.key();
+        listing.bond_state = ctx.accounts.bond_state.key();
+        listing.units = units;
+        listing.price_per_unit = price_per_unit;
+        listing.contribution_share = contribution_share;
+        listing.yield_claimed_share = entitled_for_units;
+        listing.active = true;
+        listing.bump = ctx.bumps.listing;
+        Ok(())
+    }
+
+    /// Satici ilani iptal eder: birimler (paylariyla) pozisyona geri doner,
+    /// Listing hesabi kapatilir (rent satiriya iade).
+    pub fn cancel_listing(ctx: Context<CancelListing>) -> Result<()> {
+        let listing_units = ctx.accounts.listing.units;
+        let contribution_share = ctx.accounts.listing.contribution_share;
+        let claimed_share = ctx.accounts.listing.yield_claimed_share;
+
+        let position = &mut ctx.accounts.investor_position;
+        require!(!position.refunded && !position.redeemed, LacusError::NotTradeable);
+        position.units = position.units.checked_add(listing_units).ok_or(LacusError::MathOverflow)?;
+        position.contribution = position
+            .contribution
+            .checked_add(contribution_share)
+            .ok_or(LacusError::MathOverflow)?;
+        position.yield_claimed = position
+            .yield_claimed
+            .checked_add(claimed_share)
+            .ok_or(LacusError::MathOverflow)?;
+        Ok(())
+    }
+
+    /// Alici, ilanin tamamini satin alir. SOL atomik olarak satiriya (fiyat) ve
+    /// protokole (%0.25 ucret) gider; birimler (par + accrued seviyesiyle) alicinin
+    /// pozisyonuna gecer. tokens_sold DEGISMEZ => kupon matematigi bozulmaz.
+    pub fn buy_listing(ctx: Context<BuyListing>) -> Result<()> {
+        let clock = Clock::get()?;
+        {
+            let bond = &ctx.accounts.bond_state;
+            require!(bond.funded, LacusError::NotFunded);
+            require!(clock.unix_timestamp < bond.maturity_timestamp, LacusError::NotTradeable);
+        }
+        let units = ctx.accounts.listing.units;
+        let price_per_unit = ctx.accounts.listing.price_per_unit;
+        let contribution_share = ctx.accounts.listing.contribution_share;
+        let claimed_share = ctx.accounts.listing.yield_claimed_share;
+        require!(ctx.accounts.buyer.key() != ctx.accounts.seller.key(), LacusError::SelfTrade);
+
+        let total = (units as u128)
+            .checked_mul(price_per_unit as u128)
+            .ok_or(LacusError::MathOverflow)?;
+        let total = u64::try_from(total).map_err(|_| error!(LacusError::MathOverflow))?;
+        let fee = mul_div(total, SECONDARY_FEE_BPS, BPS_DENOMINATOR)?;
+
+        // Alici -> satici (fiyat)
+        system_program::transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.buyer.to_account_info(),
+                    to: ctx.accounts.seller.to_account_info(),
+                },
+            ),
+            total,
+        )?;
+        // Alici -> protokol (ucret)
+        if fee > 0 {
+            system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.buyer.to_account_info(),
+                        to: ctx.accounts.fee_recipient.to_account_info(),
+                    },
+                ),
+                fee,
+            )?;
+        }
+
+        // Birimleri alicinin pozisyonuna tasi.
+        let position = &mut ctx.accounts.buyer_position;
+        if position.investor == Pubkey::default() {
+            position.investor = ctx.accounts.buyer.key();
+            position.bond_state = ctx.accounts.bond_state.key();
+            position.units = 0;
+            position.contribution = 0;
+            position.yield_claimed = 0;
+            position.redeemed = false;
+            position.refunded = false;
+            position.bump = ctx.bumps.buyer_position;
+        }
+        require!(!position.refunded && !position.redeemed, LacusError::NotTradeable);
+        position.units = position.units.checked_add(units).ok_or(LacusError::MathOverflow)?;
+        position.contribution = position
+            .contribution
+            .checked_add(contribution_share)
+            .ok_or(LacusError::MathOverflow)?;
+        position.yield_claimed = position
+            .yield_claimed
+            .checked_add(claimed_share)
+            .ok_or(LacusError::MathOverflow)?;
+        Ok(())
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -733,6 +930,108 @@ pub struct ReclaimResidual<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+pub struct ListUnits<'info> {
+    #[account(
+        seeds = [b"bond", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump = bond_state.bump
+    )]
+    pub bond_state: Account<'info, BondState>,
+    #[account(
+        mut,
+        seeds = [b"yield", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub yield_vault: SystemAccount<'info>,
+    #[account(mut)]
+    pub seller: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [b"position", bond_state.key().as_ref(), seller.key().as_ref()],
+        bump = investor_position.bump,
+        constraint = investor_position.investor == seller.key() @ LacusError::NotAuthorized
+    )]
+    pub investor_position: Account<'info, InvestorPosition>,
+    #[account(
+        init,
+        payer = seller,
+        space = 8 + Listing::INIT_SPACE,
+        seeds = [b"listing", bond_state.key().as_ref(), seller.key().as_ref()],
+        bump
+    )]
+    pub listing: Account<'info, Listing>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct CancelListing<'info> {
+    #[account(
+        seeds = [b"bond", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump = bond_state.bump
+    )]
+    pub bond_state: Account<'info, BondState>,
+    #[account(
+        mut,
+        seeds = [b"position", bond_state.key().as_ref(), seller.key().as_ref()],
+        bump = investor_position.bump,
+        constraint = investor_position.investor == seller.key() @ LacusError::NotAuthorized
+    )]
+    pub investor_position: Account<'info, InvestorPosition>,
+    #[account(
+        mut,
+        close = seller,
+        seeds = [b"listing", bond_state.key().as_ref(), seller.key().as_ref()],
+        bump = listing.bump,
+        constraint = listing.seller == seller.key() @ LacusError::NotAuthorized
+    )]
+    pub listing: Account<'info, Listing>,
+    #[account(mut)]
+    pub seller: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct BuyListing<'info> {
+    #[account(
+        seeds = [b"bond", bond_state.bond_id.to_le_bytes().as_ref()],
+        bump = bond_state.bump
+    )]
+    pub bond_state: Account<'info, BondState>,
+    #[account(seeds = [b"factory"], bump = factory_state.bump)]
+    pub factory_state: Account<'info, FactoryState>,
+    #[account(
+        mut,
+        close = seller,
+        seeds = [b"listing", bond_state.key().as_ref(), seller.key().as_ref()],
+        bump = listing.bump,
+        constraint = listing.bond_state == bond_state.key() @ LacusError::InvalidParams
+    )]
+    pub listing: Account<'info, Listing>,
+    /// CHECK: satici; SOL + listing rent alicisi, listing.seller'a kilitli.
+    #[account(
+        mut,
+        constraint = seller.key() == listing.seller @ LacusError::NotAuthorized
+    )]
+    pub seller: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub buyer: Signer<'info>,
+    #[account(
+        init_if_needed,
+        payer = buyer,
+        space = 8 + InvestorPosition::INIT_SPACE,
+        seeds = [b"position", bond_state.key().as_ref(), buyer.key().as_ref()],
+        bump
+    )]
+    pub buyer_position: Account<'info, InvestorPosition>,
+    /// CHECK: platform fee alicisi; factory authority'sine kilitli.
+    #[account(
+        mut,
+        constraint = fee_recipient.key() == factory_state.authority @ LacusError::NotAuthorized
+    )]
+    pub fee_recipient: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
+}
+
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
@@ -783,6 +1082,21 @@ pub struct InvestorPosition {
     pub bump: u8,
 }
 
+/// Ikincil piyasa ilani. Birimler ilan suresince burada kilitli; satici basina
+/// tek aktif ilan (PDA seed seller'a bagli). buy/cancel'da hesap kapatilir.
+#[account]
+#[derive(InitSpace)]
+pub struct Listing {
+    pub seller: Pubkey,
+    pub bond_state: Pubkey,
+    pub units: u64,
+    pub price_per_unit: u64,
+    pub contribution_share: u64,
+    pub yield_claimed_share: u64,
+    pub active: bool,
+    pub bump: u8,
+}
+
 // ---------------------------------------------------------------------------
 // Errors
 // ---------------------------------------------------------------------------
@@ -827,4 +1141,64 @@ pub enum LacusError {
     NothingToClaim,
     #[msg("Too early")]
     TooEarly,
+    #[msg("Bond is not tradeable in its current state")]
+    NotTradeable,
+    #[msg("Not enough units in position")]
+    InsufficientUnits,
+    #[msg("Buyer and seller cannot be the same")]
+    SelfTrade,
+}
+
+// ---------------------------------------------------------------------------
+// Tests (saf matematik) — `cargo test -p lacus`
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mul_div_basic() {
+        assert_eq!(mul_div(1000, 40, 100).unwrap(), 400);
+        assert_eq!(mul_div(4, 40, 100).unwrap(), 1); // floor
+        assert_eq!(mul_div(8000, 40, 1000).unwrap(), 320);
+    }
+
+    #[test]
+    fn list_split_partial() {
+        // 100 birimlik pozisyonun 40'i listeleniyor. contribution 1000, daha once
+        // 4 lamport kupon claim edilmis. total_yield 8000, tokens_sold 1000.
+        let (cs, cls, ent, settle) = list_split(1000, 4, 40, 100, 8000, 1000).unwrap();
+        assert_eq!(cs, 400); // par payi
+        assert_eq!(cls, 1); // 4*40/100 floor
+        assert_eq!(ent, 320); // 8000*40/1000
+        assert_eq!(settle, 319); // ent - claimed_share
+        // konservasyon: paylar pozisyondaki degerleri asmaz, settle birikmis hakki asmaz
+        assert!(cs <= 1000 && cls <= 4 && settle <= ent);
+    }
+
+    #[test]
+    fn list_split_full_position_moves_everything() {
+        // Tum pozisyon (100/100) listeleniyor; kupon tam claim edilmis (settle=0).
+        let (cs, cls, ent, settle) = list_split(1000, 320, 100, 100, 3200, 1000).unwrap();
+        assert_eq!(cs, 1000);
+        assert_eq!(cls, 320);
+        assert_eq!(ent, 320);
+        assert_eq!(settle, 0);
+    }
+
+    #[test]
+    fn list_split_settle_never_underflows() {
+        // claim invariant'i altinda claimed_share <= entitled_for_units olmali.
+        let (_, cls, ent, settle) = list_split(500, 100, 50, 200, 4000, 2000).unwrap();
+        assert!(cls <= ent);
+        assert_eq!(settle, ent - cls);
+    }
+
+    #[test]
+    fn secondary_fee_quarter_percent() {
+        // %0.25 ucret: 100 SOL'luk islemde 0.25 SOL.
+        let total: u64 = 100_000_000_000;
+        assert_eq!(mul_div(total, SECONDARY_FEE_BPS, BPS_DENOMINATOR).unwrap(), 250_000_000);
+    }
 }

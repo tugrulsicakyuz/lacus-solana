@@ -53,7 +53,11 @@ export default function AboutPage() {
             <div className="ghost">2</div>
             <div className="no">PRINCIPLE 2</div>
             <h3>The contract is the product</h3>
-            <p>Terms lock at issuance and execute on schedule. Not by goodwill, by code.</p>
+            <p>
+              Terms and the payment schedule lock at issuance. The contract distributes what the
+              borrower deposits, and the record shows every payment and every miss. Not by goodwill,
+              by proof.
+            </p>
           </div>
           <div className="lx-clause reveal">
             <div className="ghost">3</div>

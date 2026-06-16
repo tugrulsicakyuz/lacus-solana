@@ -12,8 +12,9 @@ import {
   getYieldVaultPDA,
   getPrincipalVaultPDA,
   getInvestorPositionPDA,
+  getListingPDA,
 } from '@/lib/lacus-program';
-import type { BondState, FactoryState } from '@/types/lacus';
+import type { BondState, FactoryState, Listing } from '@/types/lacus';
 
 // Eski/bozuk struct'tan deserialize olan hesapları ele
 const isValidBond = (bond: BondState) =>
@@ -405,6 +406,93 @@ export function useLacusProgram() {
     return sendAndConfirm(tx);
   }, [program, wallet, sendAndConfirm]);
 
+  // ── Secondary: ilan oluştur (birimleri Listing'e kilitle) ───────────────────
+  const listUnits = useCallback(async (bondId: number, units: number, pricePerUnitLamports: number) => {
+    if (!program || !wallet) throw new Error('Wallet not connected');
+    const [bondStatePDA] = getBondStatePDA(bondId);
+    const [yieldVault] = getYieldVaultPDA(bondId);
+    const [investorPosition] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
+    const [listing] = getListingPDA(bondStatePDA, wallet.publicKey);
+
+    const tx = await program.methods
+      .listUnits(new BN(units), new BN(pricePerUnitLamports))
+      .accounts({
+        bondState: bondStatePDA,
+        yieldVault,
+        seller: wallet.publicKey,
+        investorPosition,
+        listing,
+        systemProgram: SystemProgram.programId,
+      })
+      .transaction();
+
+    return sendAndConfirm(tx);
+  }, [program, wallet, sendAndConfirm]);
+
+  // ── Secondary: ilanı iptal et (birimler pozisyona geri döner) ───────────────
+  const cancelListing = useCallback(async (bondId: number) => {
+    if (!program || !wallet) throw new Error('Wallet not connected');
+    const [bondStatePDA] = getBondStatePDA(bondId);
+    const [investorPosition] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
+    const [listing] = getListingPDA(bondStatePDA, wallet.publicKey);
+
+    const tx = await program.methods
+      .cancelListing()
+      .accounts({
+        bondState: bondStatePDA,
+        investorPosition,
+        listing,
+        seller: wallet.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .transaction();
+
+    return sendAndConfirm(tx);
+  }, [program, wallet, sendAndConfirm]);
+
+  // ── Secondary: bir ilanı satın al (atomik SOL ↔ birim) ──────────────────────
+  const buyListing = useCallback(async (bondId: number, seller: PublicKey) => {
+    if (!program || !wallet) throw new Error('Wallet not connected');
+    const [bondStatePDA] = getBondStatePDA(bondId);
+    const [factoryStatePDA] = getFactoryStatePDA();
+    const [listing] = getListingPDA(bondStatePDA, seller);
+    const [buyerPosition] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const factoryState = (await (program.account as any).factoryState.fetch(factoryStatePDA)) as FactoryState;
+
+    const tx = await program.methods
+      .buyListing()
+      .accounts({
+        bondState: bondStatePDA,
+        factoryState: factoryStatePDA,
+        listing,
+        seller,
+        buyer: wallet.publicKey,
+        buyerPosition,
+        feeRecipient: new PublicKey(factoryState.authority),
+        systemProgram: SystemProgram.programId,
+      })
+      .transaction();
+
+    return sendAndConfirm(tx);
+  }, [program, wallet, sendAndConfirm]);
+
+  // ── Secondary: tüm aktif ilanları çek ───────────────────────────────────────
+  const fetchListings = useCallback(async (): Promise<{ pubkey: PublicKey; account: Listing }[]> => {
+    const readProgram = program ?? getLacusProgramReadOnly();
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const all = await (readProgram.account as any).listing.all();
+      return all
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((l: any) => ({ pubkey: l.publicKey as PublicKey, account: l.account as Listing }))
+        .filter((l: { account: Listing }) => l.account.active && Number(l.account.units) > 0);
+    } catch (e) {
+      console.error('fetchListings error:', e);
+      return [];
+    }
+  }, [program]);
+
   return {
     program,
     fetchAllBonds,
@@ -419,6 +507,10 @@ export function useLacusProgram() {
     depositPrincipal,
     claimYield,
     redeemBond,
+    listUnits,
+    cancelListing,
+    buyListing,
+    fetchListings,
     error,
   };
 }

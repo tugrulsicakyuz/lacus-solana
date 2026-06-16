@@ -8,6 +8,13 @@ import { formatDate, formatSOL } from '@/lib/format';
 import type { BondState } from '@/types/lacus';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import {
+  generateCouponSchedule,
+  computeScheduleStatus,
+  nextUnfundedCoupon,
+  type CouponFrequencyMonths,
+} from '@/lib/coupon-schedule';
 
 export default function Dashboard() {
   const { connected, publicKey } = useWallet();
@@ -28,6 +35,7 @@ export default function Dashboard() {
   const [processingWithdraw, setProcessingWithdraw] = useState<number | null>(null);
   const [yieldAmounts, setYieldAmounts] = useState<Record<number, string>>({});
   const [principalAmounts, setPrincipalAmounts] = useState<Record<number, string>>({});
+  const [issuedFreq, setIssuedFreq] = useState<Record<number, CouponFrequencyMonths>>({});
 
   // ── Data fetching
   const fetchData = useCallback(async () => {
@@ -44,6 +52,20 @@ export default function Dashboard() {
       ]);
       setHoldings(portfolioData);
       setIssuedBonds(issuedData);
+
+      // v3 bonların kupon sıklığını çek (kupon-kupon fonlama için).
+      const ids = issuedData.map((b: BondState) => Number(b.bondId));
+      if (ids.length) {
+        const { data: ags } = await supabase.from('agreements').select('bond_id, terms_json').in('bond_id', ids);
+        const map: Record<number, CouponFrequencyMonths> = {};
+        (ags || []).forEach((r: { bond_id: number; terms_json: { couponFrequencyMonths?: number } | null }) => {
+          const f = r.terms_json?.couponFrequencyMonths;
+          if (f === 12 || f === 6 || f === 3) map[r.bond_id] = f;
+        });
+        setIssuedFreq(map);
+      } else {
+        setIssuedFreq({});
+      }
     } catch (error) {
       console.error('Failed to fetch portfolio data:', error);
       toast.error('Failed to load portfolio', { description: error instanceof Error ? error.message : undefined });
@@ -113,6 +135,21 @@ export default function Dashboard() {
       await fetchData();
     } catch (error) {
       toast.error('Failed to deposit yield', { description: error instanceof Error ? error.message : 'Unknown error' });
+    } finally {
+      setProcessingDeposit(null);
+    }
+  };
+
+  // Takvimdeki sıradaki kuponu tam tutarıyla fonla (depositYield).
+  const handleFundCoupon = async (bondId: number, lamports: number) => {
+    if (lamports <= 0) { toast.error('Nothing to fund for this coupon'); return; }
+    setProcessingDeposit(bondId);
+    try {
+      await depositYield(bondId, lamports);
+      toast.success('Coupon funded!', { description: `Deposited ${(lamports / 1e9).toFixed(4)} SOL` });
+      await fetchData();
+    } catch (error) {
+      toast.error('Failed to fund coupon', { description: error instanceof Error ? error.message : 'Unknown error' });
     } finally {
       setProcessingDeposit(null);
     }
@@ -348,6 +385,35 @@ export default function Dashboard() {
                       const principalDeposited = Number(bond.totalPrincipalDeposited) / 1e9;
                       const totalRaiseSOL = Number(bond.totalRaised) / 1e9;
 
+                      // v3 bonlarda kupon takvimi → kupon-kupon fonlama.
+                      const freq = issuedFreq[bondId];
+                      const sched = freq
+                        ? computeScheduleStatus(
+                            generateCouponSchedule({
+                              faceValueLamports: Number(bond.faceValue),
+                              couponRateBps: bond.couponRateBps,
+                              maturityTimestamp: Number(bond.maturityTimestamp),
+                              saleDeadline: Number(bond.saleDeadline),
+                              couponFrequencyMonths: freq,
+                            }),
+                            {
+                              tokensSold: sold,
+                              totalYieldDeposited: Number(bond.totalYieldDeposited),
+                              totalPrincipalDeposited: Number(bond.totalPrincipalDeposited),
+                              principalFunded: bond.principalFunded,
+                              faceValueLamports: Number(bond.faceValue),
+                              maturityTimestamp: Number(bond.maturityTimestamp),
+                              nowSec: now,
+                            }
+                          )
+                        : null;
+                      const couponRows = sched ? sched.filter((s) => s.type === 'coupon') : [];
+                      const paidCoupons = couponRows.filter((s) => s.status === 'paid').length;
+                      const nextCoupon = sched ? nextUnfundedCoupon(sched) : null;
+                      const nextCouponLamports = nextCoupon
+                        ? Math.max(0, nextCoupon.promisedTotalLamports - nextCoupon.fundedTotalLamports)
+                        : 0;
+
                       return (
                         <tr key={index}>
                           <td>
@@ -384,22 +450,41 @@ export default function Dashboard() {
                               </button>
                             ) : (
                               <div className="dash-actions" style={{ flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
-                                <div className="dash-deposit-row">
-                                  <input
-                                    type="number"
-                                    placeholder="Yield SOL"
-                                    value={yieldAmounts[bondId] || ''}
-                                    onChange={(e) => setYieldAmounts(prev => ({ ...prev, [bondId]: e.target.value }))}
-                                    className="lx-input-sm num"
-                                  />
-                                  <button
-                                    onClick={() => handleDepositYield(bondId)}
-                                    disabled={processingDeposit === bondId}
-                                    className="lx-btn lx-btn-ghost lx-btn-sm"
-                                  >
-                                    {processingDeposit === bondId ? <Loader2 size={11} className="animate-spin" /> : 'Pay yield'}
-                                  </button>
-                                </div>
+                                {sched ? (
+                                  nextCoupon ? (
+                                    <div className="dash-actions" style={{ flexDirection: 'column', gap: 2, alignItems: 'flex-end' }}>
+                                      <button
+                                        onClick={() => handleFundCoupon(bondId, nextCouponLamports)}
+                                        disabled={processingDeposit === bondId || nextCouponLamports <= 0}
+                                        className="lx-btn lx-btn-solid lx-btn-sm"
+                                      >
+                                        {processingDeposit === bondId
+                                          ? <><Loader2 size={11} className="animate-spin" />Funding...</>
+                                          : `Fund coupon ${nextCoupon.index + 1} · ${(nextCouponLamports / 1e9).toFixed(4)} SOL`}
+                                      </button>
+                                      <span className="lx-issuer num">{paidCoupons}/{couponRows.length} coupons funded · due {formatDate(nextCoupon.dateUnix)}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="lx-stamp" style={{ color: '#1d9e75' }}>✓ ALL COUPONS FUNDED</span>
+                                  )
+                                ) : (
+                                  <div className="dash-deposit-row">
+                                    <input
+                                      type="number"
+                                      placeholder="Yield SOL"
+                                      value={yieldAmounts[bondId] || ''}
+                                      onChange={(e) => setYieldAmounts(prev => ({ ...prev, [bondId]: e.target.value }))}
+                                      className="lx-input-sm num"
+                                    />
+                                    <button
+                                      onClick={() => handleDepositYield(bondId)}
+                                      disabled={processingDeposit === bondId}
+                                      className="lx-btn lx-btn-ghost lx-btn-sm"
+                                    >
+                                      {processingDeposit === bondId ? <Loader2 size={11} className="animate-spin" /> : 'Pay yield'}
+                                    </button>
+                                  </div>
+                                )}
                                 {!bond.principalFunded && (
                                   <div className="dash-deposit-row">
                                     <input

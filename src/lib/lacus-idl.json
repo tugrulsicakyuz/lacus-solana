@@ -117,6 +117,248 @@
       ]
     },
     {
+      "name": "buy_listing",
+      "docs": [
+        "Alici, ilanin tamamini satin alir. SOL atomik olarak satiriya (fiyat) ve",
+        "protokole (%0.25 ucret) gider; birimler (par + accrued seviyesiyle) alicinin",
+        "pozisyonuna gecer. tokens_sold DEGISMEZ => kupon matematigi bozulmaz."
+      ],
+      "discriminator": [
+        115,
+        149,
+        42,
+        108,
+        44,
+        49,
+        140,
+        153
+      ],
+      "accounts": [
+        {
+          "name": "bond_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "factory_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  99,
+                  116,
+                  111,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state"
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller",
+          "writable": true
+        },
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "buyer_position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state"
+              },
+              {
+                "kind": "account",
+                "path": "buyer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_recipient",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_listing",
+      "docs": [
+        "Satici ilani iptal eder: birimler (paylariyla) pozisyona geri doner,",
+        "Listing hesabi kapatilir (rent satiriya iade)."
+      ],
+      "discriminator": [
+        41,
+        183,
+        50,
+        232,
+        230,
+        233,
+        157,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "bond_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "investor_position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state"
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state"
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "claim_yield",
       "docs": [
         "Lender, hak ettigi kupon payini talep eder. Pay, pozisyondaki SABIT",
@@ -507,6 +749,147 @@
               "name": "IssueBondParams"
             }
           }
+        }
+      ]
+    },
+    {
+      "name": "list_units",
+      "docs": [
+        "Holder, pozisyonundaki `units` birimi `price_per_unit` (lamport/birim)",
+        "fiyatla listeler. Birimler (oranli contribution + accrued yield ile)",
+        "Listing'e kilitlenir; saticinin o birimlere dusen birikmis kuponu o anda",
+        "saticiya odenir ki alici \"temiz\" baslasin. Trade penceresi: funded..maturity."
+      ],
+      "discriminator": [
+        73,
+        97,
+        182,
+        205,
+        45,
+        92,
+        16,
+        67
+      ],
+      "accounts": [
+        {
+          "name": "bond_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "yield_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  121,
+                  105,
+                  101,
+                  108,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state.bond_id",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "investor_position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state"
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "listing",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  115,
+                  116,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond_state"
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "units",
+          "type": "u64"
+        },
+        {
+          "name": "price_per_unit",
+          "type": "u64"
         }
       ]
     },
@@ -1007,6 +1390,19 @@
         195,
         88
       ]
+    },
+    {
+      "name": "Listing",
+      "discriminator": [
+        218,
+        32,
+        50,
+        73,
+        43,
+        134,
+        26,
+        58
+      ]
     }
   ],
   "errors": [
@@ -1104,6 +1500,21 @@
       "code": 6018,
       "name": "TooEarly",
       "msg": "Too early"
+    },
+    {
+      "code": 6019,
+      "name": "NotTradeable",
+      "msg": "Bond is not tradeable in its current state"
+    },
+    {
+      "code": 6020,
+      "name": "InsufficientUnits",
+      "msg": "Not enough units in position"
+    },
+    {
+      "code": 6021,
+      "name": "SelfTrade",
+      "msg": "Buyer and seller cannot be the same"
     }
   ],
   "types": [
@@ -1297,6 +1708,50 @@
                 32
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Listing",
+      "docs": [
+        "Ikincil piyasa ilani. Birimler ilan suresince burada kilitli; satici basina",
+        "tek aktif ilan (PDA seed seller'a bagli). buy/cancel'da hesap kapatilir."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "bond_state",
+            "type": "pubkey"
+          },
+          {
+            "name": "units",
+            "type": "u64"
+          },
+          {
+            "name": "price_per_unit",
+            "type": "u64"
+          },
+          {
+            "name": "contribution_share",
+            "type": "u64"
+          },
+          {
+            "name": "yield_claimed_share",
+            "type": "u64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }

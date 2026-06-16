@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense, useCallback } from "react";
+import Link from "next/link";
 import { formatDate } from "@/lib/format";
 import { useSearchParams } from "next/navigation";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
@@ -267,7 +268,13 @@ function PrimaryContent() {
                       >
                         <td className="lx-rowno">{String(i + 1).padStart(2, "0")}</td>
                         <td>
-                          <div className="lx-sym">{bond.symbol}</div>
+                          <Link
+                            href={`/bond/${bond.symbol}`}
+                            className="lx-sym mgmt-link"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {bond.symbol}
+                          </Link>
                           <div className="lx-issuer">{bond.issuerName}</div>
                         </td>
                         <td className="r num">{bApy.toFixed(2)}%</td>
@@ -311,6 +318,10 @@ function PrimaryContent() {
                   <div className="cap"><span>Subscribed</span><span className="num">{fill.toFixed(1)}%</span></div>
                   <div className="bar"><i style={{ width: `${fill}%` }}></i></div>
                 </div>
+
+                <Link href={`/bond/${selected.symbol}`} className="lx-readmore" style={{ display: "inline-block", marginBottom: 12 }}>
+                  View full terms, payment schedule &amp; on-chain proof →
+                </Link>
 
                 {!connected ? (
                   <div className="pri-wallet lx-wallet">

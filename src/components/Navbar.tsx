@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { formatDate } from "@/lib/format";
+import FaucetButton from "@/components/FaucetButton";
 
 const LINKS = [
   { href: "/launchpad", label: "Launchpad" },
@@ -42,6 +43,7 @@ export default function Navbar() {
           </ul>
           <div className="lc-nav-right">
             <span className="lc-devnet">DEVNET</span>
+            {mounted && <FaucetButton />}
             {mounted && <WalletMultiButton />}
           </div>
         </nav>

@@ -13,6 +13,12 @@ import {
 } from "@/lib/lacus-program";
 import { LACUS_PROGRAM_ID_STRING } from "@/config/program-id";
 import { hashAgreementText, shortHash, bytesToHex } from "@/lib/loan-agreement";
+import {
+  generateCouponSchedule,
+  computeScheduleStatus,
+  frequencyLabel,
+  type CouponFrequencyMonths,
+} from "@/lib/coupon-schedule";
 import { formatSOL, formatSOLCompact, formatDate, timestampToMonths, maturityLabel } from "@/lib/format";
 
 /* ── Types ── */
@@ -31,7 +37,10 @@ interface BondView {
   maxSupply: number;
   tokensSold: number;
   totalRaised: number;
+  totalYieldDeposited: number;
+  totalPrincipalDeposited: number;
   funded: boolean;
+  principalFunded: boolean;
   loanAgreementHash: number[];
 }
 
@@ -71,6 +80,7 @@ function BondDetailContent() {
   const [holderCount, setHolderCount] = useState(0);
   const [position, setPosition] = useState<Position | null>(null);
   const [documents, setDocuments] = useState<BondDocument[]>([]);
+  const [couponFreqMonths, setCouponFreqMonths] = useState<CouponFrequencyMonths | null>(null);
   const [agreementCheck, setAgreementCheck] = useState<{
     status: "loading" | "verified" | "mismatch" | "none" | "error";
     onchainHex?: string;
@@ -119,7 +129,10 @@ function BondDetailContent() {
           maxSupply: Number(acc.maxSupply),
           tokensSold: Number(acc.tokensSold),
           totalRaised: Number(acc.totalRaised),
+          totalYieldDeposited: Number(acc.totalYieldDeposited),
+          totalPrincipalDeposited: Number(acc.totalPrincipalDeposited),
           funded: !!acc.funded,
+          principalFunded: !!acc.principalFunded,
           loanAgreementHash: acc.loanAgreementHash as number[],
         };
         if (!cancelled) { setBond(view); setLoading(false); }
@@ -194,9 +207,13 @@ function BondDetailContent() {
         const onchainHex = bytesToHex(bond.loanAgreementHash);
         const { data: ag } = await supabase
           .from("agreements")
-          .select("agreement_text")
+          .select("agreement_text, terms_json")
           .eq("bond_id", bond.bondId)
           .maybeSingle();
+
+        // Kupon takvimi için sıklık (v3 bonlarda terms_json'da saklı).
+        const freq = (ag?.terms_json as { couponFrequencyMonths?: number } | null)?.couponFrequencyMonths;
+        if (!cancelled) setCouponFreqMonths(freq === 12 || freq === 6 || freq === 3 ? freq : null);
 
         if (!ag?.agreement_text) {
           if (!cancelled) setAgreementCheck({ status: "none", onchainHex });
@@ -260,6 +277,28 @@ function BondDetailContent() {
   const raisedSOL     = bond.totalRaised / 1e9;
   const [bondPda]     = getBondStatePDA(bond.bondId);
 
+  // Vaat edilen kupon takvimi + her satırın on-chain durumu (v3 bonlarda).
+  const scheduleStatuses = couponFreqMonths
+    ? computeScheduleStatus(
+        generateCouponSchedule({
+          faceValueLamports: bond.faceValueLamports,
+          couponRateBps: bond.couponRateBps,
+          maturityTimestamp: bond.maturityTimestamp,
+          saleDeadline: bond.saleDeadline,
+          couponFrequencyMonths: couponFreqMonths,
+        }),
+        {
+          tokensSold: bond.tokensSold,
+          totalYieldDeposited: bond.totalYieldDeposited,
+          totalPrincipalDeposited: bond.totalPrincipalDeposited,
+          principalFunded: bond.principalFunded,
+          faceValueLamports: bond.faceValueLamports,
+          maturityTimestamp: bond.maturityTimestamp,
+          nowSec,
+        }
+      )
+    : null;
+
   return (
     <div className="lx-wrap">
       <div className="lx-crumb"><Link href="/primary">MARKETS</Link> / {bond.symbol}</div>
@@ -300,6 +339,49 @@ function BondDetailContent() {
               <dt>Structure</dt><dd>Bilateral loan agreement, peer to peer</dd>
             </dl>
           </div>
+
+          {/* Payment schedule (promise vs on-chain record) */}
+          {scheduleStatuses && (
+            <div className="lx-subsection">
+              <h3 className="lx-subhead">Payment schedule</h3>
+              <div className="lx-drule"></div>
+              <p className="lx-fn" style={{ marginTop: 12 }}>
+                The borrower promised these payments in the signed agreement
+                {couponFreqMonths ? ` (${frequencyLabel(couponFreqMonths).toLowerCase()} coupons)` : ""}.
+                Each status is computed from on-chain deposits. Late is visible. Missing is undeniable.
+              </p>
+              <div className="lx-scroll">
+                <table className="lx-table">
+                  <thead>
+                    <tr>
+                      <th>No.</th><th>Date</th><th>Type</th>
+                      <th className="r">Per unit</th><th className="r">Promised</th><th className="r">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scheduleStatuses.map((s, i) => (
+                      <tr key={i}>
+                        <td className="lx-rowno">{String(i + 1).padStart(2, "0")}</td>
+                        <td className="num">{formatDate(s.dateUnix)}</td>
+                        <td>{s.type === "principal" ? "Principal" : "Coupon"}</td>
+                        <td className="r num">{formatSOL(s.perUnitLamports)} SOL</td>
+                        <td className="r num">{bond.tokensSold > 0 ? formatSOLCompact(s.promisedTotalLamports / 1e9) : "--"}</td>
+                        <td className="r">
+                          {s.status === "paid" ? (
+                            <span className="lx-stamp" style={{ color: "#1d9e75" }}>✓ PAID</span>
+                          ) : s.status === "due" ? (
+                            <span className="lx-stamp" style={{ color: "#c0392b" }}>● OVERDUE</span>
+                          ) : (
+                            <span className="lx-stamp">SCHEDULED</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Subscription (on-chain) */}
           <div className="lx-subsection">
