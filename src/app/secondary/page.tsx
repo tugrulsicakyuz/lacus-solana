@@ -175,7 +175,13 @@ export default function SecondaryMarket() {
           {loading ? (
             <div className="lx-loading"><Loader2 size={14} className="animate-spin" /> Loading the order book…</div>
           ) : openListings.length === 0 ? (
-            <div className="lx-empty"><p>No listings for sale right now. If you hold units, you can list the first one below.</p></div>
+            <div className="lx-empty">
+              <p>
+                {myListings.length > 0
+                  ? 'Your own listing is not shown here. It is under "Your listings" below. This list shows offers from other wallets, so to buy your listing, connect a different wallet.'
+                  : 'No listings for sale right now. If you hold units in a funded bond, list the first one below.'}
+              </p>
+            </div>
           ) : (
             <div className="lx-scroll">
               <table className="lx-table">
