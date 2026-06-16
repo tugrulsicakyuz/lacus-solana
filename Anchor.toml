@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-lacus = "BdRJSxsqbQZ12xuM9dcEQXuQ9R8AHvfTfMq6EppmEUoH"
+lacus = "9NYAKSppmqJgBPmrKq5zqudEsURvbjSm6Tb4BxCZMS8S"
 
 [registry]
 url = "https://api.apr.dev"

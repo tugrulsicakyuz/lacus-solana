@@ -79,6 +79,29 @@ export default function SecondaryMarket() {
       !myListedBondIds.has(Number(h.bond.bondId))
   );
 
+  // İzole log: ilanların neden "Open" yerine "Your listings"e düştüğünü, sellable
+  // filtresinin ne elediğini gösterir. Konsolda "[Lacus] secondary" diye filtrele.
+  useEffect(() => {
+    if (loading) return;
+    console.log("[Lacus] secondary breakdown", {
+      wallet: mine ?? "(disconnected)",
+      totalActiveListings: listings.length,
+      openListings_notMine: openListings.length,
+      yourListings_mine: myListings.length,
+      holdings: holdings.length,
+      sellableHoldings: sellable.length,
+      sellableReasonHint: "sellable = funded & not matured & units>0 & not already listed by you",
+      holdingsDetail: holdings.map((h) => ({
+        symbol: h.bond.symbol,
+        bondId: Number(h.bond.bondId),
+        units: h.units,
+        funded: h.bond.funded,
+        matured: Number(h.bond.maturityTimestamp) <= now,
+        alreadyListedByYou: myListedBondIds.has(Number(h.bond.bondId)),
+      })),
+    });
+  }, [loading, listings, holdings, mine, openListings.length, myListings.length, sellable.length, now, myListedBondIds]);
+
   const explorer = (tx: string) => () => window.open(`https://explorer.solana.com/tx/${tx}?cluster=devnet`, "_blank");
 
   const handleBuy = async (row: ListingRow) => {

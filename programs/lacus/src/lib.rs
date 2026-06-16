@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 
-declare_id!("BdRJSxsqbQZ12xuM9dcEQXuQ9R8AHvfTfMq6EppmEUoH");
+declare_id!("9NYAKSppmqJgBPmrKq5zqudEsURvbjSm6Tb4BxCZMS8S");
 
 // ---------------------------------------------------------------------------
 // Lacus — P2P tokenize tahvil / kredi protokolu (guvenli yeniden yazim)

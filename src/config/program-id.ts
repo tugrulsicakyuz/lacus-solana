@@ -4,7 +4,7 @@
 // Program ID deployment'a bağlı ve sabittir. Vercel/.env üzerinde eski bir
 // NEXT_PUBLIC_LACUS_PROGRAM_ID kalmış olsa bile production'ın YANLIŞ programa
 // gitmemesi için env override KASTEN kullanılmıyor (sabit hardcode).
-export const LACUS_PROGRAM_ID_STRING = 'BdRJSxsqbQZ12xuM9dcEQXuQ9R8AHvfTfMq6EppmEUoH';
+export const LACUS_PROGRAM_ID_STRING = '9NYAKSppmqJgBPmrKq5zqudEsURvbjSm6Tb4BxCZMS8S';
 
 // Tanı: yalnızca development'ta aktif program ID'yi konsola yaz (prod'da sessiz).
 if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {

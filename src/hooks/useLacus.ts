@@ -40,6 +40,13 @@ function describeSolanaError(e: any): string {
   return e.message || String(e);
 }
 
+// İzole edilebilir akış logları. Tarayıcı konsolunda "[Lacus]" diye filtrele.
+const L = (label: string, data?: unknown) => {
+  if (data !== undefined) console.log(`[Lacus] ${label}`, data);
+  else console.log(`[Lacus] ${label}`);
+};
+const LErr = (label: string, e: unknown) => console.error(`[Lacus] ✗ ${label}`, e);
+
 export interface PortfolioHolding {
   bond: BondState;
   units: number;
@@ -167,6 +174,8 @@ export function useLacusProgram() {
           refunded: !!pos.refunded,
         });
       }
+      L(`fetchPortfolioBonds: ${holdings.length} holding(s)`,
+        holdings.map((h) => ({ symbol: h.bond.symbol, bondId: Number(h.bond.bondId), units: h.units, funded: h.bond.funded, matured: Number(h.bond.maturityTimestamp) <= Math.floor(Date.now() / 1000) })));
       return holdings;
     } catch (e) {
       console.error('fetchPortfolioBonds error:', e);
@@ -266,19 +275,26 @@ export function useLacusProgram() {
     const [bondStatePDA] = getBondStatePDA(bondId);
     const [escrowVault] = getEscrowVaultPDA(bondId);
     const [investorPosition] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
+    L('buyBond →', { bondId, units, buyer: wallet.publicKey.toBase58(), positionPDA: investorPosition.toBase58() });
 
-    const tx = await program.methods
-      .buyBond(new BN(units))
-      .accounts({
-        bondState: bondStatePDA,
-        escrowVault,
-        buyer: wallet.publicKey,
-        investorPosition,
-        systemProgram: SystemProgram.programId,
-      })
-      .transaction();
-
-    return sendAndConfirm(tx);
+    try {
+      const tx = await program.methods
+        .buyBond(new BN(units))
+        .accounts({
+          bondState: bondStatePDA,
+          escrowVault,
+          buyer: wallet.publicKey,
+          investorPosition,
+          systemProgram: SystemProgram.programId,
+        })
+        .transaction();
+      const sig = await sendAndConfirm(tx);
+      L('buyBond ✓ confirmed', sig);
+      return sig;
+    } catch (e) {
+      LErr('buyBond failed', e);
+      throw e;
+    }
   }, [program, wallet, sendAndConfirm]);
 
   // ── Issuer: funding başarılıysa escrow'u çek (issuer + %1 fee) ───────────────
@@ -289,20 +305,27 @@ export function useLacusProgram() {
     const [escrowVault] = getEscrowVaultPDA(bondId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const factoryState = (await (program.account as any).factoryState.fetch(factoryStatePDA)) as FactoryState;
+    L('withdrawEscrow →', { bondId, issuer: wallet.publicKey.toBase58() });
 
-    const tx = await program.methods
-      .withdrawEscrow()
-      .accounts({
-        bondState: bondStatePDA,
-        factoryState: factoryStatePDA,
-        escrowVault,
-        issuer: wallet.publicKey,
-        feeRecipient: new PublicKey(factoryState.authority),
-        systemProgram: SystemProgram.programId,
-      })
-      .transaction();
-
-    return sendAndConfirm(tx);
+    try {
+      const tx = await program.methods
+        .withdrawEscrow()
+        .accounts({
+          bondState: bondStatePDA,
+          factoryState: factoryStatePDA,
+          escrowVault,
+          issuer: wallet.publicKey,
+          feeRecipient: new PublicKey(factoryState.authority),
+          systemProgram: SystemProgram.programId,
+        })
+        .transaction();
+      const sig = await sendAndConfirm(tx);
+      L('withdrawEscrow ✓ confirmed', sig);
+      return sig;
+    } catch (e) {
+      LErr('withdrawEscrow failed', e);
+      throw e;
+    }
   }, [program, wallet, sendAndConfirm]);
 
   // ── Lender: funding başarısız/abandoned → katkı iadesi ──────────────────────
@@ -331,18 +354,25 @@ export function useLacusProgram() {
     if (!program || !wallet) throw new Error('Wallet not connected');
     const [bondStatePDA] = getBondStatePDA(bondId);
     const [yieldVault] = getYieldVaultPDA(bondId);
+    L('depositYield →', { bondId, amountLamports, sol: amountLamports / 1e9 });
 
-    const tx = await program.methods
-      .depositYield(new BN(amountLamports))
-      .accounts({
-        bondState: bondStatePDA,
-        yieldVault,
-        issuer: wallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .transaction();
-
-    return sendAndConfirm(tx);
+    try {
+      const tx = await program.methods
+        .depositYield(new BN(amountLamports))
+        .accounts({
+          bondState: bondStatePDA,
+          yieldVault,
+          issuer: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .transaction();
+      const sig = await sendAndConfirm(tx);
+      L('depositYield ✓ confirmed', sig);
+      return sig;
+    } catch (e) {
+      LErr('depositYield failed', e);
+      throw e;
+    }
   }, [program, wallet, sendAndConfirm]);
 
   // ── Issuer: anapara yatır → principal vault ─────────────────────────────────
@@ -413,20 +443,27 @@ export function useLacusProgram() {
     const [yieldVault] = getYieldVaultPDA(bondId);
     const [investorPosition] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
     const [listing] = getListingPDA(bondStatePDA, wallet.publicKey);
+    L('listUnits →', { bondId, units, pricePerUnitLamports, seller: wallet.publicKey.toBase58(), bondStatePDA: bondStatePDA.toBase58(), listingPDA: listing.toBase58() });
 
-    const tx = await program.methods
-      .listUnits(new BN(units), new BN(pricePerUnitLamports))
-      .accounts({
-        bondState: bondStatePDA,
-        yieldVault,
-        seller: wallet.publicKey,
-        investorPosition,
-        listing,
-        systemProgram: SystemProgram.programId,
-      })
-      .transaction();
-
-    return sendAndConfirm(tx);
+    try {
+      const tx = await program.methods
+        .listUnits(new BN(units), new BN(pricePerUnitLamports))
+        .accounts({
+          bondState: bondStatePDA,
+          yieldVault,
+          seller: wallet.publicKey,
+          investorPosition,
+          listing,
+          systemProgram: SystemProgram.programId,
+        })
+        .transaction();
+      const sig = await sendAndConfirm(tx);
+      L('listUnits ✓ confirmed', sig);
+      return sig;
+    } catch (e) {
+      LErr('listUnits failed', e);
+      throw e;
+    }
   }, [program, wallet, sendAndConfirm]);
 
   // ── Secondary: ilanı iptal et (birimler pozisyona geri döner) ───────────────
@@ -435,19 +472,26 @@ export function useLacusProgram() {
     const [bondStatePDA] = getBondStatePDA(bondId);
     const [investorPosition] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
     const [listing] = getListingPDA(bondStatePDA, wallet.publicKey);
+    L('cancelListing →', { bondId, listingPDA: listing.toBase58() });
 
-    const tx = await program.methods
-      .cancelListing()
-      .accounts({
-        bondState: bondStatePDA,
-        investorPosition,
-        listing,
-        seller: wallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .transaction();
-
-    return sendAndConfirm(tx);
+    try {
+      const tx = await program.methods
+        .cancelListing()
+        .accounts({
+          bondState: bondStatePDA,
+          investorPosition,
+          listing,
+          seller: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .transaction();
+      const sig = await sendAndConfirm(tx);
+      L('cancelListing ✓ confirmed', sig);
+      return sig;
+    } catch (e) {
+      LErr('cancelListing failed', e);
+      throw e;
+    }
   }, [program, wallet, sendAndConfirm]);
 
   // ── Secondary: bir ilanı satın al (atomik SOL ↔ birim) ──────────────────────
@@ -459,22 +503,29 @@ export function useLacusProgram() {
     const [buyerPosition] = getInvestorPositionPDA(bondStatePDA, wallet.publicKey);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const factoryState = (await (program.account as any).factoryState.fetch(factoryStatePDA)) as FactoryState;
+    L('buyListing →', { bondId, seller: seller.toBase58(), buyer: wallet.publicKey.toBase58(), listingPDA: listing.toBase58(), feeRecipient: factoryState.authority.toString() });
 
-    const tx = await program.methods
-      .buyListing()
-      .accounts({
-        bondState: bondStatePDA,
-        factoryState: factoryStatePDA,
-        listing,
-        seller,
-        buyer: wallet.publicKey,
-        buyerPosition,
-        feeRecipient: new PublicKey(factoryState.authority),
-        systemProgram: SystemProgram.programId,
-      })
-      .transaction();
-
-    return sendAndConfirm(tx);
+    try {
+      const tx = await program.methods
+        .buyListing()
+        .accounts({
+          bondState: bondStatePDA,
+          factoryState: factoryStatePDA,
+          listing,
+          seller,
+          buyer: wallet.publicKey,
+          buyerPosition,
+          feeRecipient: new PublicKey(factoryState.authority),
+          systemProgram: SystemProgram.programId,
+        })
+        .transaction();
+      const sig = await sendAndConfirm(tx);
+      L('buyListing ✓ confirmed', sig);
+      return sig;
+    } catch (e) {
+      LErr('buyListing failed', e);
+      throw e;
+    }
   }, [program, wallet, sendAndConfirm]);
 
   // ── Secondary: tüm aktif ilanları çek ───────────────────────────────────────
@@ -483,12 +534,17 @@ export function useLacusProgram() {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const all = await (readProgram.account as any).listing.all();
-      return all
+      L(`fetchListings: ${all.length} raw listing account(s)`,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        all.map((l: any) => ({ pubkey: l.publicKey.toBase58(), seller: l.account.seller.toString(), bondState: l.account.bondState.toString(), units: Number(l.account.units), price: Number(l.account.pricePerUnit), active: l.account.active })));
+      const filtered = all
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((l: any) => ({ pubkey: l.publicKey as PublicKey, account: l.account as Listing }))
         .filter((l: { account: Listing }) => l.account.active && Number(l.account.units) > 0);
+      L(`fetchListings: ${filtered.length} active listing(s) after filter`);
+      return filtered;
     } catch (e) {
-      console.error('fetchListings error:', e);
+      LErr('fetchListings failed', e);
       return [];
     }
   }, [program]);
