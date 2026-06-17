@@ -15,6 +15,7 @@ import {
   getListingPDA,
 } from '@/lib/lacus-program';
 import type { BondState, FactoryState, Listing } from '@/types/lacus';
+import { fetchChainIndex, refreshChainIndex } from '@/lib/chain-index';
 
 // Eski/bozuk struct'tan deserialize olan hesapları ele
 const isValidBond = (bond: BondState) =>
@@ -105,6 +106,8 @@ export function useLacusProgram() {
 
       const sig = await sendTransaction(tx, connection);
       await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
+      // Yazim sonrasi indeksi zorla tazele ki sonraki okumalar (liste) guncel olsun.
+      await refreshChainIndex();
       return sig;
     } catch (e: unknown) {
       console.error('[Lacus] tx failed:', e);
@@ -119,6 +122,14 @@ export function useLacusProgram() {
   }, [connection, sendTransaction, wallet]);
 
   const fetchAllBonds = useCallback(async () => {
+    // İndeks-öncelikli: client getProgramAccounts yapmaz (429 yok). Hata → RPC fallback.
+    try {
+      const snap = await fetchChainIndex();
+      L(`fetchAllBonds: index ${snap.bonds.length} bond (source ${snap.source})`);
+      return snap.bonds.filter(isValidBond);
+    } catch (idxErr) {
+      L('fetchAllBonds: index basarisiz, RPC fallback', idxErr);
+    }
     const readProgram = program ?? getLacusProgramReadOnly();
     try {
       setError(null);
@@ -137,6 +148,15 @@ export function useLacusProgram() {
 
   const fetchMyBonds = useCallback(async () => {
     if (!program || !wallet) { setError('Wallet not connected'); return []; }
+    // İndeks-öncelikli.
+    try {
+      const snap = await fetchChainIndex();
+      return snap.bonds.filter(
+        (bond) => isValidBond(bond) && bond.issuer.toString() === wallet.publicKey.toString()
+      );
+    } catch (idxErr) {
+      L('fetchMyBonds: index basarisiz, RPC fallback', idxErr);
+    }
     try {
       setError(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -157,6 +177,38 @@ export function useLacusProgram() {
   // Portföy artık token bakiyesinden değil, InvestorPosition kayıtlarından gelir.
   const fetchPortfolioBonds = useCallback(async (): Promise<PortfolioHolding[]> => {
     if (!program || !wallet) { setError('Wallet not connected'); return []; }
+
+    // İndeks-öncelikli: pozisyonlari snapshot'tan filtrele, bond'la birlestir.
+    try {
+      const snap = await fetchChainIndex();
+      const byState = new Map<string, BondState>();
+      for (const b of snap.bonds) {
+        const [pda] = getBondStatePDA(Number(b.bondId));
+        byState.set(pda.toBase58(), b);
+      }
+      const mine = wallet.publicKey.toBase58();
+      const holdings: PortfolioHolding[] = [];
+      for (const { account: pos } of snap.positions) {
+        if (pos.investor.toString() !== mine) continue;
+        const units = Number(pos.units);
+        if (units <= 0) continue;
+        const bond = byState.get(pos.bondState.toString());
+        if (!bond || !isValidBond(bond)) continue;
+        const tokensSold = Number(bond.tokensSold);
+        const entitled = tokensSold > 0 ? Math.floor((Number(bond.totalYieldDeposited) * units) / tokensSold) : 0;
+        const yieldClaimed = Number(pos.yieldClaimed);
+        holdings.push({
+          bond, units, contribution: Number(pos.contribution), yieldClaimed,
+          claimableYield: Math.max(0, entitled - yieldClaimed),
+          redeemed: !!pos.redeemed, refunded: !!pos.refunded,
+        });
+      }
+      L(`fetchPortfolioBonds: index ${holdings.length} holding(s)`);
+      return holdings;
+    } catch (idxErr) {
+      L('fetchPortfolioBonds: index basarisiz, RPC fallback', idxErr);
+    }
+
     try {
       setError(null);
       // Bu cüzdana ait tüm pozisyonlar (offset 8 = discriminator sonrası investor: Pubkey)
@@ -550,6 +602,15 @@ export function useLacusProgram() {
 
   // ── Secondary: tüm aktif ilanları çek ───────────────────────────────────────
   const fetchListings = useCallback(async (): Promise<{ pubkey: PublicKey; account: Listing }[]> => {
+    // İndeks-öncelikli.
+    try {
+      const snap = await fetchChainIndex();
+      const filtered = snap.listings.filter((l) => l.account.active && Number(l.account.units) > 0);
+      L(`fetchListings: index ${snap.listings.length} raw, ${filtered.length} active (source ${snap.source})`);
+      return filtered;
+    } catch (idxErr) {
+      L('fetchListings: index basarisiz, RPC fallback', idxErr);
+    }
     const readProgram = program ?? getLacusProgramReadOnly();
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
