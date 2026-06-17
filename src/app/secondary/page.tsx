@@ -172,17 +172,13 @@ export default function SecondaryMarket() {
 
         {/* Open listings */}
         <div className="lx-statement">
-          <h3 className="lx-subhead">Open listings{!loading && <span className="num"> · {openListings.length}</span>}</h3>
+          <h3 className="lx-subhead">Listings{!loading && <span className="num"> · {listings.length}</span>}</h3>
           <div className="lx-drule"></div>
           {loading ? (
             <div className="lx-loading"><Loader2 size={14} className="animate-spin" /> Loading the order book…</div>
-          ) : openListings.length === 0 ? (
+          ) : listings.length === 0 ? (
             <div className="lx-empty">
-              <p>
-                {myListings.length > 0
-                  ? 'Your own listing is not shown here. It is under "Your listings" below. This list shows offers from other wallets, so to buy your listing, connect a different wallet.'
-                  : 'No listings for sale right now. If you hold units in a funded bond, list the first one below.'}
-              </p>
+              <p>No listings yet. If you hold units in a funded bond, list the first one in &ldquo;Sell your units&rdquo; below.</p>
             </div>
           ) : (
             <div className="lx-scroll">
@@ -194,20 +190,22 @@ export default function SecondaryMarket() {
                   </tr>
                 </thead>
                 <tbody>
-                  {openListings.map((row) => {
+                  {listings.map((row) => {
                     const units = Number(row.account.units);
                     const price = Number(row.account.pricePerUnit);
                     const total = units * price;
                     const fee = Math.floor((total * SECONDARY_FEE_BPS) / 10000);
                     const sym = row.bond?.symbol ?? "—";
-                    const k = "buy-" + row.pubkey.toBase58();
+                    const isMine = !!mine && row.account.seller.toBase58() === mine;
+                    const kBuy = "buy-" + row.pubkey.toBase58();
+                    const kCancel = "cancel-" + row.pubkey.toBase58();
                     return (
                       <tr key={row.pubkey.toBase58()}>
                         <td>
                           {row.bond
                             ? <Link href={`/bond/${sym}`} className="lx-sym mgmt-link">{sym}</Link>
                             : <span className="lx-sym">{sym}</span>}
-                          <div className="lx-issuer">{row.bond?.name ?? row.account.seller.toBase58().slice(0, 8) + "…"}</div>
+                          <div className="lx-issuer">{isMine ? "Your listing" : (row.bond?.name ?? row.account.seller.toBase58().slice(0, 8) + "…")}</div>
                         </td>
                         <td className="r num">{row.bond ? (row.bond.couponRateBps / 100).toFixed(2) + "%" : "—"}</td>
                         <td className="r num">{row.bond ? formatDate(Number(row.bond.maturityTimestamp)) : "—"}</td>
@@ -215,13 +213,15 @@ export default function SecondaryMarket() {
                         <td className="r num">{formatSOL(price)} SOL</td>
                         <td className="r num">{formatSOL(total + fee)} SOL</td>
                         <td className="r">
-                          <button
-                            className="lx-btn lx-btn-solid lx-btn-sm"
-                            onClick={() => handleBuy(row)}
-                            disabled={busy === k || row.bondId == null}
-                          >
-                            {busy === k ? <Loader2 size={11} className="animate-spin" /> : "Buy"}
-                          </button>
+                          {isMine ? (
+                            <button className="lx-btn lx-btn-ghost lx-btn-sm" onClick={() => handleCancel(row)} disabled={busy === kCancel}>
+                              {busy === kCancel ? <Loader2 size={11} className="animate-spin" /> : "Cancel"}
+                            </button>
+                          ) : (
+                            <button className="lx-btn lx-btn-solid lx-btn-sm" onClick={() => handleBuy(row)} disabled={busy === kBuy || row.bondId == null}>
+                              {busy === kBuy ? <Loader2 size={11} className="animate-spin" /> : "Buy"}
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -230,8 +230,8 @@ export default function SecondaryMarket() {
               </table>
             </div>
           )}
-          {openListings.length > 0 && (
-            <p className="lx-fn">Total includes the {(SECONDARY_FEE_BPS / 100).toFixed(2)}% protocol fee. Settles in SOL, one transaction, no custody.</p>
+          {listings.length > 0 && (
+            <p className="lx-fn">Rows tagged &ldquo;Your listing&rdquo; are yours, use Cancel to unlist. Buying one needs a different wallet (you cannot buy your own). Total includes the {(SECONDARY_FEE_BPS / 100).toFixed(2)}% protocol fee, settles in SOL, no custody.</p>
           )}
         </div>
 
@@ -279,40 +279,6 @@ export default function SecondaryMarket() {
           )}
         </div>
 
-        {/* Your listings */}
-        {connected && myListings.length > 0 && (
-          <div className="lx-statement">
-            <h3 className="lx-subhead">Your listings</h3>
-            <div className="lx-drule"></div>
-            <div className="lx-scroll">
-              <table className="lx-table">
-                <thead>
-                  <tr><th>Bond</th><th className="r">Units</th><th className="r">Price / unit</th><th className="r">Total</th><th></th></tr>
-                </thead>
-                <tbody>
-                  {myListings.map((row) => {
-                    const units = Number(row.account.units);
-                    const price = Number(row.account.pricePerUnit);
-                    const k = "cancel-" + row.pubkey.toBase58();
-                    return (
-                      <tr key={row.pubkey.toBase58()}>
-                        <td><span className="lx-sym">{row.bond?.symbol ?? "—"}</span></td>
-                        <td className="r num">{units.toLocaleString()}</td>
-                        <td className="r num">{formatSOL(price)} SOL</td>
-                        <td className="r num">{formatSOL(units * price)} SOL</td>
-                        <td className="r">
-                          <button className="lx-btn lx-btn-ghost lx-btn-sm" onClick={() => handleCancel(row)} disabled={busy === k}>
-                            {busy === k ? <Loader2 size={11} className="animate-spin" /> : "Cancel"}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
       </div>
 
       <div style={{ paddingBottom: 96 }} />
